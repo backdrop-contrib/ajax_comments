@@ -1,0 +1,17 @@
+<?php
+// $Id$
+
+/**
+ * Implementaton of hook_install
+ */
+function ajax_comments_install() {
+  db_query("UPDATE {system} SET weight = 5 WHERE name = 'ajax_comments'");
+}
+
+/**
+ * Implementaton of hook_uninstall
+ */
+function ajax_comments_uninstall() {
+  db_query("DELETE FROM {variable} WHERE name LIKE 'ajax_comments_%'");
+  db_query("DELETE FROM {system} WHERE name = 'ajax_comments'");
+}
