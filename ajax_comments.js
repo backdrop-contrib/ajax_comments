@@ -33,9 +33,10 @@ function initAjaxComments(){
     //initializing main form
     action = $('#comment-form').attr('action');
     
-    title = $('#comment-form').parents(".box").children("h2,h3").html();
-    $('#comment-form').parents(".box").children("h2,h3").html('<a href="'+action+'" id="comment-form-title">'+title+'</a>');
-    $('#comment-form').parents(".box").children(".content").attr('id','comment-form-content');
+    title_element = $('#comment-form').parents(".box").find("h2,h3");
+    title = title_element.html();
+    title_element.html('<a href="'+action+'" id="comment-form-title">'+title+'</a>');
+    $('#comment-form').parents(".box").find(".content").attr('id','comment-form-content');
     
     page_url = document.location.toString();
     fragment = '';

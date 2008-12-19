@@ -132,7 +132,7 @@ function ajax_comments_submit_dispatch($form_id, &$form_state) {
       'status' => TRUE,
       'data' =>  array(
         'errors' => $errors,
-        'message' => '',
+        'message' => theme('status_messages'),
         'preview' => $preview,
         'destination' => $redirect
       )
