@@ -33,7 +33,7 @@ function initAjaxComments(){
     //initializing main form
     action = $('#comment-form').attr('action');
     
-    title_element = $('#comment-form').parents(".box").find("h2,h3");
+    title_element = $('#comment-form').parents(".box").find("h2,h3,h4");
     title = title_element.html();
     title_element.html('<a href="'+action+'" id="comment-form-title">'+title+'</a>');
     $('#comment-form').parents(".box").find(".content").attr('id','comment-form-content');
