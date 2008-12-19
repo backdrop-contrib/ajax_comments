@@ -17,6 +17,16 @@ in your "comment.tpl.php"
 3. IMPORTANT. If you have "Comment Notify" module installed, please, also install
 http://drupal.org/project/queue_mail to prevent server errors during comment submitting.
 
+TIPS & TRICKS
+
+1. To change loader progress bar look and feel, just override ".progress .bar" classes in your
+theme, for example:
+
+.progress .bar{
+  background:transparent url(../images/my-ajax-loader.gif) no-repeat 0 50%;
+}
+
+
 
 ---
 Created by Alexandr Shvets, aka neochief

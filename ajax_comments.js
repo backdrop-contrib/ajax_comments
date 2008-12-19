@@ -101,6 +101,7 @@ function initForm_Step2(token,captcha,action,rows){
     if (captcha) {
       $('.captcha').html(captcha);
     }
+    $('#comment-form textarea').focus();
     
     //setting a new action for form
     $('#comment-form').attr('action',action);
