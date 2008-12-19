@@ -7,7 +7,7 @@
 function ajax_comments_form_alter( &$form, $form_state, $form_id ){
   if (($form_id == 'comment_form') && (arg(1) != 'edit')) {
     $form['#prefix'] = '<div id="comment-preview"></div>';
-    
+
     if (!empty($_POST) && ($_POST['form_id'] == $form_id)) {
       // Redirect on successful submit, i.e., if there are no errors.
       $form['#pre_render'][] = 'ajax_comments_dispatch';
@@ -33,11 +33,11 @@ function ajax_comments_form_alter( &$form, $form_state, $form_id ){
 function ajax_comments_menu() {
   $items['admin/settings/ajax_comments'] = array(
     'title' => 'AJAX comments',
-    '#description' => t('AJAXifies comments on site.'),
+    'description' => t('AJAXifies comments on site.'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('admin_ajax_comments'),
     'access callback' => 'user_access',
-    'access arguments' => array('access content'),
+    'access arguments' => array('administer site configuration'),
    );
   $items['get_form_token/%/%'] = array(
     'page callback' => 'get_form_token',
@@ -81,9 +81,9 @@ function admin_ajax_comments() {
 function get_form_token($nid, $pid = NULL){
   global $user;
   $uid = $user->uid;
-  
+
   if ($pid == 0) $pid = NULL;
-  
+
   $fs = array();
   $edit = array('nid' => $nid, 'cid' => $cid, 'pid' => $pid, 'uid' => $uid);
   print_r((drupal_get_form('comment_form', $edit, $title)));
@@ -94,35 +94,24 @@ function get_form_token($nid, $pid = NULL){
  * Serves form submit functionality
  */
 function ajax_comments_submit_dispatch($form_id, &$form_state) {
-  _comment_form_submit($form_state['values']);
-  if ($cid = comment_save($form_state['values'])) {
-    $comment = (object)$form_state['values'];
+  global $user;
+
+  $edit = $form_state['values'];
+  _comment_form_submit($edit);
+  if ($cid = comment_save($edit)) {
+    $comment = _comment_load($cid);
     $node = node_load($comment->nid);
-    
-    $errors = form_get_errors();
-    
-    if (!$errors) {
-      // Attach the user and time information.
-      if ($edit['author']) {
-        $account = user_load(array('name' => $edit['author']));
-      }
-      elseif ($user->uid && !isset($edit['is_anonymous'])) {
-        $account = $user;
-      }
-      if ($account) {
-        $comment->uid = $account->uid;
-        $comment->name = check_plain($account->name);
-      }
-      $comment->cid = $cid;
-      $comment->timestamp = $edit['timestamp'] ? $edit['timestamp'] : time();
-      $preview = theme('comment_view', $comment, $node);
-      if ($comment->pid)
-        $preview = '<div class="indented">'.$preview.'<div>';
+
+    $preview = theme('comment_view', $comment, $node);
+    if ($comment->pid) {
+      $preview = '<div class="indented">'.$preview.'<div>';
     }
+
     $redirect = '';
-    if (!$errors)
+    if (!$errors) {
       $redirect = drupal_get_path_alias('node/'.$comment->nid).'?r'.$cid.'#comment-'.$cid;
-    
+    }
+
     $result = array(
       'status' => TRUE,
       'data' =>  array(
@@ -144,7 +133,7 @@ function ajax_comments_dispatch(&$form) {
     $form_c = array();
     captcha_form_alter($form_c, NULL, 'comment_form');
     captcha_pre_render($form_c);
-    
+
     $form_c['captcha']['captcha_token']['#id'] = 'edit-captcha-token';
     $form_c['captcha']['captcha_response']['#id'] = 'edit-captcha-response';
     $form_c['captcha']['captcha_token']['#name'] = 'captcha_token';

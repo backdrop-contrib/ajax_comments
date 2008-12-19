@@ -14,6 +14,10 @@ TROUBLESHOOTING
 2. If you have themed your comments output, make sure that everything is wrapped to ".comment" class
 in your "comment.tpl.php"
 
+3. IMPORTANT. If you have "Comment Notify" module installed, please, also install
+http://drupal.org/project/queue_mail to prevent server errors during comment submitting.
 
+
+---
 Created by Alexandr Shvets, aka neochief
 http://drupaldance.com/
