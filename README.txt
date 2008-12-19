@@ -28,6 +28,8 @@ theme, for example:
   background:transparent url(../images/my-ajax-loader.gif) no-repeat 0 50%;
 }
 
+2. If you need to remove a lot of comments and you're bored with confirmation dialog, just
+hold one ctrl key and press needed "Delete" links. It will force removal.
 
 
 ---

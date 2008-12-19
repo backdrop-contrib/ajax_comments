@@ -1,8 +1,19 @@
 commentbox = ".comment";
+ctrl = false;
 
 // prepare the form when the DOM is ready 
 $(document).ready(function() { 
   initAjaxComments();
+  
+  $(window).keydown(function(e) {
+    if(e.keyCode == 17) {
+      ctrl = true;
+    }
+  });
+  $(window).keyup(function(e) {
+    ctrl = false;
+  });
+  
 });
 
 function initAjaxComments(){
@@ -146,7 +157,7 @@ function reply_click() {
 
 // delete links handler
 function delete_click() {
-  if (confirm(Drupal.t('Are you sure you want to delete the comment? Any replies to this comment will be lost. This action cannot be undone.'))) {
+  if ((ctrl) || (confirm(Drupal.t('Are you sure you want to delete the comment? Any replies to this comment will be lost. This action cannot be undone.')))) {
     action = $(this).attr('href');
     comment = $(this).parents(commentbox);
     //specially for Opera browser
@@ -159,8 +170,15 @@ function delete_click() {
         type: "GET",
         url: Drupal.settings.basePath + "comment/instant_delete/" + cid,
         success: function(form){
-          comment.next('.indented').animate({height:'hide', opacity:'hide'});
-          comment.animate({height:'hide', opacity:'hide'}, 'fast', function(){ comment.next('.indented').remove(); comment.remove(); });
+          // if comment form is expanded on this module, we should collapse it first
+          if (comment.next().is('#comment-form-content')) {
+            thread = comment.next().next('.indented');
+            $('#comment-form-content').animate({height:'hide', opacity:'hide'});
+          } else {
+            thread = comment.next('.indented');
+          }
+          thread.animate({height:'hide', opacity:'hide'});
+          comment.animate({height:'hide', opacity:'hide'}, 'fast', function(){ thread.remove(); comment.remove(); });
         }
       });
     }
