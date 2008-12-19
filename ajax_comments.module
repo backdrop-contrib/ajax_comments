@@ -44,11 +44,20 @@ function ajax_comments_menu() {
     'page arguments' => array(1,2),
     'access callback' => 'user_access',
     'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+  $items['comment/instant_delete/%'] = array(
+    'page callback' => 'instant_delete',
+    'page arguments' => array(2),
+    'access callback' => 'user_access',
+    'access arguments' => array('administer comments'),
+    'type' => MENU_CALLBACK,
   );
   $items['ajaxsubmit/dispatch'] = array(
     'page callback' => 'ajax_comments_dispatch',
     'access callback' => 'user_access',
     'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
    );
   return $items;
 }
@@ -87,6 +96,22 @@ function get_form_token($nid, $pid = NULL){
   $fs = array();
   $edit = array('nid' => $nid, 'cid' => $cid, 'pid' => $pid, 'uid' => $uid);
   print_r((drupal_get_form('comment_form', $edit, $title)));
+  exit();
+}
+
+/*
+ * Comments delete callback
+ */
+function instant_delete($cid = 0){
+  module_load_include('inc', 'comment', 'comment.admin');
+  $comment = _comment_load($cid);
+  // Delete comment and its replies.
+  _comment_delete_thread($comment);
+  _comment_update_node_statistics($comment->nid);
+  // Clear the cache so an anonymous user sees that his comment was deleted.
+  cache_clear_all();
+  
+  print('OK');
   exit();
 }
 

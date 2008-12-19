@@ -27,8 +27,9 @@ function initAjaxComments(){
       Drupal.settings.always_expand_form = true;
     }
 
-    //initializing "Reply" links
+    //initializing comments links
     $('.comment_reply a').click(reply_click);
+    $('.comment_delete a').click(delete_click);
     
     //initializing main form
     action = $('#comment-form').attr('action');
@@ -71,7 +72,7 @@ function initForm(action, rows){
 
     //specially for Opera browser
     a1 = action.replace('http://','');
-    //getting token params
+    //getting token params (/comment/reply/x/p)
     var arr = a1.split('/');
     if (!arr[4]) arr[4] = '0';
     //sending ajax call to get the token
@@ -112,6 +113,7 @@ function initForm_Step2(token,captcha,action,rows){
     $('.form-submit').removeAttr('disabled');
 }
 
+
 function reply_click() {
   if ($(this).is('.pressed')){
   }
@@ -141,6 +143,31 @@ function reply_click() {
   fix_control_size();
   return false;
 }
+
+// delete links handler
+function delete_click() {
+  if (confirm(Drupal.t('Are you sure you want to delete the comment? Any replies to this comment will be lost. This action cannot be undone.'))) {
+    action = $(this).attr('href');
+    comment = $(this).parents(commentbox);
+    //specially for Opera browser
+    a1 = action.replace('http://','');
+    //getting token params (/comment/delete/x)
+    var arr = a1.split('/');
+    cid = arr[3];
+    if (cid) {
+      $.ajax({
+        type: "GET",
+        url: Drupal.settings.basePath + "comment/instant_delete/" + cid,
+        success: function(form){
+          comment.next('.indented').animate({height:'hide', opacity:'hide'});
+          comment.animate({height:'hide', opacity:'hide'}, 'fast', function(){ comment.next('.indented').remove(); comment.remove(); });
+        }
+      });
+    }
+  }
+  return false;
+}
+
 
 // pre-submit callback 
 function showRequest(formData, jqForm, options) { 
@@ -186,7 +213,7 @@ function showResponse(responseText, statusText)  {
     $('#comment-preview').fadeTo('fast',0.1,function(){
       $('#comment-preview').html(text);
       $('#comment-preview').fadeTo('fast',1);
-      if (!$('#comment-form #edit-submit').length) {
+      if (!$('#comment-form #edit-submit').length && !$('#comment-form #edit-submit-1').length) {
         $('#comment-form #edit-preview').after(responseText.data.submit);
         $('#comment-form #edit-submit').fadeIn('fast');
       }

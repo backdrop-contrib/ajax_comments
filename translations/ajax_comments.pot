@@ -48,3 +48,7 @@ msgstr ""
 #:
 msgid "preview"
 msgstr ""
+
+#:
+msgid "Are you sure you want to delete the comment? Any replies to this comment will be lost. This action cannot be undone."
+msgstr ""

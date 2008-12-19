@@ -44,5 +44,9 @@ msgid "Usually, there is no need in big forms for replies, so this setting allow
 msgstr "Обычно, не нужна слишком большая форма для написания ответов, поэтому эта настройка может улучшить вид форм для ответов."
 
 #:
-msgid "предпросмотр"
-msgstr ""
+msgid "preview"
+msgstr "предпросмотр"
+
+#:
+msgid "Are you sure you want to delete the comment? Any replies to this comment will be lost. This action cannot be undone."
+msgstr "Вы действительно хотите удалить это комментарий? Все ответы к нему будут также удалены. Это действие отменить будет нельзя."

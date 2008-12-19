@@ -12,8 +12,7 @@ TROUBLESHOOTING
 "Display below post or comments".
 
 2. If you have themed your comments output, make sure that everything is wrapped to ".comment" class
-in your "comment.tpl.php". Your comment form box should include ".box" class and "Post new comment"
-should be any of h2-h4 tags.
+in your "comment.tpl.php"
 
 3. IMPORTANT. If you have "Comment Notify" module installed, please, also install
 http://drupal.org/project/queue_mail to prevent server errors during comment submitting.

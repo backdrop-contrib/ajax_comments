@@ -45,5 +45,9 @@ msgstr "Зазвичай, не потрібна дуже велика форма
 
 
 #:
-msgid "попередній перегляд"
-msgstr ""
+msgid "preview"
+msgstr "попередній перегляд"
+
+#:
+msgid "Are you sure you want to delete the comment? Any replies to this comment will be lost. This action cannot be undone."
+msgstr "Ви дійсно хочете видалити цей коментар? Всі відповіді на нього будуть також видалені. Цю дію неможливо буде відмінити."
