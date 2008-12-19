@@ -99,16 +99,32 @@ function ajax_comments_submit_dispatch($form_id, &$form_state) {
   $edit = $form_state['values'];
   _comment_form_submit($edit);
   if ($cid = comment_save($edit)) {
-    $comment = _comment_load($cid);
-    $node = node_load($comment->nid);
-
-    $preview = theme('comment_view', $comment, $node);
-    if ($comment->pid) {
-      $preview = '<div class="indented">'.$preview.'<div>';
-    }
-
-    $redirect = '';
+    $errors = form_get_errors();
     if (!$errors) {
+      $node = node_load($comment->nid);
+
+      $query = 'SELECT c.cid, c.pid, c.nid, c.subject, c.comment, c.format, c.timestamp, c.name, c.mail, c.homepage, u.uid, u.name AS registered_name, u.signature, u.picture, u.data, c.status FROM {comments} c INNER JOIN {users} u ON c.uid = u.uid WHERE c.cid = %d';
+      $query_args = array($cid);
+      if (!user_access('administer comments')) {
+        $query .= ' AND c.status = %d';
+        $query_args[] = COMMENT_PUBLISHED;
+      }
+
+      $query = db_rewrite_sql($query, 'c', 'cid');
+      $result = db_query($query, $query_args);
+
+      if ($comment = db_fetch_object($result)) {
+        $comment->name = $comment->uid ? $comment->registered_name : $comment->name;
+        $links = module_invoke_all('link', 'comment', $comment, 0);
+        drupal_alter('link', $links, $node);
+
+        $preview .= theme('comment_view', $comment, $node, $links);
+      }
+
+      if ($comment->pid) {
+        $preview = '<div class="indented">'.$preview.'<div>';
+      }
+
       $redirect = drupal_get_path_alias('node/'.$comment->nid).'?r'.$cid.'#comment-'.$cid;
     }
 
@@ -141,25 +157,29 @@ function ajax_comments_dispatch(&$form) {
 
     $captcha = @drupal_render($form_c);
   }
+  
+  $errors =  form_get_errors();
 
-  if (empty($form['comment_preview'])) {
+  if ((!$errors) && (empty($form['comment_preview']))) {
     $form_state = array();
     drupal_process_form('comment_form', $form, $form_state);
     $result = ajax_comments_submit_dispatch('comment_form', $form_state);
+    print drupal_to_js($result);
+    exit();
   }
-  else {
-    $result = array(
-      'status' => TRUE,
-      'data' =>  array(
-        'errors' => form_get_errors(),
-        'message' => theme('status_messages'),
-        'preview' => isset($form['comment_preview']) && !empty($form['comment_preview']['#value']) ? $form['comment_preview']['#value'] : NULL,
-        'submit' => isset($form['submit']) && !empty($form['submit']) ? drupal_render($form['submit']) : NULL,
-        'destination' => '',
-        'captcha' => $captcha,
-      )
-    );
-  }
+  
+  $result = array(
+    'status' => TRUE,
+    'data' =>  array(
+      'errors' => $errors,
+      'message' => theme('status_messages'),
+      'preview' => isset($form['comment_preview']) && !empty($form['comment_preview']['#value']) ? $form['comment_preview']['#value'] : NULL,
+      'submit' => isset($form['submit']) && !empty($form['submit']) ? drupal_render($form['submit']) : NULL,
+      'destination' => '',
+      'captcha' => $captcha,
+    )
+  );
+  
   print drupal_to_js($result);
   exit();
 }

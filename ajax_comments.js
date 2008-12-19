@@ -172,6 +172,10 @@ function showResponse(responseText, statusText)  {
     else{
       $('#comment-form-content').before(text);
     }
+
+    //initializing new "Reply" link
+    $('a.comment_reply').click(reply_click);
+
     $('#comment-form-content').animate({height:'hide', opacity:'hide'});
     
     $('.pressed').removeClass('pressed');

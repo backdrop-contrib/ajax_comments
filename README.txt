@@ -17,6 +17,8 @@ in your "comment.tpl.php"
 3. IMPORTANT. If you have "Comment Notify" module installed, please, also install
 http://drupal.org/project/queue_mail to prevent server errors during comment submitting.
 
+4. Module may conflict with Devel. It causing in lags when comment is submitting.
+
 TIPS & TRICKS
 
 1. To change loader progress bar look and feel, just override ".progress .bar" classes in your
