@@ -1,10 +1,11 @@
 commentbox = ".comment";
 ctrl = false;
 
-// prepare the form when the DOM is ready 
 $(document).ready(function() { 
+  // prepare the form when the DOM is ready
   initAjaxComments();
-  
+
+  // add Ctrl key listener for deletion feature
   $(window).keydown(function(e) {
     if(e.keyCode == 17) {
       ctrl = true;
