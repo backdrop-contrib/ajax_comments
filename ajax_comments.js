@@ -64,7 +64,7 @@ function initAjaxComments(){
     }
     
     $('#comment-form-title').click(reply_click);
-    fix_control_size();
+    if(typeof(fix_control_size)!='undefined'){ fix_control_size(); };
   }
 }
 
@@ -150,7 +150,7 @@ function reply_click() {
     $('.pressed').removeClass('pressed');
     $(this).addClass('pressed');
   }
-  fix_control_size();
+  if(typeof(fix_control_size)!='undefined'){ fix_control_size(); };
   return false;
 }
 
@@ -238,14 +238,4 @@ function showResponse(responseText, statusText)  {
     });
   }
   $('.form-submit').removeAttr('disabled');
-}
-
-
-function fix_control_size() {
-/*  $("textarea").each(function(){
-    $(this).width($(this).parents('div').width() - 12);
-  });
-  $(".grippie").each(function(){
-    $(this).width($(this).parents('div').width() - 2);
-  });*/
 }
