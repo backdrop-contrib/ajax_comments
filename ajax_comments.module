@@ -33,7 +33,7 @@ function ajax_comments_form_alter( &$form, $form_state, $form_id ){
 function ajax_comments_menu() {
   $items['admin/settings/ajax_comments'] = array(
     'title' => 'AJAX comments',
-    'description' => t('AJAXifies comments on site.'),
+    'description' => 'AJAXifies comments on site.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('admin_ajax_comments'),
     'access callback' => 'user_access',
@@ -88,6 +88,7 @@ function admin_ajax_comments() {
  * Misc function to fetch form tokens for authentificated users
  */
 function get_form_token($nid, $pid = NULL){
+  drupal_set_header('Content-type: text/javascript; charset=utf-8');
   global $user;
   $uid = $user->uid;
 
@@ -103,6 +104,7 @@ function get_form_token($nid, $pid = NULL){
  * Comments delete callback
  */
 function instant_delete($cid = 0){
+  drupal_set_header('Content-type: text/javascript; charset=utf-8');
   module_load_include('inc', 'comment', 'comment.admin');
   $comment = _comment_load($cid);
   // Delete comment and its replies.
