@@ -28,6 +28,10 @@ function initAjaxComments(){
     // bind form using 'ajaxForm' 
     $('#comment-form').ajaxForm(options);
     
+    if(typeof(FCKeditor_OnAfterLinkedFieldUpdate)!='undefined'){ 
+      $('.form-submit').bind('click', function(){ FCKeditor_OnAfterLinkedFieldUpdate(FCKeditorAPI.GetInstance('edit-comment')); });
+    }
+    
     if ((Drupal.settings.rows_default == undefined) || (!Drupal.settings.rows_default)) {
       Drupal.settings.rows_default = $('#comment-form textarea').attr('rows');
     }
