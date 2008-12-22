@@ -221,8 +221,9 @@ function showResponse(responseText, statusText)  {
       $('#comment-form-content').before(text);
     }
 
-    //initializing new "Reply" link
-    $('a.comment_reply').click(reply_click);
+    //initializing comments links
+    $('.comment_reply a').click(reply_click);
+    $('.comment_delete a').click(delete_click);
 
     $('#comment-form-content').animate({height:'hide', opacity:'hide'});
     
