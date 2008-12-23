@@ -179,6 +179,7 @@ function ajax_comments_submit_dispatch($form_id, &$form_state) {
  */
 function ajax_comments_dispatch(&$form) {
   $js_enabled = $form['js_enabled']['#value'];
+
   if (module_exists('captcha')) {
     $form_c = array();
     captcha_form_alter($form_c, NULL, 'comment_form');
