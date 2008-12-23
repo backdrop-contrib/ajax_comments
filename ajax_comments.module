@@ -8,6 +8,13 @@ function ajax_comments_form_alter( &$form, $form_state, $form_id ){
   if (($form_id == 'comment_form') && (arg(1) != 'edit')) {
     $form['#prefix'] = '<div id="comment-preview"></div>';
 
+    $form['js_enabled'] = array(
+      '#type' => 'hidden',
+      '#default_value' => $_GET['q'],
+      '#weight' => 0,
+    );
+    $form['#suffix'] = '<script>$("#comment-form #edit-js-enabled").val(1);</script>';
+
     if (!empty($_POST) && ($_POST['form_id'] == $form_id)) {
       // Redirect on successful submit, i.e., if there are no errors.
       $form['#pre_render'][] = 'ajax_comments_dispatch';
@@ -122,7 +129,6 @@ function instant_delete($cid = 0){
  */
 function ajax_comments_submit_dispatch($form_id, &$form_state) {
   global $user;
-
   $edit = $form_state['values'];
   _comment_form_submit($edit);
   if ($cid = comment_save($edit)) {
@@ -172,6 +178,7 @@ function ajax_comments_submit_dispatch($form_id, &$form_state) {
  * Serves previews and validation
  */
 function ajax_comments_dispatch(&$form) {
+  $js_enabled = $form['js_enabled']['#value'];
   if (module_exists('captcha')) {
     $form_c = array();
     captcha_form_alter($form_c, NULL, 'comment_form');
@@ -191,6 +198,9 @@ function ajax_comments_dispatch(&$form) {
     $form_state = array();
     drupal_process_form('comment_form', $form, $form_state);
     $result = ajax_comments_submit_dispatch('comment_form', $form_state);
+    
+    if ($js_enabled != 1) { drupal_goto($js_enabled); return $form; }
+    
     print drupal_to_js($result);
     exit();
   }
@@ -206,6 +216,17 @@ function ajax_comments_dispatch(&$form) {
       'captcha' => $captcha,
     )
   );
+  if ($js_enabled != 1) { 
+    if ($form['form_id']['#post']['op'] != t('Preview')) {
+      drupal_goto($js_enabled);
+    }
+    $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Save'),
+      '#weight' => 19
+    );
+    return $form;
+  }
   
   print drupal_to_js($result);
   exit();
