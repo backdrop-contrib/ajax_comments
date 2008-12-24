@@ -28,6 +28,9 @@ function initAjaxComments(){
     // bind form using 'ajaxForm' 
     $('#comment-form').ajaxForm(options);
     
+    if (typeof(doFCKeditorSave)!='undefined') {
+      $('.form-submit').bind('click', function(){ doFCKeditorSave(); });
+    }
     if(typeof(FCKeditor_OnAfterLinkedFieldUpdate)!='undefined'){ 
       $('.form-submit').bind('click', function(){ FCKeditor_OnAfterLinkedFieldUpdate(FCKeditorAPI.GetInstance('edit-comment')); });
     }
@@ -243,3 +246,9 @@ function showResponse(responseText, statusText)  {
   }
   $('.form-submit').removeAttr('disabled');
 }
+
+$('#comments .pager a').bind('click', function(){
+  href = $(this).attr('href');
+  page = href.split('?');
+  alert(());
+})
