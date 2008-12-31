@@ -306,7 +306,19 @@ function ajax_comments_remove_editors() {
 // attach editors to comments textarea if needed
 function ajax_comments_attach_editors() {
   if (typeof(tinyMCE) != 'undefined') {
+    // ugly hack to get invisible element's width
+    height = $('#comment-form-content').css('height');
+    overflow = $('#comment-form-content').css('overflow');
+    $('#comment-form-content').css('height', '0px');
+    $('#comment-form-content').css('overflow', 'hidden');
+    $('#comment-form-content').show();
+    
     tinyMCE.execCommand('mceAddControl', false, "edit-comment");
+    
+    // returning old values
+    $('#comment-form-content').css('height', height);
+    $('#comment-form-content').css('overflow', overflow);
+    $('#comment-form-content').hide();
   }
 }
 
