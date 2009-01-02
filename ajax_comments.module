@@ -4,18 +4,23 @@
 /*
  * Implementation of hook_form_alter()
  */
-function ajax_comments_form_alter( &$form, $form_state, $form_id ){
+function ajax_comments_form_alter(&$form, $form_state, $form_id) {
   if (($form_id == 'comment_form') && (arg(1) != 'edit')) {
     $form['#prefix'] = '<div id="comment-preview"></div>';
+    
+    // we should set specific ID to let ahah wrapper know what to wrap on ajax
+    // loaded comment-form even if we have many submit buttons on the page
+    $form['preview']['#id'] = "ajax-comments-preview";
     $form['preview']['#ahah'] = array(
       'path' => 'ajax_comments/js',
       'wrapper' => 'comment-preview',
       'event' => 'click',
       'method' => 'append',
       'effect' => 'ajaxCommentsPreview',
-      'progress' => array('type' => 'bar', 'message' => t('Please wait...')),
+      'progress' => array('type' => '1bar', 'message' => t('Please wait...')),
     );
     
+    $form['submit']['#id'] = "ajax-comments-submit";
     $form['submit']['#submit'] = array('ajax_comments_submit');
     $form['submit']['#ahah'] = array(
       'path' => 'ajax_comments/js',
@@ -23,7 +28,7 @@ function ajax_comments_form_alter( &$form, $form_state, $form_id ){
       'event' => 'click',
       'method' => 'before',
       'effect' => 'ajaxCommentsSubmit',
-      'progress' => array('type' => 'bar', 'message' => t('Please wait...')),
+      'progress' => array('type' => '1bar', 'message' => t('Please wait...')),
     );
     
     $path = drupal_get_path('module', 'ajax_comments');
@@ -51,14 +56,14 @@ function ajax_comments_menu() {
     'access callback' => 'user_access',
     'access arguments' => array('administer site configuration'),
    );
-  $items['get_form_token/%/%'] = array(
+  $items['ajax_comments/get_form_token/%/%'] = array(
     'page callback' => 'get_form_token',
-    'page arguments' => array(1,2),
+    'page arguments' => array(2,3),
     'access callback' => 'user_access',
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
   );
-  $items['comment/instant_delete/%'] = array(
+  $items['ajax_comments/instant_delete/%'] = array(
     'page callback' => 'instant_delete',
     'page arguments' => array(2),
     'access callback' => 'user_access',
@@ -75,9 +80,48 @@ function ajax_comments_menu() {
 }
 
 
-/** 
-* submit handler for the "Add Tab" button
-*/ 
+/*
+ * AHAH callback
+ */
+function ajax_comments_js() {
+  include_once 'modules/node/node.pages.inc';
+  $form_state = array('storage' => NULL, 'submitted' => FALSE);
+  $form_build_id = $_POST['form_build_id'];
+  $form = form_get_cache($form_build_id, $form_state);
+
+  $args = $form['#parameters'];
+  $form_id = array_shift($args);
+  $form_state['post'] = $form['#post'] = $_POST;
+  $form['#programmed'] = $form['#redirect'] = FALSE;
+
+  $form['#after_build'] = array('comment_form_add_preview');
+  drupal_process_form($form_id, $form, $form_state);
+  
+  $errors = form_get_errors();
+
+  if (!$errors) {
+    if ($form_state['values']['op'] == t('Preview')) {
+      $output = '<div class="preview-item">'.$form['comment_preview']['#value'].'</div>';
+    }
+    elseif ($form_state['values']['op'] == t('Save')) {
+      $output = '<div class="comment-new-success">'.$form_state['ajax_comment'].'</div>';
+    }
+    
+    if ($output && $form_state['values']['pid']) {
+      $output = '<div class="indented">'. $output .'<div>';
+    }
+    $form = drupal_rebuild_form($form_id, $form_state, $args, $form_build_id);
+  }
+  unset($form['#suffix']);
+  unset($form['#prefix']);
+  $output = theme('status_messages') . $output . drupal_render($form);
+
+  drupal_json(array('status' => TRUE, 'data' => $output));
+}
+
+/*
+ * Comment submit routine
+ */
 function ajax_comments_submit($form, &$form_state) {
   //remove self
   unset($form_state['submit_handlers']);
@@ -122,41 +166,6 @@ function ajax_comments_submit($form, &$form_state) {
   return $output;
 }
 
-function ajax_comments_js() {
-  include_once 'modules/node/node.pages.inc';
-  $form_state = array('storage' => NULL, 'submitted' => FALSE);
-  $form_build_id = $_POST['form_build_id'];
-  $form = form_get_cache($form_build_id, $form_state);
-
-  $args = $form['#parameters'];
-  $form_id = array_shift($args);
-  $form_state['post'] = $form['#post'] = $_POST;
-  $form['#programmed'] = $form['#redirect'] = FALSE;
-
-  $form['#after_build'] = array('comment_form_add_preview');
-  drupal_process_form($form_id, $form, $form_state);
-  
-  $errors = form_get_errors();
-
-  if (!$errors) {
-    if ($form_state['values']['op'] == t('Preview')) {
-      $output = '<div class="preview-item">'.$form['comment_preview']['#value'].'</div>';
-    }
-    elseif ($form_state['values']['op'] == t('Save')) {
-      $output = '<div class="comment-new-success">'.$form_state['ajax_comment'].'</div>';
-    }
-    
-    if ($output && $form_state['values']['pid']) {
-      $output = '<div class="indented">'. $output .'<div>';
-    }
-    $form = drupal_rebuild_form($form_id, $form_state, $args, $form_build_id);
-  }
-  unset($form['#suffix']);
-  unset($form['#prefix']);
-  $output = theme('status_messages') . $output . drupal_render($form);
-
-  drupal_json(array('status' => TRUE, 'data' => $output));
-}
 
 /*
  * AJAX comments settings form
@@ -166,7 +175,7 @@ function admin_ajax_comments() {
     '#type' => 'checkbox',
     '#title' => t('Form always expanded'),
     '#description' => t('This setting allows to render comments as collapsed link by default.'),
-    '#default_value' => variable_get('ajax_comments_always_expand_form', TRUE),
+    '#default_value' => variable_get('ajax_comments_always_expand_form', FALSE),
   );
   $form['ajax_comments_default_row_count'] = array(
     '#type' => 'textfield',
@@ -180,15 +189,11 @@ function admin_ajax_comments() {
     '#description' => t('Usually, there is no need in big forms for replies, so this setting allows to reduce their size.'),
     '#default_value' => variable_get('ajax_comments_reply_row_count', 3),
   );
-  /*$form['tuning'] = array(
-    '#type' => 'fieldset',
-    '#collapsed' => true,
-  );*/
   return system_settings_form($form);
 }
 
 /*
- * Misc function to fetch form tokens for authentificated users
+ * Misc function to fetch new form and it's values when full reload needed
  */
 function get_form_token($nid, $pid = NULL){
   drupal_set_header('Content-type: text/javascript; charset=utf-8');
@@ -230,6 +235,3 @@ function ajax_comments_preprocess_comment(&$variables) {
     $variables['comment']->new = TRUE;
   }
 }
-
-
-
