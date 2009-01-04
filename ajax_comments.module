@@ -32,6 +32,7 @@ function ajax_comments_form_alter(&$form, $form_state, $form_id) {
     );
     
     $path = drupal_get_path('module', 'ajax_comments');
+    drupal_add_css($path .'/jquery.scrollTo.js');
     drupal_add_css($path .'/ajax_comments.css');
     
     drupal_add_js('misc/jquery.form.js');

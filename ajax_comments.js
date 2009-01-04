@@ -72,7 +72,15 @@ Drupal.behaviors.ajax_comments = function(context) {
   });
   
   $('.comment_reply a:not(.ajax-comments-processed)', context).addClass('ajax-comments-processed').click(reply_click);
-  $(commentbox + ' .quote a:not(.ajax-comments-processed)', context).addClass('ajax-comments-processed').click(reply_click);
+  $('.quote a:not(.ajax-comments-processed)', context).addClass('ajax-comments-processed').each(function(){
+    href = $(this).attr('href');
+    if (ajax_comments_is_reply_to_node(href)) {
+      $(this).click(function(){ $('#comment-form-title', context).click(); return false; });
+    } else {
+      $(this).click(reply_click);
+    }
+  });
+  
   $('.comment_delete a:not(.ajax-comments-processed)', context).addClass('ajax-comments-processed').click(delete_click);
 
   // add Ctrl key listener for deletion feature
@@ -99,12 +107,14 @@ function reply_click() {
           
       
       // move form from old position
-      if ($(this).is('#comment-form-title')) {
+      href = $(this).attr('href');
+      if (ajax_comments_is_reply_to_node(href)) {
         $('#comment-form-content').removeClass('indented');
         $('#comment-form-content').after('<div style="height:' + $('#comment-form-content').height() + 'px;" class="sizer"></div>');
         $('.sizer').slideUp('fast', function(){$(this).remove();});
         $(this).parents('h2,h3,h4').after($('#comment-form-content'));
         rows = Drupal.settings.rows_default;
+        $('#comment-form-content').parents('.box').before($('#comment-preview'));
       }
       else {
         $('#comment-form-content').addClass('indented');
@@ -112,6 +122,7 @@ function reply_click() {
         $('.sizer').slideUp('fast', function(){$(this).remove();});
         $(this).parents(commentbox).after($('#comment-form-content'));
         rows = Drupal.settings.rows_in_reply;
+        $('#comment-form-content').prepend($('#comment-preview'));
       }
       $('#comment-form-content').hide();
     }
@@ -157,11 +168,18 @@ function initForm(action, rows){
 
   // specially for Opera browser
   action = action.replace('http:// ','');
+  fragments = action.split('#');
+  queries = fragments[0].split('?');
+  
+  fragment = '';
+  query = '';
+  if (fragments[1]) { fragment = '#' + fragments[1]; }
+  if (queries[1]) { query = '?' + queries[1]; }
 
   // getting token params (/comment/reply/x/p)
-  var arr = action.split('/');
-  if (!arr[4]) {
-    arr[4] = '0';
+  var arg = queries[0].split('/');
+  if (!arg[4]) {
+    arg[4] = '0';
   }
 
   needs_reload = (action.indexOf('ajaxreload=1') != -1);
@@ -180,7 +198,7 @@ function initForm(action, rows){
   var token = 0;
   $.ajax({
     type: "GET",
-    url: Drupal.settings.basePath + "ajax_comments/get_form_token/" + arr[3] + '/' + arr[4],
+    url: Drupal.settings.basePath + "ajax_comments/get_form_token/" + arg[3] + '/' + arg[4] + query + fragment,
     success: function(form){
       // Going further
       initForm_setTokens(form, rows, needs_reload);
@@ -403,6 +421,16 @@ function ajax_comments_get_cid(action) {
     cid = arg[4];
   }
   return cid;
+}
+
+function ajax_comments_is_reply_to_node(href) {
+  href = href.replace('http:// ','');
+  var href = href.split('#');
+  var href = href[0].split('?');
+  arg = href[0].split('/');
+
+  result = arg[2] == 'reply' && arg[3] && !arg[4];
+  return result;
 }
 
 function ajax_comments_show_progress(context) {
