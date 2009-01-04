@@ -44,10 +44,11 @@ Drupal.behaviors.ajax_comments = function(context) {
     action = $(this).attr('action');
 
     // Creating title link
-    title_element = $(this).parents(".box").find("h2,h3,h4");
-    title = title_element.html();
-    title_element.html('<a href="'+action+'" id="comment-form-title">'+title+'</a>');
-    $(this).parents(".box").find(".content").attr('id','comment-form-content');
+    $(this).parents(".box").find("h2:not(.ajax-comments-processed),h3:not(.ajax-comments-processed),h4:not(.ajax-comments-processed)").addClass('ajax-comments-processed').each(function(){
+      title = $(this).html();
+      $(this).html('<a href="'+action+'" id="comment-form-title">'+title+'</a>');
+      $(this).parents(".box").find(".content").attr('id','comment-form-content');
+    });
 
     // Expanding form if needed
     page_url = document.location.toString();
@@ -65,7 +66,7 @@ Drupal.behaviors.ajax_comments = function(context) {
     }
     
     // Attaching event to title link
-    $('#comment-form-title', context).click(reply_click);
+    $('#comment-form-title:not(.ajax-comments-processed)', context).addClass('ajax-comments-processed').click(reply_click);
     
     if(typeof(fix_control_size)!='undefined'){ fix_control_size(); };
   });
@@ -92,17 +93,17 @@ function reply_click() {
     action = $(this).attr('href');
     link_cid = ajax_comments_get_cid(action);
     rows = Drupal.settings.rows_default;
-
     if ($('#comment-form-content').attr('cid') != link_cid) {
       // We should remove any WYSIWYG before moving controls
       ajax_comments_remove_editors();
+          
       
       // move form from old position
       if ($(this).is('#comment-form-title')) {
         $('#comment-form-content').removeClass('indented');
         $('#comment-form-content').after('<div style="height:' + $('#comment-form-content').height() + 'px;" class="sizer"></div>');
         $('.sizer').slideUp('fast', function(){$(this).remove();});
-        $(this).parent().after($('#comment-form-content'));
+        $(this).parents('h2,h3,h4').after($('#comment-form-content'));
         rows = Drupal.settings.rows_default;
       }
       else {
@@ -132,13 +133,13 @@ function reply_click() {
   else {
     // handling double click
     if ((!$(this).is('#comment-form-title')) && (Drupal.settings.always_expand_main_form)) {
-      $('#comment-form-title').trigger('click');
+      $('#comment-form-title').click();
     } else {
       ajax_comments_close_form();
     }
   }
 
-  if(typeof(fix_control_size) != 'undefined'){ fix_control_size(); };
+  if (typeof(fix_control_size) != 'undefined'){ fix_control_size(); };
   return false;
 }
 
@@ -163,9 +164,9 @@ function initForm(action, rows){
     arr[4] = '0';
   }
 
-  //needs_reload = (action.indexOf('ajaxreload=1') != -1);
-  //needs_reload = needs_reload || (action.indexOf('quote=') != -1);
-  needs_reload = true;
+  needs_reload = (action.indexOf('ajaxreload=1') != -1);
+  needs_reload = needs_reload || (action.indexOf('quote=') != -1);
+  //needs_reload = true;
   
   // disabling buttons while loading tokens
   $('#comment-form .form-submit').addClass('ajax-comments-disabled').attr('disabled','true');
@@ -321,7 +322,7 @@ jQuery.fn.ajaxCommentsSubmitToggle = function(speed) {
     $('#comment-form-content #comment-preview').empty();
     
     // move comment out of comment form box if posting to main thread
-    if ($('#comment-form-title').is('.pressed')){
+    if ($('#comment-form-content').attr('cid') == 0){
       $('#comment-form-content').parents('.box').before(obj);
     }
     // at last - showing it up
@@ -396,6 +397,9 @@ function ajax_comments_get_cid(action) {
   }
   // getting token params (/comment/reply/nid/!cid!)
   else {
+    if (!arg[4]) {
+      arg[4] = 0;
+    }
     cid = arg[4];
   }
   return cid;
