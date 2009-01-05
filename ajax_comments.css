@@ -1,3 +1,7 @@
+.comment {
+  position:relative;
+}
+
 #comment-form-content, form {
   position:relative;
 }
@@ -15,6 +19,10 @@
   display:none;
 }
 
+#comment-preview .indented {
+  margin-left:0;
+}
+
 #comment-form .percentage {
   display:none;
 }
@@ -27,7 +35,7 @@
   border:1px solid #00375A;
 }
 
-#comment-form-content .ajax-comments-loader {
+.ajax-comments-loader {
   background:#FFFFFF url(images/ajax-loader.gif) no-repeat scroll 50% 50%;
   position:absolute;
   left:0;

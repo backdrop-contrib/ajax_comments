@@ -85,7 +85,6 @@ function ajax_comments_menu() {
  * AHAH callback
  */
 function ajax_comments_js() {
-  include_once 'modules/node/node.pages.inc';
   $form_state = array('storage' => NULL, 'submitted' => FALSE);
   $form_build_id = $_POST['form_build_id'];
   $form = form_get_cache($form_build_id, $form_state);
@@ -94,8 +93,12 @@ function ajax_comments_js() {
   $form_id = array_shift($args);
   $form_state['post'] = $form['#post'] = $_POST;
   $form['#programmed'] = $form['#redirect'] = FALSE;
-
-  $form['#after_build'] = array('comment_form_add_preview');
+  
+  if ($form_state['post']['op'] == t('Preview')) {
+    $form['#after_build'] = array('comment_form_add_preview');
+  } else {
+    unset($form['#after_build']);
+  }
   drupal_process_form($form_id, $form, $form_state);
   
   $errors = form_get_errors();

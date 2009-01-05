@@ -1,6 +1,7 @@
 var commentbox = ".comment";
 var ctrl = false;
 var last_submit;
+var speed = 'fast';
 /**
  * Attaches the ahah behavior to each ahah form element.
  */
@@ -67,6 +68,11 @@ Drupal.behaviors.ajax_comments = function(context) {
     
     // Attaching event to title link
     $('#comment-form-title:not(.ajax-comments-processed)', context).addClass('ajax-comments-processed').click(reply_click);
+    //moving preview in a proper place
+    $('#comment-form-content').parents('.box').before($('#comment-preview'));
+    if (!$('#comment-form-content').attr('cid')) {
+      $('#comment-form-content').attr('cid', 0)
+    }
     
     if(typeof(fix_control_size)!='undefined'){ fix_control_size(); };
   });
@@ -110,16 +116,20 @@ function reply_click() {
       href = $(this).attr('href');
       if (ajax_comments_is_reply_to_node(href)) {
         $('#comment-form-content').removeClass('indented');
-        $('#comment-form-content').after('<div style="height:' + $('#comment-form-content').height() + 'px;" class="sizer"></div>');
-        $('.sizer').slideUp('fast', function(){$(this).remove();});
+        if ($('#comment-form-content:visible').length) {
+          $('#comment-form-content').after('<div style="height:' + $('#comment-form-content').height() + 'px;" class="sizer"></div>');
+          $('.sizer').slideUp(speed, function(){$(this).remove();});
+        }
         $(this).parents('h2,h3,h4').after($('#comment-form-content'));
         rows = Drupal.settings.rows_default;
         $('#comment-form-content').parents('.box').before($('#comment-preview'));
       }
       else {
         $('#comment-form-content').addClass('indented');
-        $('#comment-form-content').after('<div style="height:' + $('#comment-form-content').height() + 'px;" class="sizer"></div>');
-        $('.sizer').slideUp('fast', function(){$(this).remove();});
+        if ($('#comment-form-content:visible').length) {
+          $('#comment-form-content').after('<div style="height:' + $('#comment-form-content').height() + 'px;" class="sizer"></div>');
+          $('.sizer').slideUp(speed, function(){$(this).remove();});
+        }
         $(this).parents(commentbox).after($('#comment-form-content'));
         rows = Drupal.settings.rows_in_reply;
         $('#comment-form-content').prepend($('#comment-preview'));
@@ -161,7 +171,7 @@ function initForm(action, rows){
   $('#comment-form textarea').attr('value','');
 
   // clearing form
-  $('#comment-form-content #comment-preview').empty();
+  $('#comment-preview').empty();
   $('#comment-form .error').removeClass('error');
 
   // * getting proper form tokens
@@ -258,6 +268,7 @@ function delete_click() {
     cid = ajax_comments_get_cid_from_href(action);
     
     if (cid) {
+      $(this).parents(commentbox).fadeTo(speed, 0.5);
       $.ajax({
         type: "GET",
         url: Drupal.settings.basePath + "ajax_comments/instant_delete/" + cid,
@@ -269,12 +280,12 @@ function delete_click() {
           } else {
             thread = comment.next('.indented');
           }
-          thread.animate({height:'hide', opacity:'hide'});
-          comment.animate({height:'hide', opacity:'hide'}, 'fast', function(){
+          thread.animate({height:'hide', opacity:'hide'}, speed);
+          comment.animate({height:'hide', opacity:'hide'}, speed, function(){
             thread.remove();
             comment.remove();
             if (!$(commentbox).length) {
-              $('#comment-controls').animate({height:'hide', opacity:'hide'}, 'fast', function(){ $(this).remove(); });
+              $('#comment-controls').animate({height:'hide', opacity:'hide'}, speed, function(){ $(this).remove(); });
             }
           });
         }
@@ -300,12 +311,12 @@ $('#comments .pager a').bind('click', function(){
 // Misc. functions
 // ====================================
 
-function ajax_comments_expand_form() {
-  $('#comment-form-content').animate({height:'show'}, 'fast', function() {  $('#comment-form textarea').focus(); });
+function ajax_comments_expand_form(focus) {
+  $('#comment-form-content').animate({height:'show'}, speed, function() { if (focus) { $('#comment-form textarea').focus(); } });
 }
 
 function ajax_comments_close_form() {
-  $('#comment-form-content').animate({height:'hide', opacity:'hide'});
+  $('#comment-form-content').animate({height:'hide', opacity:'hide'}, speed);
   $('.pressed').removeClass('pressed');
   ajax_comments_hide_progress();
 }
@@ -317,9 +328,10 @@ jQuery.fn.ajaxCommentsPreviewToggle = function(speed) {
   $('#comment-form', obj).remove();
   
   // hiding previous previews
-  $('#comment-preview > div:visible').animate({height:'hide', opacity:'hide'}, 'fast', function() { $(this).remove(); } );
+  $('#comment-preview > div:visible').animate({height:'hide', opacity:'hide'}, speed, function() { $(this).remove(); } );
   // showing fresh preview
-  obj.animate({height:'show', opacity:'show'}, 'fast');
+  $('#comment-preview').show();
+  obj.animate({height:'show', opacity:'show'}, speed);
   ajax_comments_hide_progress();
 };
 
@@ -334,14 +346,14 @@ jQuery.fn.ajaxCommentsSubmitToggle = function(speed) {
   html = obj.html();
   if (html.indexOf('comment-new-success') != -1) {
     // empty any preview before output comment
-    $('#comment-form-content #comment-preview').empty();
+    $('#comment-preview').slideUp(speed, function(){ $(this).empty(); });
     
     // move comment out of comment form box if posting to main thread
     if ($('#comment-form-content').attr('cid') == 0){
-      $('#comment-form-content').parents('.box').before(obj);
+      $('#comment-preview').before(obj);
     }
     // at last - showing it up
-    obj.animate({height:'show', opacity:'show'}, 'fast');
+    obj.animate({height:'show', opacity:'show'}, speed);
 
     // re-attaching to new comment
     Drupal.attachBehaviors(html);
@@ -468,6 +480,6 @@ function ajax_comments_hide_progress(context) {
   if (!context) {
     context = '#comment-form-content';
   }
-  $('#comment-form .ajax-comments-loader', context).fadeOut('fast', function(){ $(this).remove(); });
+  $('#comment-form .ajax-comments-loader', context).fadeOut(speed, function(){ $(this).remove(); });
 }
 
