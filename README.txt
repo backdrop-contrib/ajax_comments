@@ -21,14 +21,7 @@ http://drupal.org/project/queue_mail to prevent server errors during comment sub
 
 TIPS & TRICKS
 
-1. To change loader progress bar look and feel, just override ".progress .bar" classes in your
-theme, for example:
-
-.progress .bar{
-  background:transparent url(../images/my-ajax-loader.gif) no-repeat 0 50%;
-}
-
-2. If you need to remove a lot of comments and you're bored with confirmation dialog, just
+1. If you need to remove a lot of comments and you're bored with confirmation dialog, just
 hold one ctrl key and press needed "Delete" links. It will force removal.
 
 
