@@ -5,7 +5,7 @@
  * Implementation of hook_form_alter()
  */
 function ajax_comments_form_alter(&$form, $form_state, $form_id) {
-  if (($form_id == 'comment_form') && (arg(1) != 'edit')) {
+  if (($form_id == 'comment_form') && (arg(1) != 'edit') && (arg(1) != 'reply') && (arg(2) != 'edit') && (arg(2) != 'reply')) {
     $form['#prefix'] = '<div id="comment-preview"></div>';
     
     // we should set specific ID to let ahah wrapper know what to wrap on ajax
@@ -141,6 +141,7 @@ function ajax_comments_submit($form, &$form_state) {
   if ($cid = comment_save($edit)) {
     $errors = form_get_errors();
     if (!$errors) {
+      _comment_update_node_statistics($cid);
       $node = node_load($edit['nid']);
 
       $query = 'SELECT c.cid, c.pid, c.nid, c.subject, c.comment, c.format, c.timestamp, c.name, c.mail, c.homepage, u.uid, u.name AS registered_name, u.signature, u.picture, u.data, c.status FROM {comments} c INNER JOIN {users} u ON c.uid = u.uid WHERE c.cid = %d';

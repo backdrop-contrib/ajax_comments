@@ -99,7 +99,7 @@ function reply_click() {
   // We should only handle non presed links
   if (!$(this).is('.pressed')){
     action = $(this).attr('href');
-    link_cid = ajax_comments_get_cid(action);
+    link_cid = ajax_comments_get_cid_from_href(action);
     rows = Drupal.settings.rows_default;
     if ($('#comment-form-content').attr('cid') != link_cid) {
       // We should remove any WYSIWYG before moving controls
@@ -175,12 +175,9 @@ function initForm(action, rows){
   query = '';
   if (fragments[1]) { fragment = '#' + fragments[1]; }
   if (queries[1]) { query = '?' + queries[1]; }
-
-  // getting token params (/comment/reply/x/p)
-  var arg = queries[0].split('/');
-  if (!arg[4]) {
-    arg[4] = '0';
-  }
+  
+  cid = ajax_comments_get_cid_from_href(action);
+  nid = ajax_comments_get_nid_from_href(action);
 
   needs_reload = (action.indexOf('ajaxreload=1') != -1);
   needs_reload = needs_reload || (action.indexOf('quote=') != -1);
@@ -198,7 +195,7 @@ function initForm(action, rows){
   var token = 0;
   $.ajax({
     type: "GET",
-    url: Drupal.settings.basePath + "ajax_comments/get_form_token/" + arg[3] + '/' + arg[4] + query + fragment,
+    url: Drupal.settings.basePath + "ajax_comments/get_form_token/" + nid + '/' + cid + query + fragment,
     success: function(form){
       // Going further
       initForm_setTokens(form, rows, needs_reload);
@@ -258,7 +255,7 @@ function delete_click() {
     // taking link's href as AJAX url
     action = $(this).attr('href');
     comment = $(this).parents(commentbox);
-    cid = ajax_comments_get_cid(action);
+    cid = ajax_comments_get_cid_from_href(action);
     
     if (cid) {
       $.ajax({
@@ -404,23 +401,49 @@ function ajax_comments_update_editors() {
   }
 }
 
-function ajax_comments_get_cid(action) {
+function ajax_comments_get_cid_from_href(action) {
   a1 = action.replace('http:// ','');
   var a2 = a1.split('#');
   var a3 = a2[0].split('?');
   var arg = a3[0].split('/');
+  
+  if (arg[1] == 'comment') {
+    lang = 0;
+  } else if (arg[2] == 'comment') {
+    lang = 1;
+  }
+
+
   // getting token params (/comment/delete/!cid!)
-  if (arg[2] == 'delete') {
-    cid = arg[3];
+  if (arg[2 + lang] == 'delete') {
+    cid = arg[3 + lang];
   }
   // getting token params (/comment/reply/nid/!cid!)
   else {
-    if (!arg[4]) {
-      arg[4] = 0;
+    if (!arg[4 + lang]) {
+      arg[4 + lang] = 0;
     }
-    cid = arg[4];
+    cid = arg[4 + lang];
   }
   return cid;
+}
+
+function ajax_comments_get_nid_from_href(action) {
+  a1 = action.replace('http:// ','');
+  var a2 = a1.split('#');
+  var a3 = a2[0].split('?');
+  var arg = a3[0].split('/');
+  
+  if (arg[1] == 'comment') {
+    lang = 0;
+  } else if (arg[2] == 'comment') {
+    lang = 1;
+  }
+  if (!arg[3 + lang]) {
+    arg[3 + lang] = 0;
+  }
+  nid = arg[3 + lang];
+  return nid;
 }
 
 function ajax_comments_is_reply_to_node(href) {
