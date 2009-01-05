@@ -144,7 +144,7 @@ function ajax_comments_submit($form, &$form_state) {
   if ($cid = comment_save($edit)) {
     $errors = form_get_errors();
     if (!$errors) {
-      _comment_update_node_statistics($cid);
+      _comment_update_node_statistics($edit['nid']);
       $node = node_load($edit['nid']);
 
       $query = 'SELECT c.cid, c.pid, c.nid, c.subject, c.comment, c.format, c.timestamp, c.name, c.mail, c.homepage, u.uid, u.name AS registered_name, u.signature, u.picture, u.data, c.status FROM {comments} c INNER JOIN {users} u ON c.uid = u.uid WHERE c.cid = %d';
