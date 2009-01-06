@@ -239,4 +239,7 @@ function ajax_comments_preprocess_comment(&$variables) {
     $variables['new'] = t('preview');
     $variables['comment']->new = TRUE;
   }
+  else {
+    $variables['title'] = l($comment->subject, 'node/'.$comment->nid, array('attributes' => array('class' => 'active'), 'fragment' => "comment-$comment->cid"));
+  }
 }
