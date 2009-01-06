@@ -322,7 +322,7 @@ function ajax_comments_close_form() {
 }
 
 // AHAH effect for comment previews
-jQuery.fn.ajaxCommentsPreviewToggle = function(speed) {
+jQuery.fn.ajaxCommentsPreviewToggle = function() {
   var obj = $(this[0]);
   initForm_setTokens($('#comment-form', obj));
   $('#comment-form', obj).remove();
@@ -337,7 +337,7 @@ jQuery.fn.ajaxCommentsPreviewToggle = function(speed) {
 
 
 // AHAH effect for comment submits
-jQuery.fn.ajaxCommentsSubmitToggle = function(speed) {
+jQuery.fn.ajaxCommentsSubmitToggle = function() {
   var obj = $(this[0]);
 
   initForm_setTokens($('#comment-form', obj));
