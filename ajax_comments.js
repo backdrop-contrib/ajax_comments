@@ -72,10 +72,10 @@ Drupal.behaviors.ajax_comments = function(context) {
     //moving preview in a proper place
     $('#comment-form-content').parents('.box').before($('#comment-preview'));
     if (!$('#comment-form-content').attr('cid')) {
-      $('#comment-form-content').attr('cid', 0)
+      $('#comment-form-content').attr('cid', 0);
     }
     
-    if(typeof(fix_control_size)!='undefined'){ fix_control_size(); };
+    if(typeof(fix_control_size)!='undefined'){ fix_control_size(); }
   });
   
   $('.comment_reply a:not(.ajax-comments-processed)', context).addClass('ajax-comments-processed').click(reply_click);
@@ -161,7 +161,7 @@ function reply_click() {
     }
   }
 
-  if (typeof(fix_control_size) != 'undefined'){ fix_control_size(); };
+  if (typeof(fix_control_size) != 'undefined'){ fix_control_size(); }
   return false;
 }
 
