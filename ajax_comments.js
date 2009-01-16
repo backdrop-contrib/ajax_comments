@@ -350,7 +350,7 @@ jQuery.fn.ajaxCommentsSubmitToggle = function() {
     $('#comment-preview').slideUp(speed, function(){ $(this).empty(); });
     
     // move comment out of comment form box if posting to main thread
-    if ($('#comment-form-content').attr('cid') == 0){
+    if ($('#comment-form-content').attr('cid') === '0'){
       $('#comment-preview').before(obj);
     }
     // at last - showing it up
@@ -461,8 +461,8 @@ function ajax_comments_get_nid_from_href(action) {
 
 function ajax_comments_is_reply_to_node(href) {
   href = href.replace('http:// ','');
-  var href = href.split('#');
-  var href = href[0].split('?');
+  href = href.split('#');
+  href = href[0].split('?');
   arg = href[0].split('/');
 
   result = arg[2] == 'reply' && arg[3] && !arg[4];
