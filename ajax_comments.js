@@ -65,6 +65,7 @@ Drupal.behaviors.ajax_comments = function(context) {
     else {
       $('#comment-form-title', context).addClass('pressed');
     }
+    $('#comment-form-content').attr('cid', 0);
     
     // Attaching event to title link
     $('#comment-form-title:not(.ajax-comments-processed)', context).addClass('ajax-comments-processed').click(reply_click);
