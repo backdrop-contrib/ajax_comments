@@ -264,31 +264,36 @@ function initForm_setTokens(form, rows, needs_reload){
 function delete_click() {
   if ((ctrl) || (confirm(Drupal.t('Are you sure you want to delete the comment? Any replies to this comment will be lost. This action cannot be undone.')))) {
     // taking link's href as AJAX url
-    action = $(this).attr('href');
     comment = $(this).parents(commentbox);
-    cid = ajax_comments_get_cid_from_href(action);
+    action = $(this).attr('href');
+    action = action.replace(/comment\/delete\//, 'ajax_comments/instant_delete/');
     
-    if (cid) {
+    if (action) {
       $(this).parents(commentbox).fadeTo(speed, 0.5);
       $.ajax({
         type: "GET",
-        url: Drupal.settings.basePath + "ajax_comments/instant_delete/" + cid,
-        success: function(form){
-          // if comment form is expanded on this module, we should collapse it first
-          if (comment.next().is('#comment-form-content')) {
-            thread = comment.next().next('.indented');
-            ajax_comments_close_form();
-          } else {
-            thread = comment.next('.indented');
-          }
-          thread.animate({height:'hide', opacity:'hide'}, speed);
-          comment.animate({height:'hide', opacity:'hide'}, speed, function(){
-            thread.remove();
-            comment.remove();
-            if (!$(commentbox).length) {
-              $('#comment-controls').animate({height:'hide', opacity:'hide'}, speed, function(){ $(this).remove(); });
+        url: action,
+        success: function(result){
+          if (result == 'OK') {
+            // if comment form is expanded on this module, we should collapse it first
+            if (comment.next().is('#comment-form-content')) {
+              thread = comment.next().next('.indented');
+              ajax_comments_close_form();
+            } else {
+              thread = comment.next('.indented');
             }
-          });
+            thread.animate({height:'hide', opacity:'hide'}, speed);
+            comment.animate({height:'hide', opacity:'hide'}, speed, function(){
+              thread.remove();
+              comment.remove();
+              if (!$(commentbox).length) {
+                $('#comment-controls').animate({height:'hide', opacity:'hide'}, speed, function(){ $(this).remove(); });
+              }
+            });
+          }
+          else {
+            alert('Sorry, token error.');
+          }
         }
       });
     }

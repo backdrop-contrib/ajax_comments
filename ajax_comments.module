@@ -54,26 +54,22 @@ function ajax_comments_menu() {
     'description' => 'AJAXifies comments on site.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('admin_ajax_comments'),
-    'access callback' => 'user_access',
     'access arguments' => array('administer site configuration'),
    );
   $items['ajax_comments/get_form_token/%/%'] = array(
     'page callback' => 'get_form_token',
     'page arguments' => array(2,3),
-    'access callback' => 'user_access',
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
   );
   $items['ajax_comments/instant_delete/%'] = array(
     'page callback' => 'instant_delete',
     'page arguments' => array(2),
-    'access callback' => 'user_access',
     'access arguments' => array('administer comments'),
     'type' => MENU_CALLBACK,
   );
   $items['ajax_comments/js'] = array(
     'page callback' => 'ajax_comments_js',
-    'access callback' => 'user_access',
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
    );
@@ -213,20 +209,24 @@ function get_form_token($nid, $pid = NULL){
   exit();
 }
 
-/*
+
+/**
  * Comments delete callback
  */
 function instant_delete($cid = 0){
-  drupal_set_header('Content-type: text/javascript; charset=utf-8');
-  module_load_include('inc', 'comment', 'comment.admin');
-  $comment = _comment_load($cid);
-  // Delete comment and its replies.
-  _comment_delete_thread($comment);
-  _comment_update_node_statistics($comment->nid);
-  // Clear the cache so an anonymous user sees that his comment was deleted.
-  cache_clear_all();
-  
-  print('OK');
+  // Check token to avoid CSRF attack.
+  if ($cid && isset($_GET['token']) && drupal_valid_token($_GET['token'], $cid)) {
+    drupal_set_header('Content-type: text/javascript; charset=utf-8');
+    module_load_include('inc', 'comment', 'comment.admin');
+    $comment = _comment_load($cid);
+    // Delete comment and its replies.
+    _comment_delete_thread($comment);
+    _comment_update_node_statistics($comment->nid);
+    // Clear the cache so an anonymous user sees that his comment was deleted.
+    cache_clear_all();
+    
+    print('OK');
+  }
   exit();
 }
 
@@ -234,6 +234,15 @@ function instant_delete($cid = 0){
  * Process variables for comment.tpl.php.
  */
 function ajax_comments_preprocess_comment(&$variables) {
+  if ($variables['links'] && user_access('administer comments')) {
+    $links = module_invoke_all('link', 'comment', $variables['comment'], 0);
+    $links['comment_delete'] = array(
+      'title' => t('delete'),
+      'href' => 'comment/delete/'. $variables['comment']->cid,
+      'query' => 'token='. drupal_get_token($variables['comment']->cid),
+    );
+    $variables['links'] = isset($links) ? theme('links', $links) : '';
+  }
   $comment = $variables['comment'];
   if (!$comment->cid) {
     $variables['new'] = t('preview');
