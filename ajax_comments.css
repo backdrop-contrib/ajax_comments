@@ -1,5 +1,6 @@
 #comment-form-content, form {
   position:relative;
+  zoom:1;
 }
 
 #comment-form #ajax-comments-preview.progress-disabled, #comment-form #ajax-comments-submit.progress-disabled {

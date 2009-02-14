@@ -231,19 +231,35 @@ function instant_delete($cid = 0){
 }
 
 /**
+ * Implementation of hook_link_alter().
+ */
+function ajax_comments_link_alter(&$links, $comment) {
+  if (isset($links['comment_delete'])) {
+    $links['comment_delete'] = array(
+      'title' => t('delete'),
+      'href' => 'comment/delete/'. $comment->cid,
+      'query' => 'token='. drupal_get_token($comment->cid),
+    );
+  }
+}
+
+/**
  * Process variables for comment.tpl.php.
  */
 function ajax_comments_preprocess_comment(&$variables) {
+  $comment = $variables['comment'];
+
+  // Insert proper delete links (fix until hook_link_alter will not work propertly)
   if ($variables['links'] && user_access('administer comments')) {
-    $links = module_invoke_all('link', 'comment', $variables['comment'], 0);
+    $links = module_invoke_all('link', 'comment', $comment, 0);
     $links['comment_delete'] = array(
       'title' => t('delete'),
-      'href' => 'comment/delete/'. $variables['comment']->cid,
-      'query' => 'token='. drupal_get_token($variables['comment']->cid),
+      'href' => 'comment/delete/'. $comment->cid,
+      'query' => 'token='. drupal_get_token($comment->cid),
     );
     $variables['links'] = isset($links) ? theme('links', $links) : '';
   }
-  $comment = $variables['comment'];
+
   if (!$comment->cid) {
     $variables['new'] = t('preview');
     $variables['comment']->new = TRUE;
