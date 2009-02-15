@@ -381,7 +381,7 @@ jQuery.fn.ajaxCommentsSubmitToggle = function() {
       height = height / 2;
       offset = obj.offset();
       if ((offset.top > $('html').scrollTop() + height) || (offset.top < $('html').scrollTop() - 20)) {
-        $('html, body').animate({scrollTop: offset.top - height}, 'slow', function(){
+        $('html').animate({scrollTop: offset.top - height}, 'slow', function(){
           /// Blink a little bit to user, so he know where's his comment
           obj.fadeTo('fast', 0.6, function(){ $(this).fadeTo('fast', 1, function(){ $(this).fadeTo('fast', 0.6, function(){ $(this).fadeTo('fast', 1, function() { if ($.browser.msie) this.style.removeAttribute('filter'); })}); }); });
         });
