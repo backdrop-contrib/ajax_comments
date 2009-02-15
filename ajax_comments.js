@@ -49,7 +49,7 @@ Drupal.behaviors.ajax_comments = function(context) {
     $(this).parents(".box").find("h2:not(.ajax-comments-processed),h3:not(.ajax-comments-processed),h4:not(.ajax-comments-processed)").addClass('ajax-comments-processed').each(function(){
       title = $(this).html();
       $(this).html('<a href="'+action+'" id="comment-form-title">'+title+'</a>');
-      $(this).parents(".box").find(".content").attr('id','comment-form-content');
+      $(this).parents(".box").find(".content").attr('id','comment-form-content').removeClass("content");
     });
 
     // Expanding form if needed
@@ -65,6 +65,7 @@ Drupal.behaviors.ajax_comments = function(context) {
     }
     else {
       $('#comment-form-title', context).addClass('pressed');
+      $('#comment-form-content').attr('cid', 0);
     }
     
     // Attaching event to title link
@@ -120,7 +121,7 @@ function reply_click() {
       
       // move form from old position
       if (ajax_comments_is_reply_to_node(action)) {
-        $('#comment-form-content').removeClass('indented');
+        $('#comment-form').removeClass('indented');
         if ($('#comment-form-content:visible').length) {
           $('#comment-form-content').after('<div style="height:' + $('#comment-form-content').height() + 'px;" class="sizer"></div>');
           $('.sizer').slideUp(speed, function(){ $(this).remove(); });
@@ -130,7 +131,7 @@ function reply_click() {
         $('#comment-form-content').parents('.box').before($('#comment-preview'));
       }
       else {
-       $('#comment-form-content').addClass('indented');
+       $('#comment-form').addClass('indented');
         if ($('#comment-form-content:visible').length) {
           $('#comment-form-content').after('<div style="height:' + $('#comment-form-content').height() + 'px;" class="sizer"></div>');
           $('.sizer').slideUp(speed, function(){ $(this).remove(); });
