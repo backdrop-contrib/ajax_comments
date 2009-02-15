@@ -283,9 +283,9 @@ function delete_click() {
 
             // if comment form is expanded on this module, we should collapse it first
             if (comment.next().is('#comment-form-content')) {
-              thread = comment.next().next('.indented');
+              thread = comment.next().next('.indented, div > .indented');
             } else {
-              thread = comment.next('.indented');
+              thread = comment.next('.indented, div > .indented');
             }
             thread.animate({height:'hide', opacity:'hide'}, speed);
             comment.animate({height:'hide', opacity:'hide'}, speed, function(){
@@ -364,15 +364,28 @@ jQuery.fn.ajaxCommentsSubmitToggle = function() {
 
   html = obj.html();
   if (html.indexOf('comment-new-success') > -1) {
+    
     // empty any preview before output comment
     $('#comment-preview').slideUp(speed, function(){ $(this).empty(); });
     
-    // move comment out of comment form box if posting to main thread
-    if ($('#comment-form-content').attr('cid') == 0){
-      $('#comment-preview').before(obj);
-    }
+    // place new comment in proper place
+    insert_new_comment(obj);
+    
     // at last - showing it up
     obj.animate({height:'show', opacity:'show'}, speed, function () {
+      if ($.browser.msie) {
+        height = document.documentElement.offsetHeight ;
+      } else if (window.innerWidth && window.innerHeight) {
+        height = window.innerHeight;
+      }
+      height = height / 2;
+      offset = obj.offset();
+      if ((offset.top > $('html').scrollTop() + height) || (offset.top < $('html').scrollTop() - 20)) {
+        $('html, body').animate({scrollTop: offset.top - height}, 'slow', function(){
+          /// Blink a little bit to user, so he know where's his comment
+          obj.fadeTo('fast', 0.6, function(){ $(this).fadeTo('fast', 1, function(){ $(this).fadeTo('fast', 0.6, function(){ $(this).fadeTo('fast', 1, function() { if ($.browser.msie) this.style.removeAttribute('filter'); })}); }); });
+        });
+      }
       if ($.browser.msie) this.style.removeAttribute('filter');
     });
 
@@ -501,5 +514,20 @@ function ajax_comments_hide_progress(context) {
     context = '#comment-form-content';
   }
   $('#comment-form .ajax-comments-loader', context).fadeOut(speed, function(){ $(this).remove(); });
+}
+
+function insert_new_comment(comment) {
+  if ($('#comment-form-content').attr('cid') == 0) {
+    $('#comment-preview').before(comment);
+  }
+  else {
+    if ($('#comment-form-content').next().is('.indented')) {
+      $('#comment-form-content').next().append(comment);
+    }
+    else {
+      $('#comment-form-content').before(comment);
+      comment.wrap('<div class="indented"></div>');
+    }
+  }
 }
 

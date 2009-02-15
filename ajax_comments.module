@@ -102,14 +102,14 @@ function ajax_comments_js() {
   if (!$errors) {
     if ($form_state['values']['op'] == t('Preview')) {
       $output = '<div class="preview-item">'.$form['comment_preview']['#value'].'</div>';
+      if ($output && $form_state['values']['pid']) {
+        $output = '<div class="indented">'. $output .'<div>';
+      }
     }
     elseif ($form_state['values']['op'] == t('Save')) {
       $output = '<div class="comment-new-success">'.$form_state['ajax_comment'].'</div>';
     }
     
-    if ($output && $form_state['values']['pid']) {
-      $output = '<div class="indented">'. $output .'<div>';
-    }
     $form = drupal_rebuild_form($form_id, $form_state, $args, $form_build_id);
   }
   unset($form['#suffix']);
