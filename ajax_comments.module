@@ -234,7 +234,7 @@ function instant_delete($cid = 0){
 }
 
 /**
- * Implementation of hook_link_alter().
+ * Implementation of ().
  */
 function ajax_comments_link_alter(&$links, $comment) {
   if (isset($links['comment_delete'])) {
