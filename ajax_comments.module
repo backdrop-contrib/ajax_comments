@@ -35,9 +35,17 @@ function ajax_comments_form_alter(&$form, $form_state, $form_id) {
     drupal_add_css($path .'/jquery.scrollTo.js');
     drupal_add_css($path .'/ajax_comments.css');
     
+    // Language settings
+    $mode = variable_get('language_negotiation', LANGUAGE_NEGOTIATION_NONE);
+    $languages = language_list('enabled');
+    $languages = $languages[1];
+
     drupal_add_js('misc/jquery.form.js');
     drupal_add_js($path .'/ajax_comments.js', 'module');
     drupal_add_js(array(
+      'language_mode' => $mode,
+      'language_list' => $languages,
+      'clean_url' => variable_get('clean_url', 0),
       'rows_in_reply' => variable_get('ajax_comments_reply_row_count', 3),
       'rows_default' => variable_get('ajax_comments_default_row_count', 5),
       'always_expand_main_form' => variable_get('ajax_comments_always_expand_form', TRUE),
@@ -110,14 +118,15 @@ function ajax_comments_js() {
       $output = '<div class="comment-new-success">'.$form_state['ajax_comment'].'</div>';
     }
     
-    $form = drupal_rebuild_form($form_id, $form_state, $args, $form_build_id);
+    $form = form_builder($form_id, $form, $form_state);
   }
   unset($form['#suffix']);
   unset($form['#prefix']);
-  $output = theme('status_messages') . $output . drupal_render($form);
+  $output = theme('status_messages') . $output;
 
   drupal_json(array('status' => TRUE, 'data' => $output));
 }
+
 
 /*
  * Comment submit routine
@@ -234,7 +243,7 @@ function instant_delete($cid = 0){
 }
 
 /**
- * Implementation of ().
+ * Implementation of hook_link_alter().
  */
 function ajax_comments_link_alter(&$links, $comment) {
   if (isset($links['comment_delete'])) {

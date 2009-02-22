@@ -40,7 +40,7 @@
   filter: alpha(opacity=80);
 }
 
-a.pressed {
+.ajax-comments-processed a.pressed {
   text-decoration:none;
   border-bottom:1px dotted;
   outline:0;
