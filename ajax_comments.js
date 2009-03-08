@@ -411,6 +411,14 @@ jQuery.fn.ajaxCommentsSubmitToggle = function() {
 // remove editors from comments textarea (mostly to re-attach it)
 function ajax_comments_remove_editors() {
   ajax_comments_update_editors();
+  if (typeof(Drupal.wysiwyg) != undefined) {
+    $('#comment-form input.wysiwyg-processed:checked').each(function() {
+      var params = Drupal.wysiwyg.getParams(this);
+      Drupal.wysiwygDetach($(this), params);
+    });
+    return;
+  }
+  
   if (typeof(tinyMCE) != 'undefined') {
     if (tinyMCE.getInstanceById("edit-comment")) {
       tinyMCE.execCommand('mceRemoveControl', false, "edit-comment");
@@ -420,6 +428,14 @@ function ajax_comments_remove_editors() {
 
 // attach editors to comments textarea if needed
 function ajax_comments_attach_editors() {
+  if (typeof(Drupal.wysiwyg) != undefined) {
+    $('#comment-form input.wysiwyg-processed:checked').each(function() {
+      var params = Drupal.wysiwyg.getParams(this);
+      Drupal.wysiwygAttach($(this), params);
+    });
+    return;
+  }
+
   if (typeof(tinyMCE) != 'undefined') {
     // ugly hack to get invisible element's width
     /*height = $('#comment-form-content').css('height');
