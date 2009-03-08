@@ -2,17 +2,19 @@ var commentbox = ".comment";
 var ctrl = false;
 var last_submit;
 var speed = 'fast';
+var ahah = false;
 
 /**
  * Attaches the ahah behavior to each ahah form element.
  */
 Drupal.behaviors.ajax_comments = function(context) {
   $('#comment-form:not(.ajax-comments-processed)', context).addClass('ajax-comments-processed').each(function() {
+    form = $(this);
     // prepare the form when the DOM is ready
     if ((Drupal.settings.rows_default == undefined) || (!Drupal.settings.rows_default)) {
-      Drupal.settings.rows_default = $('textarea', $(this)).attr('rows');
+      Drupal.settings.rows_default = $('textarea', form).attr('rows');
     }
-    $('textarea', $(this)).attr('rows', Drupal.settings.rows_default);
+    $('textarea', form).attr('rows', Drupal.settings.rows_default);
     if ((Drupal.settings.rows_in_reply == undefined) || (!Drupal.settings.rows_in_reply)) {
       Drupal.settings.rows_in_reply = Drupal.settings.rows_default;
     }
@@ -20,33 +22,39 @@ Drupal.behaviors.ajax_comments = function(context) {
       Drupal.settings.always_expand_main_form = true;
     }
     
+    $('#edit-upload', form).bind('change', function(){
+      $('#ajax-comments-submit,#ajax-comments-preview', form).attr('disabled', 1);
+    });
+    
     // It's not possible to use 'click' or 'submit' events for ahah sumits, so
     // we should emulate it by up-down events. We need to check which elements
     // are actually clicked pressed, to make everything work correct.
-    $('#ajax-comments-submit,#ajax-comments-preview', $(this)).bind('mousedown', function(){
-      last_submit = $(this).attr('id');
-    });
-    $('#ajax-comments-submit,#ajax-comments-preview', $(this)).bind('keydown', function(event){
-      last_submit = $(this).attr('id');
-    });
-    $('#ajax-comments-submit,#ajax-comments-preview', $(this)).bind('mouseup', function(){
+    $('#ajax-comments-submit,#ajax-comments-preview', form).bind('mousedown keydown', function() { last_submit = $(this).attr('id'); });
+    $('#ajax-comments-submit,#ajax-comments-preview', form).bind('mouseup', function() {
       if (last_submit == $(this).attr('id')) {
         ajax_comments_show_progress(context);
         ajax_comments_update_editors();
       }
     });
-    $('#ajax-comments-submit,#ajax-comments-preview', $(this)).bind('keyup', function(event){
+    $('#ajax-comments-submit,#ajax-comments-preview', form).bind('keyup', function(event) {
       if (last_submit == $(this).attr('id') && event.keyCode == 13) {
         ajax_comments_show_progress(context);
         ajax_comments_update_editors();
       }
     });
     
+    // enable comments buttons back when attachement is uploaded
+    $('#edit-attach', form).bind('mousedown keydown', function() {
+      if (last_submit == $(this).attr('id')) {
+        $('#ajax-comments-submit,#ajax-comments-preview', form).removeAttr('disabled');
+      }
+    });
+
     // initializing main form
-    action = $(this).attr('action');
+    action = form.attr('action');
 
     // Creating title link
-    $(this).parents(".box").find("h2:not(.ajax-comments-processed),h3:not(.ajax-comments-processed),h4:not(.ajax-comments-processed)").addClass('ajax-comments-processed').each(function(){
+    form.parents(".box").find("h2:not(.ajax-comments-processed),h3:not(.ajax-comments-processed),h4:not(.ajax-comments-processed)").addClass('ajax-comments-processed').each(function(){
       title = $(this).html();
       $(this).html('<a href="'+action+'" id="comment-form-title">'+title+'</a>');
       $(this).parents(".box").find(".content").attr('id','comment-form-content').removeClass("content");
@@ -107,6 +115,8 @@ Drupal.behaviors.ajax_comments = function(context) {
     ctrl = false;
   });
 };
+
+
 
 // Reply link handler
 function reply_click() {
@@ -201,11 +211,11 @@ function initForm(action, needs_reload, rows){
   }
   
   // disabling buttons while loading tokens
-  $('#comment-form .form-submit').addClass('ajax-comments-disabled').attr('disabled','true');
+  $('#comment-form .form-submit').addClass('ajax-comments-disabled').attr('disabled', 1);
   // if will be realoaded, we should disable everything
   if (needs_reload) {
     ajax_comments_show_progress();
-    $('#comment-form input, #comment-form textarea').addClass('ajax-comments-disabled').attr('disabled', 'true');
+    $('#comment-form input, #comment-form textarea').addClass('ajax-comments-disabled').attr('disabled', 1);
   }
 
   // sending ajax call to get the token
@@ -225,49 +235,60 @@ function initForm(action, needs_reload, rows){
 }
 
 // Second helper function for Reply handler
-function initForm_setTokens(form, needs_reload, rows){
-  action = form.attr('action');
-  token = $("#edit-form-token", form).val();
-  bid = $("input[name=form_build_id]", form).val();
-  captcha = $(".captcha", form).html();
+function initForm_setTokens(varform, needs_reload, rows){
+  action = varform.attr('action');
+  token = $("#edit-form-token", varform).val();
+  bid = $("input[name=form_build_id]", varform).val();
+  captcha = $(".captcha", varform).html();
+
+  form = $('#comment-form-content > #comment-form');
 
   // Refresh form tokens
   if (token) {
-    $('#comment-form-content > #comment-form #edit-form-token').attr('value',token);
+    $('#edit-form-token', form).attr('value',token);
   }
   // ...and build ids
   if (bid) {
-    $('#comment-form-content > #comment-form input[name=form_build_id]').val(bid);
-    $('#comment-form-content > #comment-form input[name=form_build_id]').attr('id', bid);
+    $('input[name=form_build_id]', form).val(bid);
+    $('input[name=form_build_id]', form).attr('id', bid);
   }
   // ...and captcha
   if (captcha) {
-    $('#comment-form-content > #comment-form .captcha').html(captcha);
-    Drupal.attachBehaviors($('#comment-form-content > #comment-form .captcha'));
+    $('.captcha', form).html(captcha);
+    Drupal.attachBehaviors($('.captcha', form));
   }
   // ...and action
   if (action) {
-    $('#comment-form-content > #comment-form').attr('action', action);
+    form.attr('action', action);
   }
-  
+
   if (needs_reload) {
     // ensure that editors were removed
     ajax_comments_remove_editors();
     
     ajax_comments_hide_progress();
-    $('#comment-form-content > #comment-form').html('<div>' + $("div", form).html() + '</div>');
-    $('#comment-form-content > #comment-form').removeClass('ajax-comments-processed');
+    form.html('<div>' + $("div", varform).html() + '</div>');
+    form.removeClass('ajax-comments-processed');
 
     Drupal.attachBehaviors($('#comment-form-content'));
 
     // resizing textarea
-    $('#comment-form textarea').attr('rows', rows);
+    $('textarea', form).attr('rows', rows);
   }
   // now we can attach previously removed editors
   ajax_comments_attach_editors();
-  
+
   // enabling form controls again
-  $('#comment-form-content > #comment-form .ajax-comments-disabled').removeAttr('disabled');
+  $('.ajax-comments-disabled', form).removeAttr('disabled');
+
+  // ensure that attachment is uploaded
+  if ($('#edit-upload').length && $('#edit-upload', form).val()) {
+    $('#ajax-comments-submit,#ajax-comments-preview', form).attr('disabled', 1);
+    parent_fieldset = $('#edit-upload', form).parents('fieldset');
+    if (parent_fieldset.is('.collapsed')) {
+      Drupal.toggleFieldset(parent_fieldset);
+    }
+  }
 }
 
 
