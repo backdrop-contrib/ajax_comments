@@ -43,11 +43,23 @@ msgstr "Кількість строк у формах відповідей"
 msgid "Usually, there is no need in big forms for replies, so this setting allows to reduce their size."
 msgstr "Зазвичай, не потрібна дуже велика форма для відповідей, тому це налаштування може покращити вигляд форм для відповідей."
 
-
-#:
 msgid "preview"
 msgstr "попередній перегляд"
 
-#:
 msgid "Are you sure you want to delete the comment? Any replies to this comment will be lost. This action cannot be undone."
 msgstr "Ви дійсно хочете видалити цей коментар? Всі відповіді на нього будуть також видалені. Цю дію неможливо буде відмінити."
+
+msgid "Blink new comment"
+msgstr "Підморгування новими комментарями"
+
+msgid "This effect helps to find new comment after replying to long threads."
+msgstr "Цей ефект допомагає користувачеві знаходити його комментар після відповіді у довгу гілку."
+
+msgid "Settings"
+msgstr "Налаштування"
+
+msgid "Content types"
+msgstr "Типи матеріалів"
+
+msgid "Select node types you want to activate ajax comments on. If you select nothing, AJAX Comments will be enabled everywhere."
+msgstr "Виберіть типи матеріалів, де АЯКС коментарі будуть ввімкнені. Якщо нічого не вибрано, вони будуть працювати скрізь."

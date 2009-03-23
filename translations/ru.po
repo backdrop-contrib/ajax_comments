@@ -40,3 +40,18 @@ msgstr "предпросмотр"
 
 msgid "Are you sure you want to delete the comment? Any replies to this comment will be lost. This action cannot be undone."
 msgstr "Вы действительно хотите удалить этот комментарий? Все ответы к нему будут также удалены. Это действие отменить будет нельзя."
+
+msgid "Blink new comment"
+msgstr "Мигать новыми комментариями"
+
+msgid "This effect helps to find new comment after replying to long threads."
+msgstr "Этот эффект помогает пользователю находить его комментарий после ответа на большую ветку."
+
+msgid "Settings"
+msgstr "Настройки"
+
+msgid "Content types"
+msgstr "Типы материалов"
+
+msgid "Select node types you want to activate ajax comments on. If you select nothing, AJAX Comments will be enabled everywhere."
+msgstr "Выберите типы материалов, где вы хотите включить АЯКС комментарии. Если ничего не выбрано, они будут включены везде."

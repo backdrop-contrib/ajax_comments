@@ -3,6 +3,7 @@ var ctrl = false;
 var last_submit;
 var speed = 'fast';
 var ahah = false;
+var firsttime_init = true;
 
 /**
  * Attaches the ahah behavior to each ahah form element.
@@ -21,7 +22,10 @@ Drupal.behaviors.ajax_comments = function(context) {
     if (Drupal.settings.always_expand_main_form == undefined) {
       Drupal.settings.always_expand_main_form = true;
     }
-    
+    if (Drupal.settings.blink_new == undefined) {
+      Drupal.settings.blink_new = true;
+    }
+
     $('#edit-upload', form).bind('change', function(){
       $('#ajax-comments-submit,#ajax-comments-preview', form).attr('disabled', 1);
     });
@@ -67,13 +71,13 @@ Drupal.behaviors.ajax_comments = function(context) {
       fragment = page_url.split('#')[1];
     }
 
-    if ((fragment != 'comment-form') && (!Drupal.settings.always_expand_main_form)) {
-      // fast hide form
-      $('#comment-form-content', context).hide();
-    }
-    else {
+    if ((fragment == 'comment-form'  || Drupal.settings.always_expand_main_form) && firsttime_init) {
       $('#comment-form-title', context).addClass('pressed');
       $('#comment-form-content').attr('cid', 0);
+    }
+    else {
+      // fast hide form
+      $('#comment-form-content', context).hide();
     }
     
     // Attaching event to title link
@@ -114,6 +118,8 @@ Drupal.behaviors.ajax_comments = function(context) {
   $(window).keyup(function(e) {
     ctrl = false;
   });
+  
+  firsttime_init = false;
 };
 
 
@@ -408,12 +414,16 @@ jQuery.fn.ajaxCommentsSubmitToggle = function() {
       offset = obj.offset();
       if ((offset.top > $('html').scrollTop() + height) || (offset.top < $('html').scrollTop() - 20)) {
         $('html').animate({scrollTop: offset.top - height}, 'slow', function(){
-          /// Blink a little bit to user, so he know where's his comment
-          obj.fadeTo('fast', 0.2).fadeTo('fast', 1).fadeTo('fast', 0.5).fadeTo('fast', 1).fadeTo('fast', 0.7).fadeTo('fast', 1, function() { if ($.browser.msie) this.style.removeAttribute('filter'); });
+          // Blink a little bit to user, so he know where's his comment
+          if (Drupal.settings.blink_new) {
+            obj.fadeTo('fast', 0.2).fadeTo('fast', 1).fadeTo('fast', 0.5).fadeTo('fast', 1).fadeTo('fast', 0.7).fadeTo('fast', 1, function() { if ($.browser.msie) this.style.removeAttribute('filter'); });
+          }
         });
       }
       else {
-        obj.fadeTo('fast', 0.2).fadeTo('fast', 1).fadeTo('fast', 0.5).fadeTo('fast', 1).fadeTo('fast', 0.7).fadeTo('fast', 1, function() { if ($.browser.msie) this.style.removeAttribute('filter'); });
+        if (Drupal.settings.blink_new) {
+          obj.fadeTo('fast', 0.2).fadeTo('fast', 1).fadeTo('fast', 0.5).fadeTo('fast', 1).fadeTo('fast', 0.7).fadeTo('fast', 1, function() { if ($.browser.msie) this.style.removeAttribute('filter'); });
+        }
       }
       if ($.browser.msie) this.style.removeAttribute('filter');
     });

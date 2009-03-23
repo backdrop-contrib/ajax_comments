@@ -5,51 +5,58 @@
  * Implementation of hook_form_alter()
  */
 function ajax_comments_form_alter(&$form, $form_state, $form_id) {
-  if (($form_id == 'comment_form') && (arg(1) != 'edit') && (arg(1) != 'reply') && (arg(2) != 'edit') && (arg(2) != 'reply')) {
-    $form['#prefix'] = '<div id="comment-preview"></div>';
-    
-    // we should set specific ID to let ahah wrapper know what to wrap on ajax
-    // loaded comment-form even if we have many submit buttons on the page
-    $form['preview']['#id'] = "ajax-comments-preview";
-    $form['preview']['#ahah'] = array(
-      'path' => 'ajax_comments/js',
-      'wrapper' => 'comment-preview',
-      'event' => 'click',
-      'method' => 'append',
-      'effect' => 'ajaxCommentsPreview',
-      'progress' => array('type' => '1bar', 'message' => t('Please wait...')),
-    );
-    
-    $form['submit']['#id'] = "ajax-comments-submit";
-    $form['submit']['#submit'] = array('ajax_comments_submit');
-    $form['submit']['#ahah'] = array(
-      'path' => 'ajax_comments/js',
-      'wrapper' => 'comment-form-content',
-      'event' => 'click',
-      'method' => 'before',
-      'effect' => 'ajaxCommentsSubmit',
-      'progress' => array('type' => '1bar', 'message' => t('Please wait...')),
-    );
-    
-    $path = drupal_get_path('module', 'ajax_comments');
-    drupal_add_css($path .'/jquery.scrollTo.js');
-    drupal_add_css($path .'/ajax_comments.css');
-    
-    // Language settings
-    $mode = variable_get('language_negotiation', LANGUAGE_NEGOTIATION_NONE);
-    $languages = language_list('enabled');
-    $languages = $languages[1];
+  $node = menu_get_object();
+  $node_types = variable_get('ajax_comments_node_types', array());
+  $allowed = in_array($node->type, $node_types, TRUE);
+  
+  if (empty($node_types) || $allowed) {
+    if (($form_id == 'comment_form') && (arg(1) != 'edit') && (arg(1) != 'reply') && (arg(2) != 'edit') && (arg(2) != 'reply')) {
+      $form['#prefix'] = '<div id="comment-preview"></div>';
+      
+      // we should set specific ID to let ahah wrapper know what to wrap on ajax
+      // loaded comment-form even if we have many submit buttons on the page
+      $form['preview']['#id'] = "ajax-comments-preview";
+      $form['preview']['#ahah'] = array(
+        'path' => 'ajax_comments/js',
+        'wrapper' => 'comment-preview',
+        'event' => 'click',
+        'method' => 'append',
+        'effect' => 'ajaxCommentsPreview',
+        'progress' => array('type' => '1bar', 'message' => t('Please wait...')),
+      );
+      
+      $form['submit']['#id'] = "ajax-comments-submit";
+      $form['submit']['#submit'] = array('ajax_comments_submit');
+      $form['submit']['#ahah'] = array(
+        'path' => 'ajax_comments/js',
+        'wrapper' => 'comment-form-content',
+        'event' => 'click',
+        'method' => 'before',
+        'effect' => 'ajaxCommentsSubmit',
+        'progress' => array('type' => '1bar', 'message' => t('Please wait...')),
+      );
+      
+      $path = drupal_get_path('module', 'ajax_comments');
+      drupal_add_css($path .'/jquery.scrollTo.js');
+      drupal_add_css($path .'/ajax_comments.css');
+      
+      // Language settings
+      $mode = variable_get('language_negotiation', LANGUAGE_NEGOTIATION_NONE);
+      $languages = language_list('enabled');
+      $languages = $languages[1];
 
-    drupal_add_js('misc/jquery.form.js');
-    drupal_add_js($path .'/ajax_comments.js', 'module');
-    drupal_add_js(array(
-      'language_mode' => $mode,
-      'language_list' => $languages,
-      'clean_url' => variable_get('clean_url', 0),
-      'rows_in_reply' => variable_get('ajax_comments_reply_row_count', 3),
-      'rows_default' => variable_get('ajax_comments_default_row_count', 5),
-      'always_expand_main_form' => variable_get('ajax_comments_always_expand_form', TRUE),
-    ), 'setting');
+      drupal_add_js('misc/jquery.form.js');
+      drupal_add_js($path .'/ajax_comments.js', 'module');
+      drupal_add_js(array(
+        'language_mode' => $mode,
+        'language_list' => $languages,
+        'clean_url' => variable_get('clean_url', 0),
+        'rows_in_reply' => variable_get('ajax_comments_reply_row_count', 3),
+        'rows_default' => variable_get('ajax_comments_default_row_count', 5),
+        'always_expand_main_form' => variable_get('ajax_comments_always_expand_form', TRUE),
+        'blink_new' => variable_get('ajax_comments_blink_new', TRUE),
+      ), 'setting');
+    }
   }
 }
 
@@ -184,23 +191,46 @@ function ajax_comments_submit($form, &$form_state) {
  * AJAX comments settings form
  */
 function admin_ajax_comments() {
-  $form['ajax_comments_always_expand_form'] = array(
+  $form['settings'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Settings'),
+  );
+  $form['settings']['ajax_comments_always_expand_form'] = array(
     '#type' => 'checkbox',
     '#title' => t('Form always expanded'),
     '#description' => t('This setting allows to render comments as collapsed link by default.'),
     '#default_value' => variable_get('ajax_comments_always_expand_form', FALSE),
   );
-  $form['ajax_comments_default_row_count'] = array(
+  $form['settings']['ajax_comments_blink_new'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Blink new comment'),
+    '#description' => t('This effect helps to find new comment after replying to long threads.'),
+    '#default_value' => variable_get('ajax_comments_blink_new', TRUE),
+  );
+  $form['settings']['ajax_comments_default_row_count'] = array(
     '#type' => 'textfield',
     '#title' => t('Default row count'),
     '#description' => t('Allows to control comment forms\' textarea size. Leave blank to use system defined.'),
     '#default_value' => variable_get('ajax_comments_default_row_count', 5),
   );
-  $form['ajax_comments_reply_row_count'] = array(
+  $form['settings']['ajax_comments_reply_row_count'] = array(
     '#type' => 'textfield',
     '#title' => t('Row count in replies'),
     '#description' => t('Usually, there is no need in big forms for replies, so this setting allows to reduce their size.'),
     '#default_value' => variable_get('ajax_comments_reply_row_count', 3),
+  );
+
+  $form['node_types'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Content types'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['node_types']['ajax_comments_node_types'] = array(
+    '#type' => 'checkboxes',
+    '#description' => t('Select node types you want to activate ajax comments on. If you select nothing, AJAX Comments will be enabled everywhere.'),
+    '#default_value' => variable_get('ajax_comments_node_types', array()),
+    '#options' => node_get_types('names'),
   );
   return system_settings_form($form);
 }
@@ -246,12 +276,18 @@ function instant_delete($cid = 0){
  * Implementation of hook_link_alter().
  */
 function ajax_comments_link_alter(&$links, $comment) {
-  if (isset($links['comment_delete'])) {
-    $links['comment_delete'] = array(
-      'title' => t('delete'),
-      'href' => 'comment/delete/'. $comment->cid,
-      'query' => 'token='. drupal_get_token($comment->cid),
-    );
+  $node = menu_get_object();
+  $node_types = variable_get('ajax_comments_node_types', array());
+  $allowed = in_array($node->type, $node_types, TRUE);
+  
+  if (empty($node_types) || $allowed) {
+    if (isset($links['comment_delete'])) {
+      $links['comment_delete'] = array(
+        'title' => t('delete'),
+        'href' => 'comment/delete/'. $comment->cid,
+        'query' => 'token='. drupal_get_token($comment->cid),
+      );
+    }
   }
 }
 
