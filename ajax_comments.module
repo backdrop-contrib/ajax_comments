@@ -116,10 +116,12 @@ function ajax_comments_js() {
     unset($form['#after_build']);
   }
   drupal_process_form($form_id, $form, $form_state);
-  
+
+
   $errors = form_get_errors();
 
   if (!$errors) {
+    // Prepare output
     if ($form_state['values']['op'] == t('Preview')) {
       $output = '<div class="preview-item">'. $form['comment_preview']['#value'] .'</div>';
       if ($output && $form_state['values']['pid']) {
@@ -129,14 +131,46 @@ function ajax_comments_js() {
     elseif ($form_state['values']['op'] == t('Save')) {
       $output = '<div class="comment-new-success">'. $form_state['ajax_comment'] .'</div>';
     }
-    
     $form = form_builder($form_id, $form, $form_state);
+
+    // Add Submit button if preview was required
+    $node = node_load($form_state['values']['nid']);
+    $op = $form_state['values']['op'];
+    if (variable_get('comment_preview_'. $node->type, COMMENT_PREVIEW_REQUIRED) == COMMENT_PREVIEW_REQUIRED && ($op == t('Preview') || $op == t('Save'))) {
+      $form['submit'] = array(
+        '#type' => 'submit',
+        '#value' => t('Save'),
+        '#weight' => 19
+      );
+      $form['submit']['#id'] = "ajax-comments-submit";
+      $form['submit']['#submit'] = array('ajax_comments_submit');
+      $form['submit']['#ahah'] = array(
+        'path' => 'ajax_comments/js',
+        'wrapper' => 'comment-form-content',
+        'event' => 'click',
+        'method' => 'before',
+        'effect' => 'ajaxCommentsSubmit',
+        'progress' => array('type' => '1bar', 'message' => t('Please wait...')),
+      );
+      $form = drupal_rebuild_form($form_id, &$form_state, $args, $form_build_id);
+    }
   }
   unset($form['#suffix']);
   unset($form['#prefix']);
   $output = theme('status_messages') . $output;
 
-  drupal_json(array('status' => TRUE, 'data' => $output));
+
+  if ($output) {
+    $javascript = drupal_add_js(NULL, NULL);
+    if (isset($javascript['setting'])) {
+      $output .= '<script type="text/javascript">jQuery.extend(Drupal.settings, '. drupal_to_js(call_user_func_array('array_merge_recursive', $javascript['setting'])) .');</script>';
+    }
+
+    drupal_json(array(
+      'status'   => TRUE,
+      'data'     => $output,
+    ));
+  }
 }
 
 

@@ -251,7 +251,7 @@ function initForm_setTokens(varform, needs_reload, rows){
 
   // Refresh form tokens
   if (token) {
-    $('#edit-form-token', form).attr('value',token);
+    $('#edit-form-token', form).attr('value', token);
   }
   // ...and build ids
   if (bid) {
@@ -388,6 +388,13 @@ jQuery.fn.ajaxCommentsPreviewToggle = function() {
   $('#comment-preview').show();
   obj.animate({height:'show', opacity:'show'}, speed);
   ajax_comments_hide_progress();
+
+  // Add submit button if it doesn't added yet
+  if (!$('#ajax-comments-submit').length && $('.preview-item').length) {
+    $('#ajax-comments-preview').after('<input name="op" id="ajax-comments-submit" value="'+ Drupal.t("Save") +'" class="form-submit" type="submit">');
+    // re-attaching to new comment
+    Drupal.attachBehaviors($('#ajax-comments-submit'));
+  }
 };
 
 // AHAH effect for comment submits
