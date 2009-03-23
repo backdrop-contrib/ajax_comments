@@ -7,9 +7,14 @@
 function ajax_comments_form_alter(&$form, $form_state, $form_id) {
   $node = menu_get_object();
   $node_types = variable_get('ajax_comments_node_types', array());
-  $allowed = in_array($node->type, $node_types, TRUE);
-  
-  if (empty($node_types) || $allowed) {
+  $empty = TRUE;
+  foreach ($node_types as $type) {
+    if ($type) {
+      $empty = FALSE;
+      break;
+    }
+  }
+  if ($empty || isset($node_types[$node->type]) && $node_types[$node->type]) {
     if (($form_id == 'comment_form') && (arg(1) != 'edit') && (arg(1) != 'reply') && (arg(2) != 'edit') && (arg(2) != 'reply')) {
       $form['#prefix'] = '<div id="comment-preview"></div>';
       
@@ -116,13 +121,14 @@ function ajax_comments_js() {
 
   if (!$errors) {
     if ($form_state['values']['op'] == t('Preview')) {
-      $output = '<div class="preview-item">'.$form['comment_preview']['#value'].'</div>';
+      $output = '<div class="preview-item">'. $form['comment_preview']['#value'] .'</div>';
       if ($output && $form_state['values']['pid']) {
         $output = '<div class="indented">'. $output .'<div>';
       }
     }
     elseif ($form_state['values']['op'] == t('Save')) {
-      $output = '<div class="comment-new-success">'.$form_state['ajax_comment'].'</div>';
+      print_r($form_state);
+      $output = '<div class="comment-new-success">'. $form_state['ajax_comment'] .'</div>';
     }
     
     $form = form_builder($form_id, $form, $form_state);
@@ -278,9 +284,15 @@ function instant_delete($cid = 0){
 function ajax_comments_link_alter(&$links, $comment) {
   $node = menu_get_object();
   $node_types = variable_get('ajax_comments_node_types', array());
-  $allowed = in_array($node->type, $node_types, TRUE);
-  
-  if (empty($node_types) || $allowed) {
+  $empty = TRUE;
+  foreach ($node_types as $type) {
+    if ($type) {
+      $empty = FALSE;
+      break;
+    }
+  }
+
+  if ($empty || isset($node_types[$node->type]) && $node_types[$node->type]) {
     if (isset($links['comment_delete'])) {
       $links['comment_delete'] = array(
         'title' => t('delete'),
