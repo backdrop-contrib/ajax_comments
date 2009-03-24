@@ -9,6 +9,7 @@ var firsttime_init = true;
  * Attaches the ahah behavior to each ahah form element.
  */
 Drupal.behaviors.ajax_comments = function(context) {
+  $('#panels-comment-form').attr('id', 'comment-form');
   $('#comment-form:not(.ajax-comments-processed)', context).addClass('ajax-comments-processed').each(function() {
     form = $(this);
     // prepare the form when the DOM is ready
@@ -196,53 +197,13 @@ function initForm(action, needs_reload, rows){
   $('#comment-preview').empty();
   $('#comment-form .error').removeClass('error');
 
-  // * getting proper form tokens
-
-  // specially for Opera browser
-  action = action.replace('http:// ','');
-  fragments = action.split('#');
-  queries = fragments[0].split('?');
-  
-  fragment = '';
-  query = '';
-  if (fragments[1]) { fragment = '#' + fragments[1]; }
-  if (queries[1]) { query = '?' + queries[1]; }
-  
-  cid = ajax_comments_get_cid_from_href(action);
-  nid = ajax_comments_get_nid_from_href(action);
-
-  if (!needs_reload) {
-    needs_reload = (action.indexOf('ajaxreload=1') != -1);
-    needs_reload = needs_reload || (action.indexOf('quote=') != -1);
-  }
-  
-  // disabling buttons while loading tokens
-  $('#comment-form .form-submit').addClass('ajax-comments-disabled').attr('disabled', 1);
-  // if will be realoaded, we should disable everything
-  if (needs_reload) {
-    ajax_comments_show_progress();
-    $('#comment-form input, #comment-form textarea').addClass('ajax-comments-disabled').attr('disabled', 1);
-  }
-
-  // sending ajax call to get the token
-  var token = 0;
-  $.ajax({
-    type: "GET",
-    url: Drupal.settings.basePath + "ajax_comments/get_form_token/" + nid + '/' + cid + query + fragment,
-    success: function(form){
-      f = $('<div></div>');
-      f.html(form);
-      form = $('form', f);
-
-      // Going further
-      initForm_setTokens(form, needs_reload, rows);
-    }
-  });
+  pid = ajax_comments_get_cid_from_href(action);
+  $('#comment-form input[name=pid]').val(pid)
 }
 
 // Second helper function for Reply handler
-function initForm_setTokens(varform, needs_reload, rows){
-  action = varform.attr('action');
+function initForm_setTokens() {
+  /*action = varform.attr('action');
   token = $("#edit-form-token", varform).val();
   bid = $("input[name=form_build_id]", varform).val();
   captcha = $(".captcha", varform).html();
@@ -280,17 +241,17 @@ function initForm_setTokens(varform, needs_reload, rows){
 
     // resizing textarea
     $('textarea', form).attr('rows', rows);
-  }
+  }*/
   // now we can attach previously removed editors
   ajax_comments_attach_editors();
 
   // enabling form controls again
-  $('.ajax-comments-disabled', form).removeAttr('disabled');
+  $('.ajax-comments-disabled').removeAttr('disabled');
 
   // ensure that attachment is uploaded
-  if ($('#edit-upload').length && $('#edit-upload', form).val()) {
-    $('#ajax-comments-submit,#ajax-comments-preview', form).attr('disabled', 1);
-    parent_fieldset = $('#edit-upload', form).parents('fieldset');
+  if ($('#edit-upload').length && $('#edit-upload').val()) {
+    $('#ajax-comments-submit,#ajax-comments-preview').attr('disabled', 1);
+    parent_fieldset = $('#edit-upload').parents('fieldset');
     if (parent_fieldset.is('.collapsed')) {
       Drupal.toggleFieldset(parent_fieldset);
     }

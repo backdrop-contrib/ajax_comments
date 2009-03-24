@@ -17,9 +17,13 @@ function ajax_comments_form_alter(&$form, $form_state, $form_id) {
   if ($empty || isset($node_types[$node->type]) && $node_types[$node->type]) {
     if (($form_id == 'comment_form') && (arg(1) != 'edit') && (arg(1) != 'reply') && (arg(2) != 'edit') && (arg(2) != 'reply')) {
       $form['#prefix'] = '<div id="comment-preview"></div>';
-      
-      // we should set specific ID to let ahah wrapper know what to wrap on ajax
-      // loaded comment-form even if we have many submit buttons on the page
+
+      // Overriding PID param so it will appear on the form.
+      $form['pid']['#type'] = 'hidden';
+      unset($form['pid']['#value']);
+
+      // We should set specific ID to let ahah wrapper know what to wrap on ajax
+      // loaded comment-form even if we have many submit buttons on the page.
       $form['preview']['#id'] = "ajax-comments-preview";
       $form['preview']['#ahah'] = array(
         'path' => 'ajax_comments/js',
@@ -40,11 +44,11 @@ function ajax_comments_form_alter(&$form, $form_state, $form_id) {
         'effect' => 'ajaxCommentsSubmit',
         'progress' => array('type' => '1bar', 'message' => t('Please wait...')),
       );
-      
+
       $path = drupal_get_path('module', 'ajax_comments');
       drupal_add_css($path .'/jquery.scrollTo.js');
       drupal_add_css($path .'/ajax_comments.css');
-      
+
       // Language settings
       $mode = variable_get('language_negotiation', LANGUAGE_NEGOTIATION_NONE);
       $languages = language_list('enabled');
@@ -93,6 +97,11 @@ function ajax_comments_menu() {
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
    );
+  $items['ajax_comments/js/refresh'] = array(
+    'page callback' => 'ajax_comments_js_refresh',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+   );
   return $items;
 }
 
@@ -129,7 +138,7 @@ function ajax_comments_js() {
       }
     }
     elseif ($form_state['values']['op'] == t('Save')) {
-      $output = '<div class="comment-new-success">'. $form_state['ajax_comment'] .'</div>';
+      $output = '<div class="comment-new-success">'. $form_state['storage']['ajax_comment'] .'</div>';
     }
     $form = form_builder($form_id, $form, $form_state);
 
@@ -137,6 +146,7 @@ function ajax_comments_js() {
     $node = node_load($form_state['values']['nid']);
     $op = $form_state['values']['op'];
     if (variable_get('comment_preview_'. $node->type, COMMENT_PREVIEW_REQUIRED) == COMMENT_PREVIEW_REQUIRED && ($op == t('Preview') || $op == t('Save'))) {
+      print_r(123);
       $form['submit'] = array(
         '#type' => 'submit',
         '#value' => t('Save'),
@@ -152,7 +162,7 @@ function ajax_comments_js() {
         'effect' => 'ajaxCommentsSubmit',
         'progress' => array('type' => '1bar', 'message' => t('Please wait...')),
       );
-      $form = drupal_rebuild_form($form_id, &$form_state, $args, $form_build_id);
+      $form = drupal_rebuild_form($form_id, $form_state, $args, $form_build_id);
     }
   }
   unset($form['#suffix']);
@@ -171,6 +181,24 @@ function ajax_comments_js() {
       'data'     => $output,
     ));
   }
+}
+
+
+function ajax_comments_js_refresh() {
+  $form_state = array('storage' => NULL, 'submitted' => FALSE);
+  $form_build_id = $_POST['form_build_id'];
+  $form = form_get_cache($form_build_id, $form_state);
+
+  $args = $form['#parameters'];
+  if (!empty($args)) {
+    $form_id = array_shift($args);
+  }
+  else {
+    $form_id = $_POST['form_id'];
+  }
+
+  $form['pid'] = array('#type' => 'value', '#value' => !empty($_POST['pid']) ? $_POST['pid'] : NULL);
+  form_set_cache($form_build_id, $form, $form_state);
 }
 
 
@@ -218,7 +246,7 @@ function ajax_comments_submit($form, &$form_state) {
 
         //render our comment and get it back to AHAH handler
         $output .= theme('comment_view', $comment, $node, $links);
-        $form_state['ajax_comment'] = $output;
+        $form_state['storage']['ajax_comment'] = $output;
       }
     }
   }
@@ -326,7 +354,7 @@ function ajax_comments_link_alter(&$links, $comment) {
   }
 
   if ($empty || isset($node_types[$node->type]) && $node_types[$node->type]) {
-    if (isset($links['comment_delete'])) {
+    if (is_array($links) && isset($links['comment_delete'])) {
       $links['comment_delete'] = array(
         'title' => t('delete'),
         'href' => 'comment/delete/'. $comment->cid,
