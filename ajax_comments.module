@@ -7,7 +7,7 @@
 function ajax_comments_form_alter(&$form, $form_state, $form_id) {
   $node = menu_get_object();
   if (!isset($node) && arg(0) == 'ajax_comments') {
-    $node = node_load(arg(3));
+    $node = node_load(arg(2));
   }
   $allowed_node_types = variable_get('ajax_comments_node_types', array());
   $all_allowed = TRUE;
@@ -96,9 +96,9 @@ function ajax_comments_menu() {
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
    );
-  $items['ajax_comments/js/reload/%'] = array(
+  $items['ajax_comments/js_reload/%'] = array(
     'page callback' => 'ajax_comments_js_reload_form',
-    'page arguments' => array(3, 4),
+    'page arguments' => array(2, 3),
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
    );

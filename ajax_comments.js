@@ -96,8 +96,16 @@ Drupal.behaviors.ajax_comments = function(context) {
   $('.quote a:not(.ajax-comments-processed)', context).addClass('ajax-comments-processed').each(function(){
     href = $(this).attr('href');
     if (ajax_comments_is_reply_to_node(href)) {
-      $(this).click(function(){ $('#comment-form-title', context).click(); return false; });
-    } else {
+      $(this).click(function(){
+        $('#comment-form').attr('action', $(this).attr('href'));
+        ajax_comments_reload_form(0);
+
+        $('#comment-form-title', context).click();
+        scroll_to_comment_form();
+        return false;
+      });
+    }
+    else {
       $(this).click(reply_click);
     }
   });
@@ -122,8 +130,6 @@ Drupal.behaviors.ajax_comments = function(context) {
   
   firsttime_init = false;
 };
-
-
 
 // Reply link handler
 function reply_click() {
@@ -163,7 +169,11 @@ function reply_click() {
     // We don't need to load everything twice
     if (!$(this).is('.last-clicked')) {
       // Reload form if preview is required
-      if (Drupal.settings.comment_preview_required && $('#ajax-comments-submit').length) {
+      if ((Drupal.settings.comment_preview_required && $('#ajax-comments-submit').length) ||
+        // Or if quoted comment
+        action.match('quote=1')
+      ) {
+        $('#comment-form').attr('action', action)
         ajax_comments_reload_form(link_cid);
       }
       else {
@@ -197,7 +207,7 @@ function reply_click() {
 function initForm(pid, rows){
   // resizing and clearing textarea
   $('#comment-form textarea').attr('rows', rows);
-  $('#comment-form textarea').attr('value','');
+  $('#comment-form:not(.fresh) textarea').attr('value','');
 
   // clearing form
   $('#comment-preview').empty();
@@ -291,10 +301,12 @@ function ajax_comments_close_form(reload) {
 
 function ajax_comments_reload_form(pid) {
   action = $('#comment-form').attr('action');
-  action = action.replace('comment/reply', 'ajax_comments/js/reload');
+  action = action.replace('comment/reply', 'ajax_comments/js_reload');
 
   if (pid > 0) {
-    action = action + '/' + pid;
+    action = action.replace(/([?])$/, '/' + pid + '?');
+    action = action.replace(/#comment-form/, '');
+    
     rows = Drupal.settings.rows_in_reply;
   }
   else {
@@ -310,13 +322,30 @@ function ajax_comments_reload_form(pid) {
       $('#comment-form-content').html(result);
       $('#comment-form').attr('class', saved_class);
 
+      $('#comment-form').addClass('fresh');
+
       Drupal.attachBehaviors($('#comment-form-content form'));
       initForm(pid, rows);
       ajax_comments_hide_progress();
+
+      $('#comment-form').removeClass('fresh');
     }
   });
 }
 
+function scroll_to_comment_form() {
+  if ($.browser.msie) {
+    height = document.documentElement.offsetHeight ;
+  }
+  else if (window.innerWidth && window.innerHeight) {
+    height = window.innerHeight;
+  }
+  height = height / 2;
+  offset = $('#comment-form-content').offset();
+  if ((offset.top > $('html').scrollTop() + height) || (offset.top < $('html').scrollTop() - 20)) {
+    $('html').animate({scrollTop: offset.top}, 'slow');
+  }
+}
 
 // AHAH effect for comment previews
 jQuery.fn.ajaxCommentsPreviewToggle = function() {
