@@ -6,20 +6,24 @@
  */
 function ajax_comments_form_alter(&$form, $form_state, $form_id) {
   $node = menu_get_object();
-  $node_types = variable_get('ajax_comments_node_types', array());
-  $empty = TRUE;
-  foreach ($node_types as $type) {
+  if (!isset($node) && arg(0) == 'ajax_comments') {
+    $node = node_load(arg(3));
+  }
+  $allowed_node_types = variable_get('ajax_comments_node_types', array());
+  $all_allowed = TRUE;
+  foreach ($allowed_node_types as $type) {
     if ($type) {
-      $empty = FALSE;
+      $all_allowed = FALSE;
       break;
     }
   }
-  if ($empty || isset($node_types[$node->type]) && $node_types[$node->type]) {
+  if ($all_allowed || isset($allowed_node_types[$node->type]) && $allowed_node_types[$node->type]) {
     if (($form_id == 'comment_form') && (arg(1) != 'edit') && (arg(1) != 'reply') && (arg(2) != 'edit') && (arg(2) != 'reply')) {
       $form['#prefix'] = '<div id="comment-preview"></div>';
 
       // Overriding PID param so it will appear on the form.
       $form['pid']['#type'] = 'hidden';
+      $form['pid']['#default_value'] = $form['pid']['#value'];
       unset($form['pid']['#value']);
 
       // We should set specific ID to let ahah wrapper know what to wrap on ajax
@@ -64,6 +68,7 @@ function ajax_comments_form_alter(&$form, $form_state, $form_id) {
         'rows_default' => variable_get('ajax_comments_default_row_count', 5),
         'always_expand_main_form' => variable_get('ajax_comments_always_expand_form', TRUE),
         'blink_new' => variable_get('ajax_comments_blink_new', TRUE),
+        'comment_preview_required' => variable_get('comment_preview_'. $node->type, COMMENT_PREVIEW_REQUIRED) == COMMENT_PREVIEW_REQUIRED
       ), 'setting');
     }
   }
@@ -80,12 +85,6 @@ function ajax_comments_menu() {
     'page arguments' => array('admin_ajax_comments'),
     'access arguments' => array('administer site configuration'),
    );
-  $items['ajax_comments/get_form_token/%/%'] = array(
-    'page callback' => 'get_form_token',
-    'page arguments' => array(2,3),
-    'access arguments' => array('access content'),
-    'type' => MENU_CALLBACK,
-  );
   $items['ajax_comments/instant_delete/%'] = array(
     'page callback' => 'instant_delete',
     'page arguments' => array(2),
@@ -97,8 +96,9 @@ function ajax_comments_menu() {
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
    );
-  $items['ajax_comments/js/refresh'] = array(
-    'page callback' => 'ajax_comments_js_refresh',
+  $items['ajax_comments/js/reload/%'] = array(
+    'page callback' => 'ajax_comments_js_reload_form',
+    'page arguments' => array(3, 4),
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
    );
@@ -121,7 +121,8 @@ function ajax_comments_js() {
   
   if ($form_state['post']['op'] == t('Preview')) {
     $form['#after_build'] = array('comment_form_add_preview');
-  } else {
+  }
+  else {
     unset($form['#after_build']);
   }
   drupal_process_form($form_id, $form, $form_state);
@@ -146,11 +147,11 @@ function ajax_comments_js() {
     $node = node_load($form_state['values']['nid']);
     $op = $form_state['values']['op'];
     if (variable_get('comment_preview_'. $node->type, COMMENT_PREVIEW_REQUIRED) == COMMENT_PREVIEW_REQUIRED && ($op == t('Preview') || $op == t('Save'))) {
-      print_r(123);
       $form['submit'] = array(
         '#type' => 'submit',
         '#value' => t('Save'),
-        '#weight' => 19
+        '#weight' => 19,
+        '#executes_submit_callback' => TRUE,
       );
       $form['submit']['#id'] = "ajax-comments-submit";
       $form['submit']['#submit'] = array('ajax_comments_submit');
@@ -162,7 +163,8 @@ function ajax_comments_js() {
         'effect' => 'ajaxCommentsSubmit',
         'progress' => array('type' => '1bar', 'message' => t('Please wait...')),
       );
-      $form = drupal_rebuild_form($form_id, $form_state, $args, $form_build_id);
+      $form = form_builder($form_id, $form, $form_state);
+      form_set_cache($form_build_id, $form, $form_state);
     }
   }
   unset($form['#suffix']);
@@ -184,21 +186,15 @@ function ajax_comments_js() {
 }
 
 
-function ajax_comments_js_refresh() {
-  $form_state = array('storage' => NULL, 'submitted' => FALSE);
-  $form_build_id = $_POST['form_build_id'];
-  $form = form_get_cache($form_build_id, $form_state);
+function ajax_comments_js_reload_form($nid, $pid = NULL) {
+  drupal_set_header('Content-type: text/javascript; charset=utf-8');
 
-  $args = $form['#parameters'];
-  if (!empty($args)) {
-    $form_id = array_shift($args);
+  $edit = array('nid' => $nid);
+  if (isset($pid)) {
+    $edit['pid'] = $pid;
   }
-  else {
-    $form_id = $_POST['form_id'];
-  }
-
-  $form['pid'] = array('#type' => 'value', '#value' => !empty($_POST['pid']) ? $_POST['pid'] : NULL);
-  form_set_cache($form_build_id, $form, $form_state);
+  print(drupal_get_form('comment_form', $edit, $title));
+  exit();
 }
 
 
@@ -302,23 +298,6 @@ function admin_ajax_comments() {
   return system_settings_form($form);
 }
 
-/*
- * Misc function to fetch new form and it's values when full reload needed
- */
-function get_form_token($nid, $pid = NULL){
-  drupal_set_header('Content-type: text/javascript; charset=utf-8');
-  global $user;
-  $uid = $user->uid;
-
-  if ($pid == 0) $pid = NULL;
-
-  $fs = array();
-  $edit = array('nid' => $nid, 'cid' => $cid, 'pid' => $pid, 'uid' => $uid);
-  print_r((drupal_get_form('comment_form', $edit, $title)));
-  exit();
-}
-
-
 /**
  * Comments delete callback
  */
@@ -344,16 +323,16 @@ function instant_delete($cid = 0){
  */
 function ajax_comments_link_alter(&$links, $comment) {
   $node = menu_get_object();
-  $node_types = variable_get('ajax_comments_node_types', array());
-  $empty = TRUE;
-  foreach ($node_types as $type) {
+  $allowed_node_types = variable_get('ajax_comments_node_types', array());
+  $all_allowed = TRUE;
+  foreach ($allowed_node_types as $type) {
     if ($type) {
-      $empty = FALSE;
+      $all_allowed = FALSE;
       break;
     }
   }
 
-  if ($empty || isset($node_types[$node->type]) && $node_types[$node->type]) {
+  if ($all_allowed || isset($allowed_node_types[$node->type]) && $allowed_node_types[$node->type]) {
     if (is_array($links) && isset($links['comment_delete'])) {
       $links['comment_delete'] = array(
         'title' => t('delete'),

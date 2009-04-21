@@ -135,8 +135,8 @@ function reply_click() {
     if ($('#comment-form-content').attr('cid') != link_cid) {
       // We should remove any WYSIWYG before moving controls
       ajax_comments_remove_editors();
-      
-      // move form from old position
+
+      // Move form from old position
       if (ajax_comments_is_reply_to_node(action)) {
         $('#comment-form').removeClass('indented');
         if ($('#comment-form-content:visible').length) {
@@ -148,7 +148,7 @@ function reply_click() {
         $('#comment-form-content').parents('.box').before($('#comment-preview'));
       }
       else {
-       $('#comment-form').addClass('indented');
+        $('#comment-form').addClass('indented');
         if ($('#comment-form-content:visible').length) {
           $('#comment-form-content').after('<div style="height:' + $('#comment-form-content').height() + 'px;" class="sizer"></div>');
           $('.sizer').slideUp(speed, function(){ $(this).remove(); });
@@ -162,8 +162,13 @@ function reply_click() {
 
     // We don't need to load everything twice
     if (!$(this).is('.last-clicked')) {
-      // Going further
-      initForm(action, false, rows);
+      // Reload form if preview is required
+      if (Drupal.settings.comment_preview_required && $('#ajax-comments-submit').length) {
+        ajax_comments_reload_form(link_cid);
+      }
+      else {
+        initForm(link_cid, rows);
+      }
     }
     // ...and show the form after everything is done
     ajax_comments_expand_form();
@@ -178,7 +183,8 @@ function reply_click() {
     // handling double click
     if ((!$(this).is('#comment-form-title')) && (Drupal.settings.always_expand_main_form)) {
       $('#comment-form-title').click();
-    } else {
+    }
+    else {
       ajax_comments_close_form();
     }
   }
@@ -188,7 +194,7 @@ function reply_click() {
 }
 
 // Helper fnction for reply handler
-function initForm(action, needs_reload, rows){
+function initForm(pid, rows){
   // resizing and clearing textarea
   $('#comment-form textarea').attr('rows', rows);
   $('#comment-form textarea').attr('value','');
@@ -197,56 +203,15 @@ function initForm(action, needs_reload, rows){
   $('#comment-preview').empty();
   $('#comment-form .error').removeClass('error');
 
-  pid = ajax_comments_get_cid_from_href(action);
+  // set proper PID
   $('#comment-form input[name=pid]').val(pid)
+
+  // now we can attach previously removed editors
+  ajax_comments_attach_editors();
 }
 
 // Second helper function for Reply handler
-function initForm_setTokens() {
-  /*action = varform.attr('action');
-  token = $("#edit-form-token", varform).val();
-  bid = $("input[name=form_build_id]", varform).val();
-  captcha = $(".captcha", varform).html();
-
-  form = $('#comment-form-content > #comment-form');
-
-  // Refresh form tokens
-  if (token) {
-    $('#edit-form-token', form).attr('value', token);
-  }
-  // ...and build ids
-  if (bid) {
-    $('input[name=form_build_id]', form).val(bid);
-    $('input[name=form_build_id]', form).attr('id', bid);
-  }
-  // ...and captcha
-  if (captcha) {
-    $('.captcha', form).html(captcha);
-    Drupal.attachBehaviors($('.captcha', form));
-  }
-  // ...and action
-  if (action) {
-    form.attr('action', action);
-  }
-
-  if (needs_reload) {
-    // ensure that editors were removed
-    ajax_comments_remove_editors();
-    
-    ajax_comments_hide_progress();
-    form.html('<div>' + $("div", varform).html() + '</div>');
-    form.removeClass('ajax-comments-processed');
-
-    Drupal.attachBehaviors($('#comment-form-content'));
-
-    // resizing textarea
-    $('textarea', form).attr('rows', rows);
-  }*/
-  // now we can attach previously removed editors
-  ajax_comments_attach_editors();
-
-  // enabling form controls again
-  $('.ajax-comments-disabled').removeAttr('disabled');
+/*function initForm_setTokens() {
 
   // ensure that attachment is uploaded
   if ($('#edit-upload').length && $('#edit-upload').val()) {
@@ -256,7 +221,7 @@ function initForm_setTokens() {
       Drupal.toggleFieldset(parent_fieldset);
     }
   }
-}
+}*/
 
 
 // delete links handler
@@ -300,22 +265,9 @@ function delete_click() {
   return false;
 }
 
-
-
-/*
-$('#comments .pager a').bind('click', function(){
-  href = $(this).attr('href');
-  page = href.split('?');
-  alert(123);
-})*/
-
-
-
-
 // ====================================
 // Misc. functions
 // ====================================
-
 function ajax_comments_expand_form(focus) {
   $('#comment-form-content').animate({height:'show'}, speed, function() {
     if (focus) {
@@ -325,10 +277,11 @@ function ajax_comments_expand_form(focus) {
   });
 }
 
-function ajax_comments_close_form(reinit) {
+function ajax_comments_close_form(reload) {
+  pid = $('#comment-form-content').attr('cid');
   $('#comment-form-content').animate({height:'hide'}, speed, function(){
-    if (reinit) {
-      initForm($('#comment-form-title').attr('href'), true, Drupal.settings.rows_default);
+    if (reload) {
+      ajax_comments_reload_form(pid);
     }
   });
   $('.pressed').removeClass('pressed');
@@ -336,7 +289,33 @@ function ajax_comments_close_form(reinit) {
   ajax_comments_hide_progress();
 }
 
+function ajax_comments_reload_form(pid) {
+  action = $('#comment-form').attr('action');
+  action = action.replace('comment/reply', 'ajax_comments/js/reload');
 
+  if (pid > 0) {
+    action = action + '/' + pid;
+    rows = Drupal.settings.rows_in_reply;
+  }
+  else {
+    rows = Drupal.settings.rows_default;
+  }
+  $('#comment-preview').hide();
+  ajax_comments_show_progress();
+  $.ajax({
+    type: "GET",
+    url: action,
+    success: function(result) {
+      saved_class = $('#comment-form').attr('class');
+      $('#comment-form-content').html(result);
+      $('#comment-form').attr('class', saved_class);
+
+      Drupal.attachBehaviors($('#comment-form-content form'));
+      initForm(pid, rows);
+      ajax_comments_hide_progress();
+    }
+  });
+}
 
 
 // AHAH effect for comment previews
@@ -370,7 +349,7 @@ jQuery.fn.ajaxCommentsSubmitToggle = function() {
     
     // place new comment in proper place
     insert_new_comment(obj);
-    
+
     // at last - showing it up
     obj.animate({height:'show', opacity:'show'}, speed, function () {
       if ($.browser.msie) {
@@ -396,18 +375,40 @@ jQuery.fn.ajaxCommentsSubmitToggle = function() {
       if ($.browser.msie) this.style.removeAttribute('filter');
     });
 
-    // re-attaching to new comment
+    // Re-attaching behaviors to new comment.
     Drupal.attachBehaviors(html);
-    
-    // hiding comment form
+
+    // Hiding comment form.
     ajax_comments_close_form(true);
-  } else {
+  }
+  else {
     $('#comment-preview').append(obj);
     obj.ajaxCommentsPreviewToggle(speed);
   }
 };
 
-// remove editors from comments textarea (mostly to re-attach it)
+
+function insert_new_comment(comment) {
+  if ($('#comment-form-content').attr('cid') == 0) {
+    $('#comment-preview').before(comment);
+  }
+  else {
+    if ($('#comment-form-content').next().is('.indented')) {
+      $('#comment-form-content').next().append(comment);
+    }
+    else {
+      $('#comment-form-content').before(comment);
+      comment.wrap('<div class="indented"></div>');
+    }
+  }
+}
+
+
+
+
+
+
+// Remove editors from comments textarea (mostly to re-attach it)
 function ajax_comments_remove_editors() {
   ajax_comments_update_editors();
   if (typeof(Drupal.wysiwyg) != undefined) {
@@ -436,23 +437,11 @@ function ajax_comments_attach_editors() {
   }
 
   if (typeof(tinyMCE) != 'undefined') {
-    // ugly hack to get invisible element's width
-    /*height = $('#comment-form-content').css('height');
-    overflow = $('#comment-form-content').css('overflow');
-    $('#comment-form-content').css('height', '0px');
-    $('#comment-form-content').css('overflow', 'hidden');
-    $('#comment-form-content').show();*/
-    
     tinyMCE.execCommand('mceAddControl', false, "edit-comment");
-    
-    // returning old values
-   /* $('#comment-form-content').css('height', height);
-    $('#comment-form-content').css('overflow', overflow);
-    $('#comment-form-content').hide();*/
   }
 }
 
-// update editors text to their textareas. Need to be done befor submits
+// Update editors text to their textareas. Need to be done befor submits
 function ajax_comments_update_editors() {
   // update tinyMCE
   if (typeof(tinyMCE) != 'undefined') {
@@ -467,6 +456,8 @@ function ajax_comments_update_editors() {
     FCKeditor_OnAfterLinkedFieldUpdate(FCKeditorAPI.GetInstance('edit-comment'));
   }
 }
+
+
 
 function ajax_comments_get_cid_from_href(action) {
   args = get_args(action);
@@ -485,18 +476,6 @@ function ajax_comments_get_cid_from_href(action) {
     }
   }
   return cid;
-}
-
-function ajax_comments_get_nid_from_href(action) {
-  args = get_args(action);
-
-  if (typeof(args[2]) == 'undefined') {
-    nid = 0;
-  }
-  else {
-    nid = args[2];
-  }
-  return nid;
 }
 
 function ajax_comments_is_reply_to_node(href) {
@@ -544,19 +523,3 @@ function ajax_comments_hide_progress(context) {
   }
   $('#comment-form .ajax-comments-loader', context).fadeOut(speed, function(){ $(this).remove(); });
 }
-
-function insert_new_comment(comment) {
-  if ($('#comment-form-content').attr('cid') == 0) {
-    $('#comment-preview').before(comment);
-  }
-  else {
-    if ($('#comment-form-content').next().is('.indented')) {
-      $('#comment-form-content').next().append(comment);
-    }
-    else {
-      $('#comment-form-content').before(comment);
-      comment.wrap('<div class="indented"></div>');
-    }
-  }
-}
-
