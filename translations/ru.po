@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: authoring_aliases-6.x-1.0\n"
 "POT-Creation-Date: 2007-12-02 07:40+0100\n"
 "PO-Revision-Date: 2009-03-05 03:20+0300\n"
-"Last-Translator: РРІР°РЅ РџРѕС‚Р°РїРѕРІ <elsewhere@yandex.ru>\n"
+"Last-Translator: Иван Потапов <elsewhere@yandex.ru>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -11,47 +11,82 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Generator: KBabel 1.11.4\n"
 
-msgid "AJAXifies comments on site."
-msgstr "РђРЇРљРЎРёС„РёСЂСѓРµС‚ С„РѕСЂРјС‹ РєРѕРјРјРµРЅС‚Р°СЂРёРµРІ РЅР° СЃР°Р№С‚Рµ."
+#: ajax_comments.module:38;49;164
+msgid "Please wait..."
+msgstr "Секунду..."
 
-msgid "AJAX comments"
-msgstr "РђРЇРљРЎ-РєРѕРјРјРµРЅС‚Р°СЂРёРё"
+#: ajax_comments.module:122;135;149
+msgid "Preview"
+msgstr "Предпросмотр"
 
-msgid "Form always expanded"
-msgstr "Р¤РѕСЂРјР° РІСЃРµРіРґР° СЂР°СЃРєСЂС‹С‚Р°"
+#: ajax_comments.module:141;149;152 ajax_comments.js:0
+msgid "Save"
+msgstr "Сохранить"
 
-msgid "This setting allows to render comments as collapsed link by default."
-msgstr "Р­С‚Р° РЅР°СЃС‚СЂРѕР№РєР° СѓРїСЂР°РІР»СЏРµС‚ РЅР°С‡Р°Р»СЊРЅС‹Рј РѕС‚РѕР±СЂР°Р¶РµРЅРёРµРј С„РѕСЂРјС‹ РєРѕРјРјРµРЅС‚Р°СЂРёРµРІ."
-
-msgid "Default row count"
-msgstr "РљРѕР»РёС‡РµСЃС‚РІРѕ СЃС‚СЂРѕРє РІ С„РѕСЂРјРµ РїРѕ-СѓРјРѕР»С‡Р°РЅРёСЋ"
-
-msgid "Allows to control comment forms' textarea size. Leave blank to use system defined."
-msgstr "РЈРєР°Р·С‹РІР°РµС‚ РєРѕР»РёС‡РµСЃС‚РІРѕ СЃС‚СЂРѕРє РІ С„РѕСЂРјР°С… РєРѕРјРјРµРЅС‚Р°СЂРёРµРІ. РћСЃС‚Р°РІСЊС‚Рµ РїСѓСЃС‚С‹Рј, С‡С‚РѕР±С‹ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ СЃРёСЃС‚РµРјРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ."
-
-msgid "Row count in replies"
-msgstr "РљРѕР»РёС‡РµСЃС‚РІРѕ СЃС‚СЂРѕРє РІ С„РѕСЂРјРµ РѕС‚РІРµС‚РѕРІ"
-
-msgid "Usually, there is no need in big forms for replies, so this setting allows to reduce their size."
-msgstr "РћР±С‹С‡РЅРѕ СЃР»РёС€РєРѕРј Р±РѕР»СЊС€Р°СЏ С„РѕСЂРјР° РґР»СЏ РЅР°РїРёСЃР°РЅРёСЏ РѕС‚РІРµС‚Р° РЅРµ РЅСѓР¶РЅР°, РїРѕСЌС‚РѕРјСѓ СЌС‚Р° РЅР°СЃС‚СЂРѕР№РєР° РјРѕР¶РµС‚ СѓР»СѓС‡С€РёС‚СЊ РІРёРґ С‚Р°РєРёС… С„РѕСЂРј."
-
-msgid "preview"
-msgstr "РїСЂРµРґРїСЂРѕСЃРјРѕС‚СЂ"
-
-msgid "Are you sure you want to delete the comment? Any replies to this comment will be lost. This action cannot be undone."
-msgstr "Р’С‹ РґРµР№СЃС‚РІРёС‚РµР»СЊРЅРѕ С…РѕС‚РёС‚Рµ СѓРґР°Р»РёС‚СЊ СЌС‚РѕС‚ РєРѕРјРјРµРЅС‚Р°СЂРёР№? Р’СЃРµ РѕС‚РІРµС‚С‹ Рє РЅРµРјСѓ Р±СѓРґСѓС‚ С‚Р°РєР¶Рµ СѓРґР°Р»РµРЅС‹. Р­С‚Рѕ РґРµР№СЃС‚РІРёРµ РѕС‚РјРµРЅРёС‚СЊ Р±СѓРґРµС‚ РЅРµР»СЊР·СЏ."
-
-msgid "Blink new comment"
-msgstr "РњРёРіР°С‚СЊ РЅРѕРІС‹РјРё РєРѕРјРјРµРЅС‚Р°СЂРёСЏРјРё"
-
-msgid "This effect helps to find new comment after replying to long threads."
-msgstr "Р­С‚РѕС‚ СЌС„С„РµРєС‚ РїРѕРјРѕРіР°РµС‚ РїРѕР»СЊР·РѕРІР°С‚РµР»СЋ РЅР°С…РѕРґРёС‚СЊ РµРіРѕ РєРѕРјРјРµРЅС‚Р°СЂРёР№ РїРѕСЃР»Рµ РѕС‚РІРµС‚Р° РЅР° Р±РѕР»СЊС€СѓСЋ РІРµС‚РєСѓ."
-
+#: ajax_comments.module:259
 msgid "Settings"
-msgstr "РќР°СЃС‚СЂРѕР№РєРё"
+msgstr "Настройки"
 
+#: ajax_comments.module:263
+msgid "Form always expanded"
+msgstr "Форма всегда раскрыта"
+
+#: ajax_comments.module:264
+msgid "This setting allows to render comments as collapsed link by default."
+msgstr "Эта настройка управляет начальным отображением формы комментариев."
+
+#: ajax_comments.module:269
+msgid "Blink new comment"
+msgstr "Мигать новыми комментариями"
+
+#: ajax_comments.module:270
+msgid "This effect helps to find new comment after replying to long threads."
+msgstr "Этот эффект помогает пользователю находить его комментарий после ответа на большую ветку."
+
+#: ajax_comments.module:275
+msgid "Default row count"
+msgstr "Количество строк в форме по-умолчанию"
+
+#: ajax_comments.module:276
+msgid "Allows to control comment forms' textarea size. Leave blank to use system defined."
+msgstr "Указывает количество строк в формах комментариев. Оставьте пустым, чтобы использовать системное значение."
+
+#: ajax_comments.module:281
+msgid "Row count in replies"
+msgstr "Количество строк в форме ответов"
+
+#: ajax_comments.module:282
+msgid "Usually, there is no need in big forms for replies, so this setting allows to reduce their size."
+msgstr "Обычно слишком большая форма для написания ответа не нужна, поэтому эта настройка может улучшить вид таких форм."
+
+#: ajax_comments.module:288
 msgid "Content types"
-msgstr "РўРёРїС‹ РјР°С‚РµСЂРёР°Р»РѕРІ"
+msgstr "Типы материалов"
 
+#: ajax_comments.module:294
 msgid "Select node types you want to activate ajax comments on. If you select nothing, AJAX Comments will be enabled everywhere."
-msgstr "Р’С‹Р±РµСЂРёС‚Рµ С‚РёРїС‹ РјР°С‚РµСЂРёР°Р»РѕРІ, РіРґРµ РІС‹ С…РѕС‚РёС‚Рµ РІРєР»СЋС‡РёС‚СЊ РђРЇРљРЎ РєРѕРјРјРµРЅС‚Р°СЂРёРё. Р•СЃР»Рё РЅРёС‡РµРіРѕ РЅРµ РІС‹Р±СЂР°РЅРѕ, РѕРЅРё Р±СѓРґСѓС‚ РІРєР»СЋС‡РµРЅС‹ РІРµР·РґРµ."
+msgstr "Выберите типы материалов, где вы хотите включить AJAX комментарии. Если ничего не выбрано, они будут включены везде."
+
+#: ajax_comments.module:338;356
+msgid "delete"
+msgstr "удалить"
+
+#: ajax_comments.module:364
+msgid "preview"
+msgstr "предпросмотр"
+
+#: ajax_comments.module:83 ajax_comments.info:0
+msgid "AJAXifies comments on site."
+msgstr "AJAXифирует формы комментариев на сайте."
+
+#: ajax_comments.module:0
+msgid "ajax_comments"
+msgstr ""
+
+#: ajax_comments.info:0
+msgid "AJAX Comments"
+msgstr "AJAX комментарии"
+
+#: ajax_comments.js:0
+msgid "Are you sure you want to delete the comment? Any replies to this comment will be lost. This action cannot be undone."
+msgstr "Вы действительно хотите удалить этот комментарий? Все ответы к нему будут также удалены. Это действие отменить будет нельзя."
