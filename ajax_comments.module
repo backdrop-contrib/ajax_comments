@@ -1,11 +1,12 @@
 <?php
 // $Id$
 
-/*
- * Implementation of hook_form_alter()
+/**
+ * Implementation of hook_form_FORM_ID_alter().
  */
-function ajax_comments_form_alter(&$form, $form_state, $form_id) {
+function ajax_comments_form_comment_form_alter(&$form, $form_state) {
   $node = menu_get_object();
+
   if (!isset($node) && arg(0) == 'ajax_comments') {
     $node = node_load(arg(2));
   }
@@ -17,8 +18,9 @@ function ajax_comments_form_alter(&$form, $form_state, $form_id) {
       break;
     }
   }
+
   if ($all_allowed || isset($allowed_node_types[$node->type]) && $allowed_node_types[$node->type]) {
-    if (($form_id == 'comment_form') && (arg(1) != 'edit') && (arg(1) != 'reply') && (arg(2) != 'edit') && (arg(2) != 'reply')) {
+    if ((arg(1) != 'edit') && (arg(1) != 'reply') && (arg(2) != 'edit') && (arg(2) != 'reply')) {
       $form['#prefix'] = '<div id="comment-preview"></div>';
 
       // Overriding PID param so it will appear on the form.
@@ -73,19 +75,20 @@ function ajax_comments_form_alter(&$form, $form_state, $form_id) {
   }
 }
 
-/*
- * Implementation of hook_menu()
+/**
+ * Implementation of hook_menu().
  */
 function ajax_comments_menu() {
   $items['admin/settings/ajax_comments'] = array(
     'title' => 'AJAX comments',
     'description' => 'AJAXifies comments on site.',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('admin_ajax_comments'),
+    'page arguments' => array('ajax_comments_settings'),
     'access arguments' => array('administer site configuration'),
+    'file' => 'ajax_comments.admin.inc',
    );
   $items['ajax_comments/instant_delete/%'] = array(
-    'page callback' => 'instant_delete',
+    'page callback' => 'ajax_comments_instant_delete',
     'page arguments' => array(2),
     'access arguments' => array('administer comments'),
     'type' => MENU_CALLBACK,
@@ -105,8 +108,8 @@ function ajax_comments_menu() {
 }
 
 
-/*
- * AHAH callback
+/**
+ * AHAH callback.
  */
 function ajax_comments_js() {
   $form_state = array('storage' => NULL, 'submitted' => FALSE);
@@ -184,7 +187,9 @@ function ajax_comments_js() {
   }
 }
 
-
+/**
+ * Delivers a new comments form after comment have been submitted.
+ */
 function ajax_comments_js_reload_form($nid, $pid = NULL) {
   drupal_set_header('Content-type: text/javascript; charset=utf-8');
 
@@ -196,9 +201,8 @@ function ajax_comments_js_reload_form($nid, $pid = NULL) {
   exit();
 }
 
-
-/*
- * Comment submit routine
+/**
+ * Comment submit routine.
  */
 function ajax_comments_submit($form, &$form_state) {
   //remove self
@@ -248,59 +252,10 @@ function ajax_comments_submit($form, &$form_state) {
   return $output;
 }
 
-
-/*
- * AJAX comments settings form
- */
-function admin_ajax_comments() {
-  $form['settings'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Settings'),
-  );
-  $form['settings']['ajax_comments_always_expand_form'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Form always expanded'),
-    '#description' => t('This setting allows to render comments as collapsed link by default.'),
-    '#default_value' => variable_get('ajax_comments_always_expand_form', FALSE),
-  );
-  $form['settings']['ajax_comments_blink_new'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Blink new comment'),
-    '#description' => t('This effect helps to find new comment after replying to long threads.'),
-    '#default_value' => variable_get('ajax_comments_blink_new', TRUE),
-  );
-  $form['settings']['ajax_comments_default_row_count'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Default row count'),
-    '#description' => t('Allows to control comment forms\' textarea size. Leave blank to use system defined.'),
-    '#default_value' => variable_get('ajax_comments_default_row_count', 5),
-  );
-  $form['settings']['ajax_comments_reply_row_count'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Row count in replies'),
-    '#description' => t('Usually, there is no need in big forms for replies, so this setting allows to reduce their size.'),
-    '#default_value' => variable_get('ajax_comments_reply_row_count', 3),
-  );
-
-  $form['node_types'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Content types'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-  );
-  $form['node_types']['ajax_comments_node_types'] = array(
-    '#type' => 'checkboxes',
-    '#description' => t('Select node types you want to activate ajax comments on. If you select nothing, AJAX Comments will be enabled everywhere.'),
-    '#default_value' => variable_get('ajax_comments_node_types', array()),
-    '#options' => node_get_types('names'),
-  );
-  return system_settings_form($form);
-}
-
 /**
- * Comments delete callback
+ * Comments delete callback.
  */
-function instant_delete($cid = 0){
+function ajax_comments_instant_delete($cid = 0){
   // Check token to avoid CSRF attack.
   if ($cid && isset($_GET['token']) && drupal_valid_token($_GET['token'], $cid)) {
     drupal_set_header('Content-type: text/javascript; charset=utf-8');
