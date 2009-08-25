@@ -114,8 +114,7 @@ function ajax_comments_menu() {
 function ajax_comments_js() {
   $form_state = array('storage' => NULL, 'submitted' => FALSE);
   $form_build_id = $_POST['form_build_id'];
-  $form = form_get_cache($form_build_id, $form_state);
-
+  $form = ajax_comments_form_get_cache($form_build_id, $form_state);
   $args = $form['#parameters'];
   $form_id = array_shift($args);
   $form_state['post'] = $form['#post'] = $_POST;
@@ -186,6 +185,49 @@ function ajax_comments_js() {
     ));
   }
 }
+
+/**
+ * Fetch a form from cache.
+ */
+function ajax_comments_form_get_cache($form_build_id, &$form_state) {
+  global $user;
+  if ($cached = ajax_comments_cache_get('form_'. $form_build_id, 'cache_form')) {
+    $form = $cached->data;
+    if ((isset($form['#cache_token']) && drupal_valid_token($form['#cache_token'])) || (!isset($form['#cache_token']) && !$user->uid)) {
+      if ($cached = ajax_comments_cache_get('storage_'. $form_build_id, 'cache_form')) {
+        $form_state['storage'] = $cached->data;
+      }
+      return $form;
+    }
+  }
+}
+
+/**
+ * This one differs from standard by loading even expired cache instances.
+ */
+function ajax_comments_cache_get($cid, $table = 'cache') {
+  global $user;
+
+  // Garbage collection necessary when enforcing a minimum cache lifetime
+  $cache_flush = variable_get('cache_flush', 0);
+  if ($cache_flush && ($cache_flush + variable_get('cache_lifetime', 0) <= time())) {
+    // Reset the variable immediately to prevent a meltdown in heavy load situations.
+    variable_set('cache_flush', 0);
+    // Time to flush old cache data
+    db_query("DELETE FROM {". $table ."} WHERE expire != %d AND expire <= %d", CACHE_PERMANENT, $cache_flush);
+  }
+
+  $cache = db_fetch_object(db_query("SELECT data, created, headers, expire, serialized FROM {". $table ."} WHERE cid = '%s'", $cid));
+  if (isset($cache->data)) {
+    $cache->data = db_decode_blob($cache->data);
+    if ($cache->serialized) {
+      $cache->data = unserialize($cache->data);
+    }
+    return $cache;
+  }
+  return 0;
+}
+
 
 /**
  * Delivers a new comments form after comment have been submitted.
