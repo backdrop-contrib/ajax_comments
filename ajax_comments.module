@@ -28,6 +28,12 @@ function ajax_comments_form_comment_form_alter(&$form, $form_state) {
       $form['pid']['#default_value'] = $form['pid']['#value'];
       unset($form['pid']['#value']);
 
+      // Node id for rebuilding form if needed
+      $form['nid'] = array(
+        '#type' => 'hidden',
+        '#default_value' => $node->nid,
+      );
+
       // We should set specific ID to let ahah wrapper know what to wrap on ajax
       // loaded comment-form even if we have many submit buttons on the page.
       $form['preview']['#id'] = "ajax-comments-preview";
@@ -115,17 +121,43 @@ function ajax_comments_js() {
   $form_state = array('storage' => NULL, 'submitted' => FALSE);
   $form_build_id = $_POST['form_build_id'];
   $form = ajax_comments_form_get_cache($form_build_id, $form_state);
-  $args = $form['#parameters'];
-  $form_id = array_shift($args);
+
+  if($form) {
+    $args = $form['#parameters'];
+    $form_id = array_shift($args);    
+  }
+  // Build form from scratch (e.g., Authcache module does not cache forms within the caching system)
+  else {
+    $form_id = 'comment_form';
+    $edit['nid'] = $_POST['nid'];
+    $args = array($form_id, $edit);
+    
+    $form_state['post'] = $_POST;
+    
+    // Use a copy of the function's arguments for manipulation
+    $args_temp = $args;
+    $args_temp[0] = &$form_state;
+    array_unshift($args_temp, $form_id);
+  
+    $form = call_user_func_array('drupal_retrieve_form', $args_temp);
+    $form_build_id = 'form-'. md5(uniqid(mt_rand(), true));
+    $form['#build_id'] = $form_build_id;    
+    drupal_prepare_form($form_id, $form, $form_state);
+    $original_form = $form;
+    $cacheable = FALSE; // No need to cache; amost done
+    $form['#post'] = $_POST;    
+  }
+
   $form_state['post'] = $form['#post'] = $_POST;
   $form['#programmed'] = $form['#redirect'] = FALSE;
-  
+
   if ($form_state['post']['op'] == t('Preview')) {
     $form['#after_build'] = array('comment_form_add_preview');
   }
   else {
     unset($form['#after_build']);
   }
+
   drupal_process_form($form_id, $form, $form_state);
 
 
@@ -197,6 +229,15 @@ function ajax_comments_form_get_cache($form_build_id, &$form_state) {
       if ($cached = ajax_comments_cache_get('storage_'. $form_build_id, 'cache_form')) {
         $form_state['storage'] = $cached->data;
       }
+      // Rewind form values.
+      $elements = element_children($form);
+      if (!empty($elements)) {
+        foreach ($elements as $element) {
+          if (in_array($form[$element]['#type'], array('textfield', 'textarea', 'select', 'checkbox', 'radio', 'checkboxes', 'radios'))) {
+            unset($form[$element]['#value']);
+          }
+        }
+      }
       return $form;
     }
   }
@@ -214,16 +255,34 @@ function ajax_comments_cache_get($cid, $table = 'cache') {
     // Reset the variable immediately to prevent a meltdown in heavy load situations.
     variable_set('cache_flush', 0);
     // Time to flush old cache data
-    db_query("DELETE FROM {". $table ."} WHERE expire != %d AND expire <= %d", CACHE_PERMANENT, $cache_flush);
+    
+    // Support third-party caching systems such as CacheRouter
+    if(variable_get('cache_inc', FALSE)) { 
+      cache_clear_all(NULL, $table);
+    } 
+    // Drupal core caching tables
+    else {
+      db_query("DELETE FROM {". $table ."} WHERE expire != %d AND expire <= %d", CACHE_PERMANENT, $cache_flush);  
+    }
   }
 
-  $cache = db_fetch_object(db_query("SELECT data, created, headers, expire, serialized FROM {". $table ."} WHERE cid = '%s'", $cid));
-  if (isset($cache->data)) {
-    $cache->data = db_decode_blob($cache->data);
-    if ($cache->serialized) {
-      $cache->data = unserialize($cache->data);
+  // Support third-party caching systems such as CacheRouter
+  if(variable_get('cache_inc', FALSE)) { 
+    $cache = cache_get($cid, $table);
+    if (isset($cache->data)) {
+      return $cache;  
     }
-    return $cache;
+  }
+  // Drupal core caching tables
+  else { 
+    $cache = db_fetch_object(db_query("SELECT data, created, headers, expire, serialized FROM {". $table ."} WHERE cid = '%s'", $cid));
+    if (isset($cache->data)) {
+      $cache->data = db_decode_blob($cache->data);
+      if ($cache->serialized) {
+        $cache->data = unserialize($cache->data);
+      }
+      return $cache;
+    }    
   }
   return 0;
 }
