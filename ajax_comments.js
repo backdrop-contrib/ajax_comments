@@ -11,7 +11,7 @@ var firsttime_init = true;
 Drupal.behaviors.ajax_comments = function(context) {
   Drupal.ajax_comments_init_form(context);
   Drupal.ajax_comments_init_links(context);
-  if (Drupal.settings.ajax_comments_fold_comments) {
+  if (Drupal.settings.comment_bonus_api_fold_comments) {
     Drupal.ajax_comments_fold(context);
   }
 
@@ -239,7 +239,7 @@ Drupal.ajax_comments_reply_click = function() {
         }
         
         folded_thread = $(this).parents(commentbox).next('.indented.folded');
-        if (folded_thread.length && Drupal.settings.ajax_comments_fold_comments) {
+        if (folded_thread.length && Drupal.settings.comment_bonus_api_fold_comments) {
           $(this).parents(commentbox).find('.hide-thread').click();
           folded_thread.after($('#comment-form-content'));
         }
