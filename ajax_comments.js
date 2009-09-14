@@ -9,22 +9,50 @@ var firsttime_init = true;
  * Attaches the ahah behavior to each ahah form element.
  */
 Drupal.behaviors.ajax_comments = function(context) {
-  $('#panels-comment-form').attr('id', 'comment-form');
+  Drupal.ajax_comments_init_form(context);
+  Drupal.ajax_comments_init_links(context);
+  if (Drupal.settings.ajax_comments_fold_comments) {
+    Drupal.ajax_comments_fold(context);
+  }
+
+  // Add Ctrl key listener for deletion feature.
+  $(window).keydown(function(e) {
+    if(e.keyCode == 17) {
+      ctrl = true;
+    }
+  });
+  $(window).keyup(function(e) {
+    ctrl = false;
+     // Add sending on Ctrl+Enter.
+    if ((e.ctrlKey) && ((e.keyCode == 0xA) || (e.keyCode == 0xD)) && !submitted) {
+      submitted = true;
+      $('#ajax-comments-submit').click()
+    }
+ });
+
+  firsttime_init = false;
+};
+
+/**
+ * Attach behaviors to comment form.
+ */
+Drupal.ajax_comments_init_form = function(context) {
   $('#comment-form:not(.ajax-comments-processed)', context).addClass('ajax-comments-processed').each(function() {
     form = $(this);
+    
     // Prepare the form when the DOM is ready.
-    if ((Drupal.settings.rows_default == undefined) || (!Drupal.settings.rows_default)) {
-      Drupal.settings.rows_default = $('textarea', form).attr('rows');
+    if ((Drupal.settings.ajax_comments_rows_default == undefined) || (!Drupal.settings.ajax_comments_rows_default)) {
+      Drupal.settings.ajax_comments_rows_default = $('textarea', form).attr('rows');
     }
-    $('textarea', form).attr('rows', Drupal.settings.rows_default);
-    if ((Drupal.settings.rows_in_reply == undefined) || (!Drupal.settings.rows_in_reply)) {
-      Drupal.settings.rows_in_reply = Drupal.settings.rows_default;
+    $('textarea', form).attr('rows', Drupal.settings.ajax_comments_rows_default);
+    if ((Drupal.settings.ajax_comments_rows_in_reply == undefined) || (!Drupal.settings.ajax_comments_rows_in_reply)) {
+      Drupal.settings.ajax_comments_rows_in_reply = Drupal.settings.ajax_comments_rows_default;
     }
-    if (Drupal.settings.always_expand_main_form == undefined) {
-      Drupal.settings.always_expand_main_form = true;
+    if (Drupal.settings.ajax_comments_always_expand_form == undefined) {
+      Drupal.settings.ajax_comments_always_expand_form = true;
     }
-    if (Drupal.settings.blink_new == undefined) {
-      Drupal.settings.blink_new = true;
+    if (Drupal.settings.ajax_comments_blink_new == undefined) {
+      Drupal.settings.ajax_comments_blink_new = true;
     }
 
     $('#edit-upload', form).bind('change', function(){
@@ -57,12 +85,12 @@ Drupal.behaviors.ajax_comments = function(context) {
 
     // Initializing main form.
     action = form.attr('action');
-
+    
     // Creating title link.
-    form.parents(".box").find("h2:not(.ajax-comments-processed),h3:not(.ajax-comments-processed),h4:not(.ajax-comments-processed)").addClass('ajax-comments-processed').each(function(){
+    form.parent('div').prev('h2:not(.ajax-comments-title-processed),h3:not(.ajax-comments-title-processed),h4:not(.ajax-comments-title-processed)').addClass('ajax-comments-title-processed').each(function(){
       title = $(this).html();
       $(this).html('<a href="'+action+'" id="comment-form-title">'+title+'</a>');
-      $(this).parents(".box").find(".content").attr('id','comment-form-content').removeClass("content");
+      form.parent('div').attr('id','comment-form-content').removeClass("content");
     });
 
     // Expanding form if needed.
@@ -72,7 +100,7 @@ Drupal.behaviors.ajax_comments = function(context) {
       fragment = page_url.split('#')[1];
     }
 
-    if ((fragment == 'comment-form'  || Drupal.settings.always_expand_main_form) && firsttime_init) {
+    if ((fragment == 'comment-form'  || Drupal.settings.ajax_comments_always_expand_form) && firsttime_init) {
       $('#comment-form-title', context).addClass('pressed');
       $('#comment-form-content').attr('cid', 0);
     }
@@ -82,23 +110,38 @@ Drupal.behaviors.ajax_comments = function(context) {
     }
     
     // Attaching event to title link.
-    $('#comment-form-title:not(.ajax-comments-processed)', context).addClass('ajax-comments-processed').click(ajax_comments_reply_click);
+    $('#comment-form-title:not(.ajax-comments-processed)', context).addClass('ajax-comments-processed').click(Drupal.ajax_comments_reply_click);
+
     // Moving preview in a proper place.
-    $('#comment-form-content').parents('.box').before($('#comment-preview'));
+    if (ajax_comments_is_reply_to_node(action)) {
+      $('.ajax-comments-title-processed').before($('#comment-preview'));
+    }
+    else {
+      $('#comment-form-content').before($('#comment-preview'));
+    }
+
     if (!$('#comment-form-content').attr('cid')) {
       $('#comment-form-content').attr('cid', -1);
     }
     
     if(typeof(fix_control_size)!='undefined'){ fix_control_size(); }
   });
-  
-  $('.comment_reply a:not(.ajax-comments-processed)', context).addClass('ajax-comments-processed').click(ajax_comments_reply_click);
+}
+
+/**
+ * Attach behaviors to comment links.
+ */
+Drupal.ajax_comments_init_links = function(context) {
+  // Process reply links.
+  $('.comment_reply a:not(.ajax-comments-processed)', context).addClass('ajax-comments-processed').click(Drupal.ajax_comments_reply_click);
+
+  // Process quote links.
   $('.quote a:not(.ajax-comments-processed)', context).addClass('ajax-comments-processed').each(function(){
     href = $(this).attr('href');
     if (ajax_comments_is_reply_to_node(href)) {
       $(this).click(function(){
         $('#comment-form').attr('action', $(this).attr('href'));
-        ajax_comments_reload_form(0);
+        ajax_comments_reload_form(0, 'pid');
 
         $('#comment-form-title', context).click();
         ajax_comments_scroll_to_comment_form();
@@ -106,69 +149,104 @@ Drupal.behaviors.ajax_comments = function(context) {
       });
     }
     else {
-      $(this).click(ajax_comments_reply_click);
+      $(this).click(Drupal.ajax_comments_reply_click);
     }
   });
-  
+
+  // Process edit links.
+  $('.comment_edit a:not(.ajax-comments-processed)', context).addClass('ajax-comments-processed').click(Drupal.ajax_comments_edit_click);
+
   // We should only bind ajax deletion on links with tokens to avoid CSRF attacks.
-  $('.comment_delete a:not(.ajax-comments-processed)', context).each(function (){
+  $('.comment_delete a:not(.ajax-comments-processed)', context).addClass('ajax-comments-processed').each(function (){
     href = $(this).attr('href');
     if (href.indexOf('token=') > -1) {
-      $(this).addClass('ajax-comments-processed').click(ajax_comments_delete_click);
+      $(this).addClass('ajax-comments-processed').click(Drupal.ajax_comments_delete_click);
     }
   });
-
-  // Add Ctrl key listener for deletion feature.
-  $(window).keydown(function(e) {
-    if(e.keyCode == 17) {
-      ctrl = true;
-    }
-  });
-  $(window).keyup(function(e) {
-    ctrl = false;
-     // Add sending on Ctrl+Enter.
-    if ((e.ctrlKey) && ((e.keyCode == 0xA) || (e.keyCode == 0xD)) && !submitted) {
-      submitted = true;
-      $('#ajax-comments-submit').click()
-    }
- });
-
-
-  firsttime_init = false;
-};
+}
 
 /**
- * Reply link handler
+ * Fold indednted comments threads.
  */
-function ajax_comments_reply_click() {
+Drupal.ajax_comments_fold = function(context) {
+  $('#comments > .indented:not(.ajax-comments-processed)', context).addClass('folded').addClass('ajax-comments-processed').each(function (){
+    $thread = $(this);
+    // Hide threads.
+    $thread.css('display', 'none');
+
+    // Calculate child elements.
+    num_replies = $thread.children(commentbox).size();
+
+    // Find placeholder for thread folding links.
+    $fold_links = $thread.prev(commentbox).find('.fold-links');
+    if (!$fold_links.length) {
+      $thread.prev(commentbox).append('<div class="fold-links"></div>');
+      $fold_links = $thread.prev(commentbox).find('.fold-links');
+    }
+    // Draw control elements.
+    $fold_links.html('<ul class="links"><li class="num-replies"><span class="num-replies-inner">' + Drupal.formatPlural(num_replies, '1 Reply', '@count Replies') + '</span></li><li class="toggle-thread"><a href="#" class="show-thread">' + Drupal.t('Show') + '</a></li></ul>');
+  });
+
+  $('.fold-links > ul > .toggle-thread a:not(.ajax-comments-processed)', context).addClass('ajax-comments-processed').click(function (){
+    $toggler = $(this);
+    if ($toggler.is('.show-thread')) {
+      $toggler.parents(commentbox).next('.indented').slideDown();
+      $toggler.text(Drupal.t('Hide'))
+        .removeClass('show-thread')
+        .addClass('hide-thread');
+    }
+    else if ($toggler.is('.hide-thread')) {
+      $toggler.parents(commentbox).next('.indented').slideUp();
+      $toggler.text(Drupal.t('Show'))
+        .removeClass('hide-thread')
+        .addClass('show-thread');
+    }
+    return false;
+  });
+}
+
+
+/**
+ * Reply links handler.
+ */
+Drupal.ajax_comments_reply_click = function() {
   // We should only handle non presed links.
   if (!$(this).is('.pressed')){
     action = $(this).attr('href');
+    form_action = $('#comment-form').attr('action');
     link_cid = ajax_comments_get_cid_from_href(action);
-    rows = Drupal.settings.rows_default;
+    rows = Drupal.settings.ajax_comments_rows_default;
     if ($('#comment-form-content').attr('cid') != link_cid) {
       // We should remove any WYSIWYG before moving controls.
       ajax_comments_remove_editors();
 
       // Move form from old position.
       if (ajax_comments_is_reply_to_node(action)) {
-        $('#comment-form').removeClass('indented');
+        $('#comment-form-content').removeClass('indented');
         if ($('#comment-form-content:visible').length) {
           $('#comment-form-content').after('<div style="height:' + $('#comment-form-content').height() + 'px;" class="sizer"></div>');
           $('.sizer').slideUp(speed, function(){ $(this).remove(); });
         }
         $(this).parents('h2,h3,h4').after($('#comment-form-content'));
-        rows = Drupal.settings.rows_default;
-        $('#comment-form-content').parents('.box').before($('#comment-preview'));
+        rows = Drupal.settings.ajax_comments_rows_default;
+        $('.ajax-comments-title-processed').before($('#comment-preview'));
       }
       else {
-        $('#comment-form').addClass('indented');
+        $('#comment-form-content').addClass('indented');
         if ($('#comment-form-content:visible').length) {
           $('#comment-form-content').after('<div style="height:' + $('#comment-form-content').height() + 'px;" class="sizer"></div>');
           $('.sizer').slideUp(speed, function(){ $(this).remove(); });
         }
-        $(this).parents(commentbox).after($('#comment-form-content'));
-        rows = Drupal.settings.rows_in_reply;
+        
+        folded_thread = $(this).parents(commentbox).next('.indented.folded');
+        if (folded_thread.length && Drupal.settings.ajax_comments_fold_comments) {
+          $(this).parents(commentbox).find('.hide-thread').click();
+          folded_thread.after($('#comment-form-content'));
+        }
+        else {
+          $(this).parents(commentbox).after($('#comment-form-content'));
+        }
+        rows = Drupal.settings.ajax_comments_rows_in_reply;
         $('#comment-form-content').prepend($('#comment-preview'));
       }
       $('#comment-form-content').hide();
@@ -178,14 +256,17 @@ function ajax_comments_reply_click() {
     if (!$(this).is('.last-clicked')) {
       // Reload form if preview is required.
       if ((Drupal.settings.comment_preview_required && $('#ajax-comments-submit').length) ||
-        // Or if quoted comment.
-        action.match('quote=1')
+        // Or if quoted comment or custom reload trigger.
+        action.match('quote=1') || form_action.match('reload=1')
       ) {
         $('#comment-form').attr('action', action)
-        ajax_comments_reload_form(link_cid);
+        ajax_comments_reload_form(link_cid, 'pid');
+        
+        $('.editing').fadeTo('fast', 1);
       }
       else {
-        ajax_comments_init_form(link_cid, rows);
+        ajax_comments_rewind(link_cid, rows);
+        ajax_comments_scroll_to_comment_form();
       }
     }
     // ...and show the form after everything is done.
@@ -199,7 +280,7 @@ function ajax_comments_reply_click() {
   }
   else {
     // Handling double click.
-    if ((!$(this).is('#comment-form-title')) && (Drupal.settings.always_expand_main_form)) {
+    if ((!$(this).is('#comment-form-title')) && (Drupal.settings.ajax_comments_always_expand_form)) {
       $('#comment-form-title').click();
     }
     else {
@@ -212,9 +293,47 @@ function ajax_comments_reply_click() {
 }
 
 /**
+ * Edit links handler.
+ */
+Drupal.ajax_comments_edit_click = function() {
+  $edit_link = $(this);
+
+  $edit_link.parents(commentbox).fadeTo('fast', 0.5).addClass('editing');
+
+  ajax_comments_show_progress();
+  $('#comment-form-content').addClass('indented');
+  if ($('#comment-form-content:visible').length) {
+    $('#comment-form-content').after('<div style="height:' + $('#comment-form-content').height() + 'px;" class="sizer"></div>');
+    $('.sizer').slideUp(speed, function(){ $(this).remove(); });
+  }
+  
+  $edit_link.parents(commentbox).after($('#comment-form-content'));
+  rows = Drupal.settings.ajax_comments_rows_in_reply;
+  $('#comment-form-content').prepend($('#comment-preview'));
+  $('#comment-form-content').hide();
+  ajax_comments_expand_form();
+
+
+  form_action = $('#comment-form').attr('action');
+  // Reload form with edit data.
+  $args = ajax_comments_get_args(form_action);
+  nid = $args[2];
+  action = $edit_link.attr('href');
+  action = action.replace('comment/edit', 'ajax_comments/js_reload/' + nid) + '/cid';
+  ajax_comments_reload_form(action, 'action', function() { 
+    // Set reload trigger.
+    $('#comment-form').attr('action', form_action + '?reload=1');
+    $('#comment-form-content').attr('cid', 'edit');
+  });
+
+
+  return false;
+}
+
+/**
  * Delete links handler.
  */
-function ajax_comments_delete_click() {
+Drupal.ajax_comments_delete_click = function() {
   if ((ctrl) || (confirm(Drupal.t('Are you sure you want to delete the comment? Any replies to this comment will be lost. This action cannot be undone.')))) {
     // Taking link's href as AJAX url.
     comment = $(this).parents(commentbox);
@@ -225,8 +344,8 @@ function ajax_comments_delete_click() {
       $.ajax({
         type: "GET",
         url: action,
-        success: function(result){
-          if (result == 'OK') {
+        success: function(response) {
+          if (response.status) {
             ajax_comments_close_form();
 
             // If comment form is expanded on this module, we should collapse it first.
@@ -248,11 +367,82 @@ function ajax_comments_delete_click() {
           else {
             alert('Sorry, token error.');
           }
-        }
+        },
+        dataType: 'json'
       });
     }
   }
   return false;
+}
+
+/**
+ * Attaches the ahah behavior to each ahah form element.
+ */
+Drupal.behaviors.ajax_comments_pager = function(context) {
+  $('#comments .pager:not(.pager-processed)', context).addClass('pager-processed').each(function() {
+    $target = $(this);
+    $target
+      .find('li > a')
+      .click(function () {
+        $(this).animate({paddingRight:16}, 'fast').addClass('throbber').removeAttr('style');
+        Drupal.turn_over_page($target, $(this).attr('href'), true, function(){}, function(){ $(this).removeClass('throbber'); });
+        return false;
+      });
+  });
+}
+
+/**
+ * Turn over a single page.
+ *
+ *   @param target
+ *     The .pager element.
+ *   @param url
+ *     New page URL.
+ *   @param scroll
+ *     Is scroll to comments header needed.
+ *   @param success_callback
+ *     Function which will be called after pagination (or immediately if pager does not exists).
+ *   @param error_callback
+ *     Function which will be called on AJAX error.
+ */
+Drupal.turn_over_page = function(target, url, scroll, success_callback, error_callback) {
+  if (target.length && url) {
+    ajaxPath = url.replace(/(.*?)\?(.*?)/g, '/ajax_comments/js_load_thread/' + Drupal.settings.ajax_comments_nid + '?$2');
+    $.ajax({
+      url: ajaxPath,
+      type: 'GET',
+      success: function(response) {
+        if (response.status && response.content) {
+          if (scroll) {
+            offset = $('#comments').offset();
+            $('html').animate({scrollTop: offset.top}, 'slow');
+          }
+          target.parent().parent().animate({opacity: 0.2}, 'fast', function() { 
+            var $newContent = $(response.content);
+            target.parent().parent().replaceWith($newContent);
+            firsttime_init = true;
+            Drupal.attachBehaviors($newContent.parent());
+
+            if (scroll) {
+              offset = $('#comments').offset();
+              $('html').animate({scrollTop: offset.top}, success_callback);
+            }
+            else {
+              success_callback();
+            }
+          });
+        }
+      },
+      error: function() {
+        error_callback();
+        alert(Drupal.t("An error occurred at @path.", {'@path': ajaxPath}));
+      },
+      dataType: 'json'
+    });
+  }
+  else {
+    success_callback();
+  }
 }
 
 // ======================================================================
@@ -274,7 +464,7 @@ function ajax_comments_expand_form(focus) {
 /**
  * Helper function for reply handler.
  */
-function ajax_comments_init_form(pid, rows){
+function ajax_comments_rewind(pid, rows){
   // Resizing and clearing textarea.
   $('#comment-form textarea').attr('rows', rows);
   $('#comment-form:not(.fresh) textarea').attr('value','');
@@ -298,7 +488,7 @@ function ajax_comments_close_form(reload) {
   pid = $('#comment-form-content').attr('cid');
   $('#comment-form-content').animate({height:'hide'}, speed, function(){
     if (reload) {
-      ajax_comments_reload_form(pid);
+      ajax_comments_reload_form(pid, 'pid');
     }
   });
   $('.pressed').removeClass('pressed');
@@ -309,38 +499,51 @@ function ajax_comments_close_form(reload) {
 /**
  * Reload comments form from server.
  */
-function ajax_comments_reload_form(pid) {
-  action = $('#comment-form').attr('action');
-  action = action.replace('comment/reply', 'ajax_comments/js_reload');
+function ajax_comments_reload_form(id, type, callback) {
+  rows = Drupal.settings.ajax_comments_rows_default;
+  if (type == 'pid') {
+    action = $('#comment-form').attr('action');
+    action = action.replace(/comment\/reply\/([0-9]+?)(\/*[0-9]*)$/, 'ajax_comments/js_reload/$1$2');
+    action = action.replace(/ajax_comments\/js_reload\/([0-9]+?)\/([0-9]+?)\/cid/, 'ajax_comments/js_reload/$1');
 
-  if (pid > 0) {
-    action = action.replace(/([?])$/, '/' + pid + '?');
-    action = action.replace(/#comment-form/, '');
-    
-    rows = Drupal.settings.rows_in_reply;
+    if (id > 0) {
+      action = action.replace(/([?])$/, '/' + id + '?');
+      action = action.replace(/#comment-form/, '');
+      
+      rows = Drupal.settings.ajax_comments_rows_in_reply;
+    }
   }
-  else {
-    rows = Drupal.settings.rows_default;
+  else if (type == 'action') {
+    action = id;
   }
+
   $('#comment-preview').hide();
   ajax_comments_show_progress();
 
   $.ajax({
     type: "GET",
     url: action,
-    success: function(result) {
-      saved_class = $('#comment-form').attr('class');
-      $('#comment-form-content').html(result);
-      $('#comment-form').attr('class', saved_class);
+    success: function(response) {
+     if (response.status && response.content) {
+        saved_class = $('#comment-form').attr('class');
+        saved_class = saved_class.replace('ajax-comments-processed', '');
 
-      $('#comment-form').addClass('fresh');
+        $('#comment-form-content').html(response.content);
+        $('#comment-form').attr('class', saved_class);
 
-      Drupal.attachBehaviors($('#comment-form-content form'));
-      ajax_comments_init_form(pid, rows);
-      ajax_comments_hide_progress();
+        $('#comment-form').addClass('fresh');
+        Drupal.attachBehaviors($('#comment-form-content'));
+        ajax_comments_rewind(id, rows);
+        ajax_comments_hide_progress();
 
-      $('#comment-form').removeClass('fresh');
-    }
+        $('#comment-form').removeClass('fresh');
+
+        if (undefined != callback) {
+          callback();
+        }
+      }
+    },
+    dataType: 'json'
   });
 }
 
@@ -358,6 +561,34 @@ function ajax_comments_scroll_to_comment_form() {
   offset = $('#comment-form-content').offset();
   if ((offset.top > $('html').scrollTop() + height) || (offset.top < $('html').scrollTop() - 20)) {
     $('html').animate({scrollTop: offset.top}, 'slow');
+  }
+}
+
+/**
+ * Find a place for a new comment.
+ */
+function ajax_comments_insert_new_comment($comment) {
+  if ($('#comment-form-content').attr('cid') == 'edit') {
+    $('#comment-form-content').before($comment);
+    $('.editing').remove();
+    $('#comment-form-content').attr('cid', 0);
+  }
+  else if ($('#comment-form-content').attr('cid') <= 0) {
+    if ($('#comments .pager').length) {
+      $('#comment-preview').prev('.item-list').before($comment);
+    }
+    else {
+      $('#comment-preview').before($comment);
+    }
+  }
+  else {
+    if ($('#comment-form-content').next().is('.indented')) {
+      $('#comment-form-content').next().append($comment);
+    }
+    else {
+      $('#comment-form-content').before($comment);
+      $comment.wrap('<div class="indented"></div>');
+    }
   }
 }
 
@@ -390,64 +621,61 @@ jQuery.fn.ajaxCommentsSubmitToggle = function() {
 
   html = obj.html();
   if (html.indexOf('comment-new-success') > -1) {
-    
     // Empty any preview before output comment.
     $('#comment-preview').slideUp(speed, function(){ $(this).empty(); });
-    
-    // Place new comment in proper place.
-    ajax_comments_insert_new_comment(obj);
 
-    // At last - showing it up.
-    obj.animate({height:'show', opacity:'show'}, speed, function () {
-      if ($.browser.msie) {
-        height = document.documentElement.offsetHeight ;
-      } else if (window.innerWidth && window.innerHeight) {
-        height = window.innerHeight;
-      }
-      height = height / 2;
+    // If there are more than one page in comments tthread, we should firstly turn over to a last page.
+    $last_page = $('#comments .pager:first li.pager-last a');
+    if (!$last_page.length) {
+      $last_page = $('#comments .pager:first li.pager-next').prev().children('a');
+    }
+    if ($('#comment-form-content').attr('cid') <= 0 && $last_page.length) {
+      Drupal.turn_over_page($('#comments .pager:first'), $last_page.attr('href'), false, function(){}, function(){ $(this).removeClass('throbber'); });
+    }
+    else {
+      // Place new comment in proper place.
+      ajax_comments_insert_new_comment(obj);
+
       offset = obj.offset();
-      if ((offset.top > $('html').scrollTop() + height) || (offset.top < $('html').scrollTop() - 20)) {
-        $('html').animate({scrollTop: offset.top - height}, 'slow', function(){
-          // Blink a little bit to user, so he know where's his comment.
-          if (Drupal.settings.blink_new) {
+      $('html').animate({scrollTop: offset.top});
+
+      // At last - showing it up.
+      obj.animate({height:'show', opacity:'show'}, speed, function () {
+        if ($.browser.msie) {
+          height = document.documentElement.offsetHeight ;
+        } else if (window.innerWidth && window.innerHeight) {
+          height = window.innerHeight;
+        }
+        height = height / 2;
+        offset = obj.offset();
+        if ((offset.top > $('html').scrollTop() + height) || (offset.top < $('html').scrollTop() - 20)) {
+          $('html').animate({scrollTop: offset.top - height}, 'slow', function(){
+            // Blink a little bit to user, so he know where's his comment.
+            if (Drupal.settings.ajax_comments_blink_new) {
+              obj.fadeTo('fast', 0.2).fadeTo('fast', 1).fadeTo('fast', 0.5).fadeTo('fast', 1).fadeTo('fast', 0.7).fadeTo('fast', 1, function() { if ($.browser.msie) this.style.removeAttribute('filter'); });
+            }
+          });
+        }
+        else {
+          if (Drupal.settings.ajax_comments_blink_new) {
             obj.fadeTo('fast', 0.2).fadeTo('fast', 1).fadeTo('fast', 0.5).fadeTo('fast', 1).fadeTo('fast', 0.7).fadeTo('fast', 1, function() { if ($.browser.msie) this.style.removeAttribute('filter'); });
           }
-        });
-      }
-      else {
-        if (Drupal.settings.blink_new) {
-          obj.fadeTo('fast', 0.2).fadeTo('fast', 1).fadeTo('fast', 0.5).fadeTo('fast', 1).fadeTo('fast', 0.7).fadeTo('fast', 1, function() { if ($.browser.msie) this.style.removeAttribute('filter'); });
         }
-      }
-      if ($.browser.msie) this.style.removeAttribute('filter');
-    });
+        if ($.browser.msie) this.style.removeAttribute('filter');
+      });
 
-    // Re-attaching behaviors to new comment.
-    Drupal.attachBehaviors(html);
+      // Re-attaching behaviors to new comment.
+      Drupal.attachBehaviors(html);
 
-    // Hiding comment form.
-    ajax_comments_close_form(true);
+      // Hiding comment form.
+      ajax_comments_close_form(true);
+    }
   }
   else {
     $('#comment-preview').append(obj);
     obj.ajaxCommentsPreviewToggle(speed);
   }
 };
-
-function ajax_comments_insert_new_comment(comment) {
-  if ($('#comment-form-content').attr('cid') == 0) {
-    $('#comment-preview').before(comment);
-  }
-  else {
-    if ($('#comment-form-content').next().is('.indented')) {
-      $('#comment-form-content').next().append(comment);
-    }
-    else {
-      $('#comment-form-content').before(comment);
-      comment.wrap('<div class="indented"></div>');
-    }
-  }
-}
 
 /**
  * Remove editors from comments textarea (mostly to re-attach it).
@@ -504,16 +732,14 @@ function ajax_comments_update_editors() {
   }
 }
 
-
-
 function ajax_comments_get_cid_from_href(action) {
   args = ajax_comments_get_args(action);
 
-  // getting token params (/comment/delete/!cid!)
+  // Getting token params (/comment/delete/!cid!).
   if (args[1] == 'delete') {
     cid = args[2];
   }
-  // getting token params (/comment/reply/nid/!cid!)
+  // Getting token params (/comment/reply/nid/!cid!).
   else {
     if (typeof(args[3]) == 'undefined') {
       cid = 0;

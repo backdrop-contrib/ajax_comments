@@ -26,6 +26,11 @@ function ajax_comments_settings() {
     '#description' => t('This effect helps to find new comment after replying to long threads.'),
     '#default_value' => variable_get('ajax_comments_blink_new', TRUE),
   );
+  $form['settings']['comment_bonus_api_fold_comments'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Display only first level of comments, fold replies'),
+    '#default_value' => variable_get('comment_bonus_api_fold_comments', FALSE),
+  );
   $form['settings']['ajax_comments_default_row_count'] = array(
     '#type' => 'textfield',
     '#title' => t('Default row count'),

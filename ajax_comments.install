@@ -12,6 +12,6 @@ function ajax_comments_install() {
  * Implementaton of hook_uninstall
  */
 function ajax_comments_uninstall() {
-  db_query("DELETE FROM {variable} WHERE name LIKE 'ajax_comments_%'");
+  db_query("DELETE FROM {variable} WHERE name LIKE 'ajax_comments_%%'");
   db_query("DELETE FROM {system} WHERE name = 'ajax_comments'");
 }
