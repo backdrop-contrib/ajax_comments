@@ -104,11 +104,16 @@ function ajax_comments_post_comment_render($node, $cid) {
  * Implementation of hook_form_FORM_ID_alter().
  */
 function ajax_comments_form_comment_form_alter(&$form, $form_state) {
-  $node = menu_get_object();
-
-  if (!isset($node) && arg(0) == 'ajax_comments') {
-    $node = node_load(arg(2));
+  if ($form['nid']['#value']) {
+    $node = node_load($form['nid']['#value']);
   }
+  else {
+    $node = menu_get_object();
+    if ((!isset($node) || !$node->nid) && arg(0) == 'ajax_comments') {
+      $node = node_load(arg(2));
+    }
+  }
+
   $allowed_node_types = variable_get('ajax_comments_node_types', array());
   $all_allowed = TRUE;
   foreach ($allowed_node_types as $type) {
