@@ -43,7 +43,7 @@ function ajax_comments_js() {
   $form_state['post'] = $form['#post'] = $_POST;
   $form['#programmed'] = $form['#redirect'] = FALSE;
 
-  if ($form_state['post']['op'] == t('Preview')) {
+  if ($form_state['post']['op'] == $form_state['values']['preview']) {
     $form['#after_build'] = array('comment_form_add_preview');
   }
   else {
@@ -57,13 +57,13 @@ function ajax_comments_js() {
 
   if (!$errors) {
     // Prepare output
-    if ($form_state['values']['op'] == t('Preview')) {
+    if ($form_state['values']['op'] == $form_state['values']['preview']) {
       $output = '<div class="preview-item">'. $form['comment_preview']['#value'] .'</div>';
       if ($output && $form_state['values']['pid']) {
         $output = '<div class="indented">'. $output .'<div>';
       }
     }
-    elseif ($form_state['values']['op'] == t('Save')) {
+    elseif ($form_state['values']['op'] == $form_state['values']['submit']) {
       $output = '<div class="comment-new-success">'. $form_state['storage']['ajax_comment'] .'</div>';
     }
     $form = form_builder($form_id, $form, $form_state);
