@@ -283,7 +283,7 @@ Drupal.ajax_comments_reply_click = function() {
     if ((!$(this).is('#comment-form-title')) && (Drupal.settings.ajax_comments_always_expand_form)) {
       $('#comment-form-title').click();
     }
-    else {
+    else if (!Drupal.settings.ajax_comments_always_expand_form) {
       ajax_comments_close_form();
     }
   }
@@ -669,6 +669,10 @@ jQuery.fn.ajaxCommentsSubmitToggle = function() {
 
       // Hiding comment form.
       ajax_comments_close_form(true);
+
+      if (Drupal.settings.ajax_comments_always_expand_form) {
+        $('#comment-form-title').click();
+      }
     }
   }
   else {
