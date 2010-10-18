@@ -409,7 +409,7 @@ Drupal.behaviors.ajax_comments_pager = function(context) {
  */
 Drupal.turn_over_page = function(target, url, scroll, success_callback, error_callback) {
   if (target.length && url) {
-    ajaxPath = url.replace(/(.*?)\?(.*?)/g, Drupal.settings.basePath + '/ajax_comments/js_load_thread/' + Drupal.settings.ajax_comments_nid + '?$2');
+    ajaxPath = url.replace(/(.*?)\?(.*?)/g, Drupal.settings.basePath + 'ajax_comments/js_load_thread/' + Drupal.settings.ajax_comments_nid + '?$2');
     $.ajax({
       url: ajaxPath,
       type: 'GET',
