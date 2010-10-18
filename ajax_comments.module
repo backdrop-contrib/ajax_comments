@@ -218,7 +218,7 @@ function ajax_comments_submit($form, &$form_state) {
 /**
  * Implementation of hook_link_alter().
  */
-function ajax_comments_link_alter(&$links, $comment) {
+function ajax_comments_link_alter(&$links, $node, $comment = NULL) {
   $node = menu_get_object();
   $allowed_node_types = variable_get('ajax_comments_node_types', array());
   $all_allowed = TRUE;
@@ -230,7 +230,7 @@ function ajax_comments_link_alter(&$links, $comment) {
   }
 
   if ($all_allowed || isset($allowed_node_types[$node->type]) && $allowed_node_types[$node->type]) {
-    if (is_array($links) && isset($links['comment_delete'])) {
+    if (is_array($links) && isset($links['comment_delete']) && isset($comment->cid)) {
       $links['comment_delete'] = array(
         'title' => t('delete'),
         'href' => 'comment/delete/'. $comment->cid,
