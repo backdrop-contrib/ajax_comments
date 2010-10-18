@@ -1,3 +1,5 @@
+// $Id$
+
 var commentbox = ".comment";
 var ctrl = false;
 var last_submit;
