@@ -39,27 +39,27 @@ function ajax_comments_menu() {
     'page arguments' => array('ajax_comments_settings'),
     'access arguments' => array('administer site configuration'),
     'file' => 'ajax_comments.admin.inc',
-   );
+  );
   $items['ajax_comments/js'] = array(
     'page callback' => 'ajax_comments_js',
     'access arguments' => array('access content'),
     'file' => 'ajax_comments.pages.inc',
     'type' => MENU_CALLBACK,
-   );
+  );
   $items['ajax_comments/js_reload/%'] = array(
     'page callback' => 'ajax_comments_js_reload_form',
     'page arguments' => array(2, 3, 4),
     'access arguments' => array('access content'),
     'file' => 'ajax_comments.pages.inc',
     'type' => MENU_CALLBACK,
-   );
+  );
   $items['ajax_comments/js_load_thread/%'] = array(
     'page callback' => 'ajax_comments_js_load_thread',
     'page arguments' => array(2),
     'access arguments' => array('access content'),
     'file' => 'ajax_comments.pages.inc',
     'type' => MENU_CALLBACK,
-   );
+  );
   $items['ajax_comments/instant_delete/%'] = array(
     'page callback' => 'ajax_comments_instant_delete',
     'page arguments' => array(2),
@@ -73,7 +73,7 @@ function ajax_comments_menu() {
 /**
  * Implementation of hook_post_comment_render().
  * Add ajax comments scripts on the page after comments being rendered.
- * @see comment_bonus_api_comment_render().
+ * @see comment_bonus_api_comment_render()
  */
 function ajax_comments_post_comment_render($node, $cid) {
   $path = drupal_get_path('module', 'ajax_comments');
@@ -149,7 +149,7 @@ function ajax_comments_form_comment_form_alter(&$form, $form_state) {
         'effect' => 'ajaxCommentsPreview',
         'progress' => array('type' => '1bar', 'message' => t('Please wait...')),
       );
-      
+
       $form['submit']['#id'] = "ajax-comments-submit";
       $form['submit']['#submit'] = array('ajax_comments_submit');
       $form['submit']['#ahah'] = array(
@@ -178,7 +178,7 @@ function ajax_comments_submit($form, &$form_state) {
   }
   //execute all others
   form_execute_handlers('submit', $form, $form_state);
-  
+
   //save comment just like comments module do it
   $edit = $form_state['values'];
   _comment_form_submit($edit);
@@ -190,7 +190,7 @@ function ajax_comments_submit($form, &$form_state) {
       // update node stats
       //_comment_update_node_statistics($node->nid);
       //node_tag_new($node->nid);
-      
+
       $query = 'SELECT c.cid, c.pid, c.nid, c.subject, c.comment, c.format, c.timestamp, c.name, c.mail, c.homepage, u.uid, u.name AS registered_name, u.signature, u.picture, u.data, c.status FROM {comments} c INNER JOIN {users} u ON c.uid = u.uid WHERE c.cid = %d';
       $query_args = array($cid);
       if (!user_access('administer comments')) {
@@ -262,6 +262,6 @@ function ajax_comments_preprocess_comment(&$variables) {
     $variables['comment']->new = TRUE;
   }
   else {
-    $variables['title'] = l($comment->subject, 'node/'.$comment->nid, array('attributes' => array('class' => 'active'), 'fragment' => "comment-$comment->cid"));
+    $variables['title'] = l($comment->subject, 'node/' . $comment->nid, array('attributes' => array('class' => 'active'), 'fragment' => "comment-$comment->cid"));
   }
 }
