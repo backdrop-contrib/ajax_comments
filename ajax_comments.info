@@ -1,3 +1,4 @@
+; $Id$
 name = AJAX Comments
 description = "AJAXifies comments on site."
 core = 6.x
