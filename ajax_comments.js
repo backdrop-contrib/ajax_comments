@@ -90,7 +90,7 @@ Drupal.ajax_comments_init_form = function(context) {
     
     // Creating title link.
     form.parent('div').prev('h2:not(.ajax-comments-title-processed),h3:not(.ajax-comments-title-processed),h4:not(.ajax-comments-title-processed)').addClass('ajax-comments-title-processed').each(function(){
-      title = $(this).html();
+      var title = $(this).html();
       $(this).html('<a href="'+action+'" id="comment-form-title">'+title+'</a>');
       form.parent('div').attr('id','comment-form-content').removeClass("content");
     });
