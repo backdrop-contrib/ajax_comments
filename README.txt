@@ -39,6 +39,16 @@ difference. (/admin/settings/performance)
 to FCKEditor 2.x or higher. Anything less than 2.x will not work properly with
 the module.
 
+6. If you have having issues, first try the module with a clean Drupal install
+with the default theme. As this is Javascript, it relies upon certain
+assumptions in the theme files. For example, there have been reports of issues
+where custom themes remove <h2> or <h3> tags which cause the module to become
+inoperable. 
+
+7. If you are using a 3rd party editor such as Wysiwug or CKeditor, try
+disabling them and first troubleshooting with just the textareas. That will
+help to narrow down any issues related to the editor.
+
 
 HELP AND ASSISTANCE
 ===================
@@ -53,6 +63,8 @@ provide the following information with your request:
 - Whether or not Javascript optimization is enabled or disabled
 - Any relevant information from the Firebug console or a similar Javascript debugger
 - Screenshots or screencast videos showing your errors are helpful
+- If you are using the default textareas or any 3rd party Javascript editors
+	like CKeditor, etc.
 
 
 TIPS & TRICKS
