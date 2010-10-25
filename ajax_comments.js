@@ -793,7 +793,13 @@ function ajax_comments_update_editors() {
   if (typeof(tinyMCE) != 'undefined') {
     tinyMCE.triggerSave();
   }
-  
+
+  // Update CKeditor.
+  if (typeof(CKEDITOR) != 'undefined') {
+    Drupal.ckeditorOff('edit-comment');
+    Drupal.ckeditorOn("edit-comment");
+	}
+
   // Update FCKeditor.
   if (typeof(doFCKeditorSave) != 'undefined') {
     doFCKeditorSave();
