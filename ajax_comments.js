@@ -1,5 +1,10 @@
 // $Id$
 
+/**
+ * @file
+ * The primary AHAH behaviors and handlers for AJAX commenting.
+ */
+
 var commentbox = ".comment";
 var ctrl = false;
 var last_submit;
@@ -8,7 +13,13 @@ var ahah = false;
 var firsttime_init = true;
 
 /**
- * Attaches the ahah behavior to each ahah form element.
+ * Attach AHAH behavior to each AHAH form element.
+ *
+ * Define a function as a property of Drupal.behaviors. This will call the code
+ * block when the DOM has finished loading. In this case, we attach the AHAH
+ * behavior to each AHAH form element.
+ *
+ * @see http://drupal.org/node/205296
  */
 Drupal.behaviors.ajax_comments = function(context) {
   Drupal.ajax_comments_init_form(context);
@@ -17,8 +28,9 @@ Drupal.behaviors.ajax_comments = function(context) {
     Drupal.ajax_comments_fold(context);
   }
 
-  // Add Ctrl key listener for deletion feature.
-  $(window).keydown(function(e) {
+  // The CTRL key listener is for the comment deletion feature. 
+	// It allows for bypassing the deletion confirmation dialog.
+	$(window).keydown(function(e) {
     if(e.keyCode == 17) {
       ctrl = true;
     }
@@ -37,6 +49,10 @@ Drupal.behaviors.ajax_comments = function(context) {
 
 /**
  * Attach behaviors to comment form.
+ *
+ * This function works with the comment entry form on the page. It binds a few different events
+ * to enable further actions to take place. It also adds the <h2> title link, which is used later
+ * as an on-page placement guide for a number of other actions (previews, new comments, etc.)
  */
 Drupal.ajax_comments_init_form = function(context) {
   $('#comment-form:not(.ajax-comments-processed)', context).addClass('ajax-comments-processed').each(function() {
@@ -61,7 +77,7 @@ Drupal.ajax_comments_init_form = function(context) {
       $('#ajax-comments-submit,#ajax-comments-preview', form).attr('disabled', 1);
     });
     
-    // It's not possible to use 'click' or 'submit' events for ahah sumits, so
+    // It's not possible to use 'click' or 'submit' events for AHAH sumits, so
     // we should emulate it by up-down events. We need to check which elements
     // are actually clicked pressed, to make everything work correct.
     $('#ajax-comments-submit,#ajax-comments-preview', form).bind('mousedown keydown', function() { last_submit = $(this).attr('id'); });
@@ -91,7 +107,7 @@ Drupal.ajax_comments_init_form = function(context) {
     // Creating title link.
     form.parent('div').prev('h2:not(.ajax-comments-title-processed),h3:not(.ajax-comments-title-processed),h4:not(.ajax-comments-title-processed)').addClass('ajax-comments-title-processed').each(function(){
       var title = $(this).html();
-      $(this).html('<a href="'+action+'" id="comment-form-title">'+title+'</a>');
+      $(this).html('<a href="' + action + '" id="comment-form-title">' + title + '</a>');
       form.parent('div').attr('id','comment-form-content').removeClass("content");
     });
 
@@ -132,6 +148,9 @@ Drupal.ajax_comments_init_form = function(context) {
 
 /**
  * Attach behaviors to comment links.
+ *
+ * This function adds event handlers for when a user clicks on certain page elements, including
+ * reply links, quote links, and edit links. 
  */
 Drupal.ajax_comments_init_links = function(context) {
   // Process reply links.
@@ -169,6 +188,9 @@ Drupal.ajax_comments_init_links = function(context) {
 
 /**
  * Fold indednted comments threads.
+ *
+ * Comment folding is configured via the AJAX comments administrative page. It enables
+ * replies to comments to be 'folded' under the parent.
  */
 Drupal.ajax_comments_fold = function(context) {
   $('#comments > .indented:not(.ajax-comments-processed)', context).addClass('folded').addClass('ajax-comments-processed').each(function (){
@@ -210,9 +232,13 @@ Drupal.ajax_comments_fold = function(context) {
 
 /**
  * Reply links handler.
+ *
+ * This function is called as the handler to the .click() event. The events were bound
+ * during the init functions above. This is the function executed when the user clicks
+ * on a 'reply' button on the page or the 'Post new comment' link.
  */
 Drupal.ajax_comments_reply_click = function() {
-  // We should only handle non presed links.
+  // We should only handle non pressed links.
   if (!$(this).is('.pressed')){
     action = $(this).attr('href');
     form_action = $('#comment-form').attr('action');
@@ -296,6 +322,10 @@ Drupal.ajax_comments_reply_click = function() {
 
 /**
  * Edit links handler.
+ *
+ * This function is called as the handler to the .click() event. This event was bound
+ * during the init function above. This is the function executed when the user clicks
+ * on an 'edit' button on the page.
  */
 Drupal.ajax_comments_edit_click = function() {
   $edit_link = $(this);
@@ -334,6 +364,10 @@ Drupal.ajax_comments_edit_click = function() {
 
 /**
  * Delete links handler.
+ *
+ * This function is called as the handler to the .click() event. The event was bound
+ * during the init function above. This is the function executed when the user clicks
+ * on a 'delete' button on the page.
  */
 Drupal.ajax_comments_delete_click = function() {
   if ((ctrl) || (confirm(Drupal.t('Are you sure you want to delete the comment? Any replies to this comment will be lost. This action cannot be undone.')))) {
@@ -378,7 +412,13 @@ Drupal.ajax_comments_delete_click = function() {
 }
 
 /**
- * Attaches the ahah behavior to each ahah form element.
+ * Attach AHAH behavior to each AHAH form element.
+ *
+ * Define a function as a property of Drupal.behaviors. This will call the code
+ * block when the DOM has finished loading. In this case, we attach the AHAH 
+ * behavior to the pager element if it appears on the page. The pager will show
+ * up when the number of comments on the page exceeds the "Default comments per page"
+ * setting for your node type. 
  */
 Drupal.behaviors.ajax_comments_pager = function(context) {
   $('#comments .pager:not(.pager-processed)', context).addClass('pager-processed').each(function() {
@@ -395,6 +435,11 @@ Drupal.behaviors.ajax_comments_pager = function(context) {
 
 /**
  * Turn over a single page.
+ *
+ * This function is called as the handler to the .click() event. The event was bound
+ * during the Drupal.behaviors.ajax_comments_pager function above. This is the function
+ * executed when the user clicks on one of the links in the pager for a specific page
+ * or the next/last/first links.
  *
  *   @param target
  *     The .pager element.
@@ -465,6 +510,16 @@ function ajax_comments_expand_form(focus) {
 
 /**
  * Helper function for reply handler.
+ *
+ * In addition to clearing the textareas and forms, this is where the PID value
+ * is set for the comment. The PID controls whether this is a new standalone
+ * 'anchor' comment or a reply to an existing comment thread. A PID value
+ * of 0 is a new anchor comment while any other number is a reply.
+ *
+ * @param $pid
+ * Some comments are replies to other comments. In those cases, $pid is the parent comment's cid.
+ * @param $rows
+ *
  */
 function ajax_comments_rewind(pid, rows){
   // Resizing and clearing textarea.
@@ -596,6 +651,11 @@ function ajax_comments_insert_new_comment($comment) {
 
 /**
  * AHAH effect for comment previews.
+ *
+ * This effect was bound via ajax_comments.module in ajax_comments_form_comment_form_alter()
+ * as the AHAH effect.
+ *
+ * @see http://drupal.org/node/331941
  */
 jQuery.fn.ajaxCommentsPreviewToggle = function() {
   var obj = $(this[0]);
@@ -609,7 +669,7 @@ jQuery.fn.ajaxCommentsPreviewToggle = function() {
 
   // Add submit button if it doesn't added yet.
   if (!$('#ajax-comments-submit').length && $('.preview-item').length) {
-    $('#ajax-comments-preview').after('<input name="op" id="ajax-comments-submit" value="'+ Drupal.t("Save") +'" class="form-submit" type="submit">');
+    $('#ajax-comments-preview').after('<input name="op" id="ajax-comments-submit" value="' + Drupal.t("Save") + '" class="form-submit" type="submit">');
     // Re-attaching to new comment.
     Drupal.attachBehaviors($('#ajax-comments-submit'));
   }
@@ -617,6 +677,11 @@ jQuery.fn.ajaxCommentsPreviewToggle = function() {
 
 /**
  * AHAH effect for comment submits.
+ *
+ * This effect was bound via ajax_comments.module in ajax_comments_form_comment_form_alter()
+ * as the AHAH effect. 
+ *
+ * @see http://drupal.org/node/331941
  */
 jQuery.fn.ajaxCommentsSubmitToggle = function() {
   var obj = $(this[0]);
@@ -721,7 +786,7 @@ function ajax_comments_attach_editors() {
 }
 
 /**
- * Update editors text to their textareas. Need to be done befor submits.
+ * Update editors text to their textareas. Needs to be done before submits.
  */
 function ajax_comments_update_editors() {
   // Update tinyMCE.
@@ -765,7 +830,7 @@ function ajax_comments_is_reply_to_node(href) {
 
 function ajax_comments_get_args(url) {
   if (Drupal.settings.clean_url == '1') {
-    var regexS = "(http(s)*:\/\/)*([^/]*)"+ Drupal.settings.basePath +"([^?#]*)";
+    var regexS = "(http(s)*:\/\/)*([^/]*)" + Drupal.settings.basePath + "([^?#]*)";
     var regex = new RegExp( regexS );
     var results = regex.exec( url );
     args = results[4];
@@ -788,6 +853,14 @@ function ajax_comments_get_args(url) {
   return args;
 }
 
+/**
+ * Display and hide the progress bar.
+ *
+ * Show or hide the progress bar during the actual comment
+ * submit/post. Be careful here with IE7 here as it needs
+ * to see the #ajax-comments-submit button or else it won't
+ * post.
+ */
 function ajax_comments_show_progress(context) {
   if (!context) {
     context = '#comment-form-content';

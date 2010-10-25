@@ -1,6 +1,13 @@
 <?php
 // $Id$
 
+/**
+ * @file
+ * Implements AJAX handling for Drupal comment forms.
+ *
+ * This module implements AJAX handling for the Drupal comment forms. This
+ * includes AJAX submits, paging, and display of newly submitted comments.
+ */
 
 /**
  * Implementation of hook_help().

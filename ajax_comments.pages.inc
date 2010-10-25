@@ -3,7 +3,7 @@
 
 /**
  * @file
- * AJAX comments settings form.
+ * AJAX comments form handling and callbacks.
  */
 
 /**

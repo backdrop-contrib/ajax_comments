@@ -65,6 +65,8 @@ provide the following information with your request:
 - Screenshots or screencast videos showing your errors are helpful
 - If you are using the default textareas or any 3rd party Javascript editors
 	like CKeditor, etc.
+- Any additional details that the module authors can use to reproduce this
+	with a default installation of Drupal with the Garland theme.
 
 
 TIPS & TRICKS
