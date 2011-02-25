@@ -1,4 +1,3 @@
-// $Id$
 
 Ajax Comments - http://drupal.org/project/ajax_comments
 

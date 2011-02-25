@@ -1,4 +1,3 @@
-# $Id$
 #
 # German translation of ajax_comments
 # Copyright 2008 Private-Servers <Webmaster@private-servers.info>
