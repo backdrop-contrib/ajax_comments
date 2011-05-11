@@ -1,3 +1,9 @@
+This is the 7.x version of AJAX Comments.
+
+This version is still in heavy development. See below for instructions for the 6.x version which will likely change.
+
+
+
 
 Ajax Comments - http://drupal.org/project/ajax_comments
 
