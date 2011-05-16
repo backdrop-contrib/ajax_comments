@@ -2,7 +2,7 @@
 
 /**
  * Implementation of hook_uninstall().
- *
+ */
 function ajax_comments_uninstall() {
   variable_del('ajax_comments_node_type');
 }
