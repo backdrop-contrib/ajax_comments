@@ -86,6 +86,8 @@ function ajax_comments_comment_view($comment, $view_mode, $langcode) {
  *  Callback for clicking "reply".
  */
 function ajax_comments_reply($nid, $cid) {
+  global $base_path;
+
   $node = node_load($nid);
   $edit = array('nid' => $node->nid);
   // If there is a cid this is a reply to a comment.
@@ -98,7 +100,7 @@ function ajax_comments_reply($nid, $cid) {
   }
   // Remove all other comment forms on the page.
   $commands[] = ajax_command_invoke('form.comment-form', 'remove');
-  $commands[] = ajax_command_after('div[about="/comment/' . $cid . '#comment-' . $cid . '"]', $form);
+  $commands[] = ajax_command_after('div[about="' . $base_path . 'comment/' . $cid . '#comment-' . $cid . '"]', $form);
   $page = array('#type' => 'ajax', '#commands' => $commands);
   ajax_deliver($page);
 }  
