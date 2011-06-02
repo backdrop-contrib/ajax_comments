@@ -27,8 +27,7 @@ function ajax_comments_menu() {
  */
 function ajax_comments_form_comment_form_alter(&$form, &$form_state, $form_id) {
   // Check to see if this node type uses ajax comments.
-  $active = ajax_comments_node_type_active($form['#node']->type);
-  if ($active) {
+  if (ajax_comments_node_type_active($form['#node']->type)) {
     $form['actions']['submit']['#ajax'] = array(
       'callback' => 'ajax_comments_submit_js',
       'wrapper' => 'comment-form',
@@ -49,8 +48,8 @@ function ajax_comments_submit_js($form, &$form_state) {
   $node = $form['#node'];
 
   $comment_build = comment_view($comment, $node);
-  // Remove "reply" which doesn't work unless page is refreshed. TODO: fix.
-  unset($comment_build['links']['comment']['#links']['comment-reply']);
+  // RDF mapping doesn't occur for some reason so the new comments don't have rdf attributes.
+  $comment_build['comment_body']['#object']->rdf_mapping = array('rdftype' => array('0' => 'sioc:Post', '1' => 'sioct:Comment'));
   $comment_text = drupal_render($comment_build);
   $notify_text = theme('ajax_comments_notify_text');
 
@@ -67,6 +66,7 @@ function ajax_comments_submit_js($form, &$form_state) {
 
   // Remove comment forms on the page.
   $commands[] = ajax_command_invoke('form.comment-form', 'remove');
+  $commands[] = ajax_command_invoke('h2.comment-form', 'remove');
 
   return array('#type' => 'ajax', '#commands' => $commands);
 }
@@ -88,6 +88,7 @@ function ajax_comments_comment_view($comment, $view_mode, $langcode) {
 function ajax_comments_reply($nid, $cid) {
   global $base_path;
 
+  // Necessary to make available only on certain nodes.
   $node = node_load($nid);
   $edit = array('nid' => $node->nid);
   // If there is a cid this is a reply to a comment.
@@ -100,6 +101,7 @@ function ajax_comments_reply($nid, $cid) {
   }
   // Remove all other comment forms on the page.
   $commands[] = ajax_command_invoke('form.comment-form', 'remove');
+  $commands[] = ajax_command_invoke('h2.comment-form', 'remove');
   $commands[] = ajax_command_after('div[about="' . $base_path . 'comment/' . $cid . '#comment-' . $cid . '"]', $form);
   $page = array('#type' => 'ajax', '#commands' => $commands);
   ajax_deliver($page);
@@ -123,7 +125,7 @@ function ajax_comments_remove_status(&$_SESSION) {
   $not_published = t('Your comment has been queued for review by site administrators and will be published after approval.');
   foreach ($_SESSION['messages']['status'] as $key => $value) {
     if ($value == $published || $value == $not_published) {
-      unset($_SESSION['messages']['status'][$key]);
+      unset($_SESSION['messages']['status']);
     }
   }
 } 
