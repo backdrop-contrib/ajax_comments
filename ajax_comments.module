@@ -145,7 +145,5 @@ function ajax_comments_theme($existing, $type, $theme, $path) {
  */
 function ajax_comments_node_type_active($node_type) {
   $types = variable_get('ajax_comments_node_types');
-  if ($types[$node_type]) {
-    return TRUE;
-  }
+  return isset($types[$node_type]) ? $types[$node_type] : NULL;
 }
