@@ -164,7 +164,7 @@ function ajax_comments_delete_js($form, &$form_state) {
  * Implementation of hook_comment_view().
  */
 function ajax_comments_comment_view($comment, $view_mode, $langcode) {
-  $active = ajax_comments_node_type_active(ltrim($comment->node_type, 'comment_node_'));
+  $active = ajax_comments_node_type_active(substr($comment->node_type, strlen('comment_node_')));
   
   if (!$active) {
     return;
