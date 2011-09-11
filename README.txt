@@ -4,7 +4,6 @@ This version is still in heavy development. See below for instructions for the 6
 
 
 
-
 Ajax Comments - http://drupal.org/project/ajax_comments
 
 INSTALLATION
@@ -13,17 +12,25 @@ INSTALLATION
 See Drupal module installation guidelines:
 http://drupal.org/getting-started/install-contrib/modules
 
-Prerequisite: This module requires comment_bonus_api. You must first install that module
-from: http://drupal.org/project/comment_bonus_api
+DEVELOPER NOTE
+============
+- Note on use of ajax_comments_init() in ajax_comments.module
 
-1. Unpack module to your /sites/all/modules directory.
-2. Visit your module management page at /admin/build/modules. Enable Ajax
-Comments. The comment_bonus_api module is also required.
-3. Configure the module via /admin/settings/ajax_comments. At the very least
-you will want to enable it for one or more of your content types.
-4. For each content type you are enabling for Ajax Comments, visit the Content
-Management admin page (/admin/content/node-type/mynodetype) and configure your
-comment settings "Location of comment submission form" to "Display below post or comments". 
+  In ajax.js, the data can be posted one of two ways, using $.ajax() or if you're using a form, form.ajaxSubmit().
+  The first sets $_POST['ajax_html_ids'] to an array of all the HTML ids, the latter sets it
+  to an array of size 1 with all of the ids concatenated by commas.
+  
+  If you'd like to see how this affects us, do this:
+  --------------------------------------------------
+  1. Comment out ajax_comments_init().
+  2. Click reply to reply to a specific comment.
+  3. Notice your form id is now comment-form--2 because $_POST['ajax_html_ids'] were sent with $.ajax() and
+     recieved properly enabling drupal_html_id to do it's job.
+  4. Press save on your new comment without any text so that it fails validation. The form is submitted with
+     form.ajaxSubmit() and $_POST['ajax_html_ids'] is set to an array of size 1 with the first entry being
+     a concatenated list of ids.
+  5. Since the ids weren't received properly, drupal_html_id thinks that comment-form is a good id.
+  6. Your new form has the same id as the main comment form at the bottom of the page. 
 
 
 TROUBLESHOOTING
@@ -73,14 +80,8 @@ provide the following information with your request:
 - Any additional details that the module authors can use to reproduce this
 	with a default installation of Drupal with the Garland theme.
 
-
-TIPS & TRICKS
-=============
-
-1. If you need to remove a lot of comments and you're bored with the confirmation dialog, just
-hold one ctrl key and press the needed "Delete" links. It will force removal.
-
-
 ---
 Created by Alexandr Shvets, aka neochief
 http://drupaldance.com/
+
+Drupal 7.x version by acouch
