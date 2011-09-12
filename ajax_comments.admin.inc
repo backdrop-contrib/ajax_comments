@@ -17,5 +17,11 @@ function ajax_comments_settings() {
     '#default_value' => variable_get('ajax_comments_node_types', array()),
     '#options' => $options, 
   );
+  $form['ajax_comments_notify'] = array(
+    '#title' => t('Notification Message'),
+    '#type' => 'checkbox',
+    '#description' => t('Add notification message to comment when posted.'),
+    '#default_value' => variable_get('ajax_comments_notify', ''),
+  );
   return system_settings_form($form);
 }
