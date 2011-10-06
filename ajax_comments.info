@@ -2,4 +2,3 @@ name = AJAX Comments
 description = Module makes comments load without a page refresh via AJAX
 core = 7.x
 dependencies[] = comment
-
