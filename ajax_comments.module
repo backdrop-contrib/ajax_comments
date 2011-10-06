@@ -13,27 +13,29 @@ function ajax_comments_init() {
  * Implementation of hook_menu().
  */
 function ajax_comments_menu() {  
-  $items['ajax_comments/reply/%/%'] = array(
+  $items['ajax_comments/reply/%node'] = array(
     'page callback' => 'ajax_comments_reply',
-    'access callback' => 'user_access',
-    'access arguments' => array('access content'),
-    'page arguments' => array(2, 3),
+    'page arguments' => array(2),
+    'access callback' => 'node_access',
+    'access arguments' => array('view', 2),
+    'delivery callback' => 'ajax_deliver',
     'type' => MENU_CALLBACK,
   );
   
-  $items['ajax_comments/edit/%'] = array(
+  $items['ajax_comments/edit/%comment'] = array(
     'page callback' => 'ajax_comments_edit',
-    'access callback' => 'user_access',
-    'access arguments' => array('edit own comments'),
     'page arguments' => array(2),
+    'access callback' => 'comment_access',
+    'access arguments' => array('edit', 2),
+    'delivery callback' => 'ajax_deliver',
     'type' => MENU_CALLBACK,
   );
   
   $items['ajax_comments/delete/%'] = array(
     'page callback' => 'ajax_comments_delete',
-    'access callback' => 'user_access',
-    'access arguments' => array('administer comments'),
     'page arguments' => array(2),
+    'access arguments' => array('administer comments'),
+    'delivery callback' => 'ajax_deliver',
     'type' => MENU_CALLBACK,
   );
   
@@ -46,6 +48,32 @@ function ajax_comments_menu() {
     'file' => 'ajax_comments.admin.inc',
    );
   return $items;
+}
+/**
+ * Implementation of hook_preprocess_node().
+ *
+ * AJAXify "Add new comment" link when there is no default form.
+ */
+function ajax_comments_preprocess_node(&$variables) {
+  $node = $variables['node'];
+
+  if (!ajax_comments_node_type_active($node->type)) {
+    return;
+  }
+
+  if (variable_get('comment_form_location_' . $node->type, COMMENT_FORM_BELOW) == COMMENT_FORM_BELOW) {
+    return;
+  }
+
+  if ($variables['view_mode'] != 'full') {
+    return;
+  }
+
+  drupal_add_library('system', 'drupal.ajax');
+
+  $variables['content']['links']['comment']['#links']['comment-add']['attributes']['class'] = 'use-ajax';
+  $variables['content']['links']['comment']['#links']['comment-add']['href'] = 'ajax_comments/reply/' . $node->nid;
+  $variables['content']['links']['comment']['#links']['comment-add']['fragment'] = NULL;
 }
 
 /**
@@ -135,7 +163,8 @@ function ajax_comments_submit_js($form, &$form_state) {
     $comment_output = drupal_render($comment_build);
     $commands[] = ajax_command_append('#comment-wrapper', $notify_text . $comment_output);
     
-    // we were using the main comment form, replace it with a new one
+    // If we have a default form, update it with a new one
+    if (variable_get('comment_form_location_' . $node->type, COMMENT_FORM_BELOW) == COMMENT_FORM_BELOW) {
     $node = $form['#node'];
     
     $new_form_state = array();
@@ -146,6 +175,11 @@ function ajax_comments_submit_js($form, &$form_state) {
     
     $commands[] = ajax_command_replace('#' . $form['#id'], $new_form_output);
   }  
+    // Otherwise, delete it
+    else {
+      $commands[] = ajax_command_remove('#' . $form['#id']);
+    }
+  }
   
   return array('#type' => 'ajax', '#commands' => $commands);
 }
@@ -167,7 +201,6 @@ function ajax_comments_delete_js($form, &$form_state) {
     $commands[] = ajax_command_remove('#comment-wrapper-' . $comment->cid);
   }
 
-  
   return array('#type' => 'ajax', '#commands' => $commands);
 }
 
@@ -285,66 +318,72 @@ function ajax_comments_entity_prepare_view($entities, $entity_type, $langcode) {
 
 /**
  *  Callback for clicking "reply".
+ *  Note: $pid is an optional parameter. This functionality is utilized by the "Add new comment" link
+ *  on pages where there is no default comment form (comment_form_location is COMMENT_FORM_SEPARATE_PAGE)
  */
-function ajax_comments_reply($nid, $cid) {
-  // Necessary to make available only on certain nodes.
-  $node = node_load($nid);
-  $edit = array('nid' => $node->nid);
-  
-  // If there is a cid this is a reply to a comment.
-  if ($cid) {
-    $edit = $edit + array('pid' => $cid);
+function ajax_comments_reply($node, $pid = NULL) {
+  if (!user_access('post comments')) {
+    return MENU_ACCESS_DENIED;
   }
   
-  if (user_access('post comments') && $node->comment == COMMENT_NODE_OPEN && (variable_get('comment_form_location_' . $node->type, COMMENT_FORM_BELOW) == COMMENT_FORM_BELOW)) {
-    $form_build = drupal_get_form("comment_node_{$node->type}_form", (object) $edit);    
-    $form = drupal_render($form_build);
+  // If there is a pid this is a reply to a comment
+  if ($pid) {
+    if (!user_access('access comments')) {
+      return MENU_ACCESS_DENIED;
   }
   
+    // Make sure the comment is valid and published
+    if (!($comments = comment_load_multiple(array($pid), array('status' => COMMENT_PUBLISHED)))) {
+      return MENU_NOT_FOUND;
+  }
+  
+    $comment = $comments[$pid];
+
+    // Make sure the comment belongs to this node
+    if ($comment->nid != $node->nid) {
+      return MENU_NOT_FOUND;
+    }
+  }
+
+  // Build form
+  $form_build = drupal_get_form("comment_node_{$node->type}_form", (object) array('nid' => $node->nid, 'pid' => $pid));
+  $form = drupal_render($form_build);
+
   // Delete any extra forms we've created
   $commands[] = ajax_command_invoke('[id^=comment-wrapper-] form.comment-form', 'remove');
     
   // Add the new form
-  $commands[] = ajax_command_after('#comment-wrapper-' . $cid . ' >.comment', $form);
+  if ($pid) {
+    $commands[] = ajax_command_after('#comment-wrapper-' . $pid . ' >.comment', $form);
+  } else {
+    $commands[] = ajax_command_append('#comment-wrapper', $form);
+  }
   
-  $page = array('#type' => 'ajax', '#commands' => $commands);
-  
-  ajax_deliver($page);
+  return array('#type' => 'ajax', '#commands' => $commands);
 }
 
 /**
  *  Callback for clicking "edit".
  */
-function ajax_comments_edit($cid) {
-  global $base_path;
-  global $user;
-  
-  // Load comment and related node  
-  $comment = comment_load($cid);
+function ajax_comments_edit($comment) {
   $node = node_load($comment->nid);
-  if ( ( (user_access('edit own comments') && $comment->uid == $user->uid ) || user_access('administer comments') )
-      && $node->comment == COMMENT_NODE_OPEN
-      && (variable_get('comment_form_location_' . $node->type, COMMENT_FORM_BELOW) == COMMENT_FORM_BELOW)) {
+
+  // Build form
     $form_build = drupal_get_form("comment_node_{$node->type}_form", $comment);
     $form = drupal_render($form_build);
-  }
   
   // Replace comment with form
-  $commands[] = ajax_command_replace('#comment-wrapper-' . $cid . ' >.comment', $form);
+  $commands[] = ajax_command_replace('#comment-wrapper-' . $comment->cid . ' >.comment', $form);
   
-  $page = array('#type' => 'ajax', '#commands' => $commands);
-  
-  ajax_deliver($page);
+  return array('#type' => 'ajax', '#commands' => $commands);
 }
 
 /**
  *  Callback for clicking "delete".
  */
 function ajax_comments_delete($cid) {
-  $comment = comment_load($cid);
-  
-  if (!$comment) {
-    return;
+  if (!($comment = comment_load($cid))) {
+    return MENU_NOT_FOUND;
   }
   
   // Need to include comment module admin file for delete form
@@ -362,8 +401,7 @@ function ajax_comments_delete($cid) {
   // Put form inside main comment wrapper
   $commands[] = ajax_command_prepend('#comment-wrapper-' . $cid, $form);
   
-  $page = array('#type' => 'ajax', '#commands' => $commands);  
-  ajax_deliver($page);
+  return array('#type' => 'ajax', '#commands' => $commands);
 }
 
 /**
