@@ -62,6 +62,11 @@ function ajax_comments_menu() {
  * AJAXify "Add new comment" link when there is no default form.
  */
 function ajax_comments_preprocess_node(&$variables) {
+  // Only show on full nodes.
+  if ($variables['teaser']) {
+    return;
+  }
+
   $node = $variables['node'];
 
   if (!ajax_comments_node_type_active($node->type)) {
