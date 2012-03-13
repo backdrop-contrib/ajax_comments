@@ -512,11 +512,16 @@ function ajax_comments_remove_status(&$_SESSION) {
 }
 
 /**
- * Returns true if this node uses ajax comments.
+ * Returns TRUE if this node uses ajax comments or if no nodes are selected.
  */
 function ajax_comments_node_type_active($node_type) {
   $types = variable_get('ajax_comments_node_types');
-  return isset($types[$node_type]) ? $types[$node_type] : NULL;
+  if (!$types || !array_filter($types)) {
+    return TRUE;
+  }
+  else {
+    return isset($types[$node_type]) ? $types[$node_type] : NULL;
+  }
 }
 
  /**
