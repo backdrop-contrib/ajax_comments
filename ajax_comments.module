@@ -520,7 +520,7 @@ function ajax_comments_edit($comment) {
   $form_build = drupal_get_form("comment_node_{$node->type}_form", $comment);
   // Allow cancelling of edit.
   $form_build['actions']['cancel'] = array(
-    '#markup' => '<a class=\'use-ajax\' href="/ajax_comments/edit/cancel/' . $node->nid . '/' . $comment->cid . '">' . t('Cancel') . '</a>',
+    '#markup' => l(t('Cancel'), 'ajax_comments/edit/cancel/' . $node->nid . '/' . $comment->cid, array('attributes' => array('class' => array('use-ajax')))),
     '#weight' => 21,
   );
   $form = drupal_render($form_build);
