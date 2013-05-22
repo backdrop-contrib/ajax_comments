@@ -250,7 +250,6 @@ function ajax_comments_submit_js($form, &$form_state) {
     // Append comment to parent wrapper.
     $comment_output = drupal_render($comment_build);
     $commands[] = ajax_command_append('#comment-wrapper-' . $comment->pid, $notify_text . $comment_output);
-
     // Delete the form.
     $commands[] = ajax_command_invoke('#' . $form['#id'], 'remove');
   }
@@ -258,7 +257,13 @@ function ajax_comments_submit_js($form, &$form_state) {
   else {
     // Append comment to root comment wrapper.
     $comment_output = drupal_render($comment_build);
-    $commands[] = ajax_command_append('#comment-wrapper-nid-' . $node->nid, $notify_text . $comment_output);
+
+    if ($node->comment_count == 0) {
+      $commands[] = ajax_command_append('#comment-wrapper-nid-' . $node->nid, $notify_text . $comment_output);
+    }
+    else {
+      $commands[] = ajax_command_after('#comment-wrapper-nid-' . $node->nid . " .ajax-comment-wrapper:last", $notify_text . $comment_output);
+    }
 
     // If we have a default form, update it with a new one.
     if (variable_get('comment_form_location_' . $node->type, COMMENT_FORM_BELOW) == COMMENT_FORM_BELOW) {
