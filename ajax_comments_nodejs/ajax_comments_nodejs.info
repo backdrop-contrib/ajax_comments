@@ -3,4 +3,3 @@ description = Integrates Nodejs with Ajax Comments
 core = 7.x
 dependencies[] = comment
 dependencies[] = nodejs
-

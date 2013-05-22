@@ -47,7 +47,6 @@ Drupal.behaviors.ajaxComments = {
           e.preventDefault();
         },
       });
-
     });
 
   }

@@ -3,3 +3,5 @@ description = Module makes comments load without a page refresh via AJAX
 core = 7.x
 dependencies[] = comment
 configure = admin/config/content/ajax_comments
+
+files[] = views_handler_field_ajax_add_comment.inc

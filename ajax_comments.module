@@ -53,6 +53,13 @@ function ajax_comments_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  $items['ajax_comments/comment_form/ajax/%node'] = array(
+    'page callback' => 'ajax_comments_comment_form',
+    'page arguments' => array(2, 3),
+    'access arguments' => array('post comments'),
+    'type' => MENU_CALLBACK,
+  );
+
   $items['admin/config/content/ajax_comments'] = array(
     'title' => 'AJAX comments',
     'description' => 'AJAXifies comments on site.',
@@ -61,7 +68,18 @@ function ajax_comments_menu() {
     'access arguments' => array('administer site configuration'),
     'file' => 'ajax_comments.admin.inc',
   );
+
   return $items;
+}
+
+/**
+ * Implements hook_views_api().
+ */
+function ajax_comments_views_api() {
+  return array(
+    'api' => 3,
+    'path' => drupal_get_path('module', 'ajax_comments'),
+  );
 }
 
 /**
@@ -252,6 +270,11 @@ function ajax_comments_submit_js($form, &$form_state) {
     $commands[] = ajax_command_append('#comment-wrapper-' . $comment->pid, $notify_text . $comment_output);
     // Delete the form.
     $commands[] = ajax_command_invoke('#' . $form['#id'], 'remove');
+  }
+  // If this is being submitted via the views ajax add comment field.
+  elseif ($form_state['comment']->views_ajax_submission) {
+    $message = t('Your comment has been posted.');
+    $commands[] = ajax_command_replace('#' . $form['#id'], $message);
   }
   // Or is this a brand new comment?
   else {
@@ -589,4 +612,34 @@ function theme_ajax_comments_notify_text($vars = array()) {
   }
   // Using messages (minus .session which defaults to 960px in bartik) for now.
   return '<div id="messages"><div class="clearfix"><div class="messages ajax-comments ' . $status . '"><h2 class="element-invisible">Status message</h2>' . $text . '</div></div></div>';
+}
+
+/**
+ * Delivers comment form via AJAX.
+ */
+function ajax_comments_comment_form($type = 'ajax', $node) {
+  // Validate token.
+  if (empty($_GET['tok']) || !drupal_valid_token($_GET['tok'], 'ajax-comments-add-comment-' . $node->nid)) {
+    return MENU_ACCESS_DENIED;
+  }
+
+  // Return rendered form.
+  if ($type == 'ajax') {
+
+    // Build form.
+    $comment = new stdClass;
+    $comment->nid = $node->nid;
+    $comment->views_ajax_submission = TRUE;
+    $form = drupal_get_form('comment_form', $comment);
+    $markup = drupal_render($form);
+    // Construct AJAX.
+    //$commands[] = ajax_command_replace('.ajax-comments-add-comment-wrapper:has(.ajax-comments-add-comment-nid-' . $node->nid . ')', $markup);
+    $commands[] = ajax_command_replace('.ajax-comments-add-comment-nid-' . $node->nid, $markup);
+    $page = array('#type' => 'ajax', '#commands' => $commands);
+    ajax_deliver($page);
+  }
+  // Return normal page callback.
+  else {
+    drupal_goto('node/' . $node->nid);
+  }
 }
