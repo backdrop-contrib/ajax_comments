@@ -374,7 +374,7 @@ function ajax_comments_comment_view_alter(&$build, $view_mode) {
 
   // Add wrapper tag.
   $indent = $comment->pid != 0 && variable_get('comment_default_mode_' . $node->type, COMMENT_MODE_THREADED) == COMMENT_MODE_THREADED;
-  $prefix .= '<div class="ajax-comment-wrapper" id="comment-wrapper-' . $comment->cid . '"' . ($indent == TRUE ? ' class="indented"' : '') . '>';
+  $prefix .= '<div class="ajax-comment-wrapper' . ($indent == TRUE ? ' indented' : '') . '" id="comment-wrapper-' . $comment->cid . '">';
 
   // Add anchor tag.
   $prefix .= "<a id=\"comment-$comment->cid\"></a>\n";
