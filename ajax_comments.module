@@ -169,12 +169,12 @@ function ajax_comments_preview_js($form, &$form_state) {
   if (form_get_errors()) {
     return $form;
   }
-
-  $notify_text = variable_get('ajax_comments_notify', '') ? theme('ajax_comments_notify_text', array('type' => 'preview')) : '';
-
+  
   $comment = comment_form_submit_build_comment($form, $form_state);
   $comment_pre_render = comment_preview($comment);
   $comment_output = drupal_render($comment_pre_render['comment_preview']);
+  
+  $notify_text = variable_get('ajax_comments_notify', '') ? theme('ajax_comments_notify_text', array('type' => 'preview', 'comment' => $comment)) : '';
 
   // This is a reply.
   if (isset($form_state['values']['pid'])) {
@@ -241,7 +241,7 @@ function ajax_comments_submit_js($form, &$form_state) {
 
   $comment = $form_state['comment'];
   $node = $form['#node'];
-  $notify_text = variable_get('ajax_comments_notify', '') ? theme('ajax_comments_notify_text') : '';
+  $notify_text = variable_get('ajax_comments_notify', '') ? theme('ajax_comments_notify_text', array('comment' => $comment)) : '';
 
   $comment_build = comment_view($comment, $node);
 
@@ -318,7 +318,7 @@ function ajax_comments_delete_js($form, &$form_state) {
 
   ajax_comments_remove_status();
 
-  $notify_text = variable_get('ajax_comments_notify', '') ? theme('ajax_comments_notify_text', array('type' => 'delete')) : '';
+  $notify_text = variable_get('ajax_comments_notify', '') ? theme('ajax_comments_notify_text', array('type' => 'delete', 'comment' => $comment)) : '';
 
   if ($notify_text) {
     $commands[] = ajax_command_replace('#comment-wrapper-' . $comment->cid, $notify_text);
@@ -592,7 +592,7 @@ function ajax_comments_node_type_active($node_type) {
 function ajax_comments_theme($existing, $type, $theme, $path) {
   return array(
     'ajax_comments_notify_text' => array(
-      'variables' => array('type' => NULL),
+      'variables' => array('type' => NULL, 'comment' => NULL),
     ),
   );
 }
@@ -603,6 +603,11 @@ function ajax_comments_theme($existing, $type, $theme, $path) {
 function theme_ajax_comments_notify_text($vars = array()) {
   $text = t('Your comment has been posted');
   $status = 'status';
+  // If the comment is unapproved, alter the message
+  if (isset($vars['comment']) && !$vars['comment']->status) {
+    $text = t('Your comment has been queued for review by site administrators and will be published after approval.');
+    $status = 'warning';
+  }
   if ($vars['type'] == 'delete') {
     $text = t('Your comment has been deleted');
   }

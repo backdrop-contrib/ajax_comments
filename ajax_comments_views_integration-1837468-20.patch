@@ -1,0 +1,113 @@
+diff --git a/ajax_comments.info b/ajax_comments.info
+index 450b8ec..024e895 100644
+--- a/ajax_comments.info
++++ b/ajax_comments.info
+@@ -4,4 +4,5 @@ core = 7.x
+ dependencies[] = comment
+ configure = admin/config/content/ajax_comments
+ 
+-files[] = views_handler_field_ajax_add_comment.inc
+\ No newline at end of file
++files[] = views_handler_field_ajax_add_comment.inc
++files[] = ajax_comments_handler_field_list_comments.inc
+diff --git a/ajax_comments.views.inc b/ajax_comments.views.inc
+index a54fdc4..7331fa9 100644
+--- a/ajax_comments.views.inc
++++ b/ajax_comments.views.inc
+@@ -18,5 +18,13 @@ function ajax_comments_views_data() {
+     ),
+   );
+ 
++  $data['node']['list_comments'] = array(
++    'title' => t('List of comments'),
++    'help' => t("Display the node's list of comments."),
++    'field' => array(
++      'handler' => 'ajax_comments_handler_field_list_comments',
++    ),
++  );
++
+   return $data;
+-}
+\ No newline at end of file
++}
+diff --git a/ajax_comments_handler_field_list_comments.inc b/ajax_comments_handler_field_list_comments.inc
+new file mode 100644
+index 0000000..82a044d
+--- /dev/null
++++ b/ajax_comments_handler_field_list_comments.inc
+@@ -0,0 +1,75 @@
++<?php
++ /**
++ * @file
++ * Definition of ajax_comments_handler_field_list_comments.
++ */
++
++/**
++ * Handler for showing an ajaxified list of comments.
++ */
++class ajax_comments_handler_field_list_comments extends views_handler_field_entity {
++
++  function option_definition() {
++    $options = parent::option_definition();
++    $options['ajax_comments_display_add_comment_form'] = array('default' => FALSE, 'bool' => TRUE);
++    return $options;
++  }
++  
++  function options_form(&$form, &$form_state) {
++    $form['ajax_comments_display_add_comment_form'] = array(
++      '#title' => t('View the add comment form'), 
++      '#description' => t("Enable to display the add comment form below the list of comments."), 
++      '#type' => 'checkbox', 
++      '#default_value' => $this->options['ajax_comments_display_add_comment_form'],
++    );
++    parent::options_form($form, $form_state);
++  }
++  
++
++  /**
++   * Render the list of comments using the comment_node_page_additions() function
++   * modified to add the ajax_comments wrapper and the add comment form option.
++   */
++  function render($values) {
++    if (user_access('post comments') && $node = $this->get_value($values)) {
++      $additions = array();
++
++      // Only attempt to render comments if the node has visible comments.
++      // Unpublished comments are not included in $node->comment_count, so show
++      // comments unconditionally if the user is an administrator.
++      if (($node->comment_count && user_access('access comments')) || user_access('administer comments')) {
++        $mode = variable_get('comment_default_mode_' . $node->type, COMMENT_MODE_THREADED);
++        $comments_per_page = variable_get('comment_default_per_page_' . $node->type, 150);
++        if ($cids = comment_get_thread($node, $mode, $comments_per_page)) {
++          $comments = comment_load_multiple($cids);
++          comment_prepare_thread($comments);
++          $build = comment_view_multiple($comments, $node);
++          $build['pager']['#theme'] = 'pager';
++          $additions['comments'] = $build;
++        }
++      }
++
++      // Append comment form if needed.
++      if (user_access('post comments') && $node->comment == COMMENT_NODE_OPEN 
++          && (variable_get('comment_form_location_' . $node->type, COMMENT_FORM_BELOW) == COMMENT_FORM_BELOW 
++              && $this->options['ajax_comments_display_add_comment_form'])) {
++        $build = drupal_get_form("comment_node_{$node->type}_form", (object) array('nid' => $node->nid));
++        $additions['comment_form'] = $build;
++      }
++
++      if ($additions) {
++        $additions += array(
++          '#theme' => 'comment_wrapper__node_' . $node->type, 
++          '#node' => $node, 
++          'comments' => array(), 
++          'comment_form' => array(),
++        );
++        //Add the ajax_comments wrapper.
++        $additions['comments']['#prefix'] = '<div id="comment-wrapper-nid-' . $node->nid . '">';
++        $additions['comments']['#suffix'] = '</div>';
++      } 
++
++      return $additions;
++    }
++  }
++}
