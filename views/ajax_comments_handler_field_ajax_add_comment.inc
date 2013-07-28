@@ -4,7 +4,7 @@
  *  views handler class
  *  mostyly just  renders the field for views display  and adds  js and css
  */
-class views_handler_field_ajax_add_comment extends views_handler_field_comment_node_link {
+class ajax_comments_handler_field_ajax_add_comment extends views_handler_field_comment_node_link {
   var $output;
 
   function option_definition() {
