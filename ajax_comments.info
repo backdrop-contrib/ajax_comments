@@ -5,3 +5,4 @@ dependencies[] = comment
 configure = admin/config/content/ajax_comments
 
 files[] = views_handler_field_ajax_add_comment.inc
+files[] = ajax_comments_handler_field_list_comments.inc
