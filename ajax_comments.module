@@ -399,8 +399,11 @@ function ajax_comments_comment_view($comment, $view_mode, $langcode) {
  * Wrap all comments in #comment-wrapper
  */
 function ajax_comments_node_view_alter(&$build) {
-  $build['comments']['comments']['#prefix'] = '<div id="comment-wrapper-nid-' . $build['#node']->nid . '">';
-  $build['comments']['comments']['#suffix'] = '</div>';
+  $active = ajax_comments_node_type_active($build['#node']->type);
+  if($active){
+    $build['comments']['comments']['#prefix'] = '<div id="comment-wrapper-nid-' . $build['#node']->nid . '">';
+    $build['comments']['comments']['#suffix'] = '</div>';
+  }
 }
 
 /**
@@ -409,7 +412,7 @@ function ajax_comments_node_view_alter(&$build) {
  */
 function ajax_comments_panels_pane_content_alter(&$content, $pane, $args, $context) {
   if ($pane->type == 'node_comments') {
-    $content->content = '<div id="comment-wrapper">' . $content->content . '</div>';
+    $content->content = '<div id="comment-wrapper-nid-' . $content->delta . '">' . $content->content . '</div>';
   }
 }
 
