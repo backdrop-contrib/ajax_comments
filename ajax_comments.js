@@ -57,7 +57,7 @@ Drupal.behaviors.ajaxComments = {
  */
 function ajaxCommentsScrollForm(commentNumber) {
   pos = $('#comment-wrapper-' + commentNumber).offset();
-  height = $('#comment-wrapper-' + commentNumber + ' .comment').attr("scrollHeight");
+  height = propHelper($('#comment-wrapper-' + commentNumber + ' .comment'), "scrollHeight");
 
   // Scroll to comment reply form.
   $('html, body').animate({ scrollTop: pos.top + height}, 'fast');
@@ -67,11 +67,26 @@ function ajaxCommentsScrollForm(commentNumber) {
  * Scrolls user to comment that has been added to page.
  */
 function ajaxCommentsScrollReply(commentNumber) {
-  formSize = $('.comment-form').attr("scrollHeight");
+  formSize = propHelper($('.comment-form'), "scrollHeight");
   pos = $('#comment-wrapper-' + commentNumber).offset();
 
   // Scroll to comment reply.
   $('html, body').animate({ scrollTop: pos.top - formSize}, 'slow');
+}
+
+/**
+ * Helper function to retrieve object properties.
+ *
+ * Works with jquery below and above version 1.6
+ *
+ */
+function propHelper(e, p) {
+	if ($.isFunction($.prop)) {
+		return e.prop(p);
+	}
+	else {
+		return e.attr(p);
+	}
 }
 
 }(jQuery));
