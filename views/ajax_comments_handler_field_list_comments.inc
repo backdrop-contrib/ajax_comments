@@ -1,7 +1,9 @@
 <?php
  /**
  * @file
- * Definition of ajax_comments_handler_field_list_comments.
+ * Definition of ajax_comments_handler_field_list_comments. 
+ * TODO: Comments per page as setting
+ * TODO: Flat or nested as option
  */
 
 /**
@@ -40,11 +42,12 @@ class ajax_comments_handler_field_list_comments extends views_handler_field_enti
       if (($node->comment_count && user_access('access comments')) || user_access('administer comments')) {
         $mode = variable_get('comment_default_mode_' . $node->type, COMMENT_MODE_THREADED);
         $comments_per_page = variable_get('comment_default_per_page_' . $node->type, 150);
-        if ($cids = comment_get_thread($node, $mode, $comments_per_page)) {
+        if ($cids = $this->comment_get_thread($node, $mode, $comments_per_page)) {
           $comments = comment_load_multiple($cids);
           comment_prepare_thread($comments);
           $build = comment_view_multiple($comments, $node);
-          $build['pager']['#theme'] = 'pager';
+          // TODO: There seems to be a problem with nested pagers :/
+          //$build['pager']['#theme'] = 'pager';
           $additions['comments'] = $build;
         }
       }
@@ -71,5 +74,32 @@ class ajax_comments_handler_field_list_comments extends views_handler_field_enti
 
       return $additions;
     }
+  }
+
+  /* 
+   * We need to fetch this in our own method since Drupal doesn't seeem
+   * to support nested pagers 
+   */
+  function comment_get_thread($node, $mode, $comments_per_page = 150) {
+    $query = db_select('comment', 'c');
+    $query->addField('c', 'cid');
+    $query
+      ->condition('c.nid', $node->nid)
+      ->addTag('node_access')
+      ->addTag('comment_filter')
+      ->addMetaData('node', $node);
+      //->limit(0,$comments_per_page);
+    if (!user_access('administer comments')) {
+      $query->condition('c.status', COMMENT_PUBLISHED);
+      $count_query->condition('c.status', COMMENT_PUBLISHED);
+    }
+    if ($mode === COMMENT_MODE_FLAT) {
+      $query->orderBy('c.cid', 'ASC');
+    }
+    
+
+    $cids = $query->execute()->fetchCol();
+
+    return $cids;
   }
 }
