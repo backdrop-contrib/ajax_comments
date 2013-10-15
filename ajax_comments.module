@@ -52,13 +52,14 @@ function ajax_comments_menu() {
     'delivery callback' => 'ajax_deliver',
     'type' => MENU_CALLBACK,
   );
-
+/*
   $items['ajax_comments/comment_form/ajax/%node'] = array(
     'page callback' => 'ajax_comments_comment_form',
     'page arguments' => array(2, 3),
     'access arguments' => array('post comments'),
     'type' => MENU_CALLBACK,
   );
+*/
 
   $items['admin/config/content/ajax_comments'] = array(
     'title' => 'AJAX comments',
@@ -660,7 +661,9 @@ function theme_ajax_comments_notify_text($vars = array()) {
 
 /**
  * Delivers comment form via AJAX.
+ * This is depreciated due to usage of ajax_comments_reply() 
  */
+ /*
 function ajax_comments_comment_form($type = 'ajax', $node) {
   // Validate token.
   if (empty($_GET['tok']) || !drupal_valid_token($_GET['tok'], 'ajax-comments-add-comment-' . $node->nid)) {
@@ -669,12 +672,12 @@ function ajax_comments_comment_form($type = 'ajax', $node) {
 
   // Return rendered form.
   if ($type == 'ajax') {
-
     // Build form.
     $comment = new stdClass;
     $comment->nid = $node->nid;
     $comment->views_ajax_submission = TRUE;
     $form = drupal_get_form('comment_form', $comment);
+    
     $markup = drupal_render($form);
     // Construct AJAX.
     //$commands[] = ajax_command_replace('.ajax-comments-add-comment-wrapper:has(.ajax-comments-add-comment-nid-' . $node->nid . ')', $markup);
@@ -687,3 +690,4 @@ function ajax_comments_comment_form($type = 'ajax', $node) {
     drupal_goto('node/' . $node->nid);
   }
 }
+*/

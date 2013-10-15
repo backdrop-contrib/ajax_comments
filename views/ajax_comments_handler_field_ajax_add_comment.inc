@@ -47,7 +47,8 @@ class ajax_comments_handler_field_ajax_add_comment extends views_handler_field_c
         ),
         'query' => array('tok' => drupal_get_token('ajax-comments-add-comment-' . $node->nid)),
         );
-      $path = 'ajax_comments/comment_form/ajax/' . $node->nid;
+      $path = 'ajax_comments/reply/' . $node->nid;
+      //$path = 'ajax_comments/comment_form/ajax/' . $node->nid;
       $text = !empty($this->options['text']) ? $this->options['text'] : t('Add new comment');
       //$this->options['element_wrapper_class'] = 'ajax-comments-add-comment-wrapper';
       return l($text, $path, $options);
