@@ -91,7 +91,6 @@ class ajax_comments_handler_field_list_comments extends views_handler_field_enti
       //->limit(0,$comments_per_page);
     if (!user_access('administer comments')) {
       $query->condition('c.status', COMMENT_PUBLISHED);
-      $count_query->condition('c.status', COMMENT_PUBLISHED);
     }
     if ($mode === COMMENT_MODE_FLAT) {
       $query->orderBy('c.cid', 'ASC');
