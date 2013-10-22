@@ -145,7 +145,7 @@ function ajax_comments_form_comment_form_alter(&$form, &$form_state, $form_id) {
   // Check to see if this node type uses ajax comments.
   $node = menu_get_object();
   // there should be a better way to determine the current view mode
-  if ($node){
+  if (is_array($node)){
     foreach($node->content as $field){
       if(!empty($field['#view_mode']) && is_array($field)){
         $view_mode = $field['#view_mode'];
@@ -369,10 +369,6 @@ function ajax_comments_delete_js($form, &$form_state) {
  */
 function ajax_comments_comment_view($comment, $view_mode, $langcode) {
   //$active = ajax_comments_node_type_active(substr($comment->node_type, strlen('comment_node_')));
-
-  if (!$active) {
-    //return;
-  }
 
   // Reply.
   if (isset($comment->content['links']['comment']['#links']['comment-reply'])) {
