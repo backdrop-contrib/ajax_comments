@@ -160,22 +160,24 @@ function ajax_comments_form_comment_form_alter(&$form, &$form_state, $form_id) {
   }else{
     // TODO: we are not in a node context and have no clue to modify the form or not
   }
+  $micro = microtime();
+  $id = drupal_html_id('ajax-comment-'.$microtime);
+  $form['#attributes'] = array('id' => array($id));
   $form['actions']['submit']['#ajax'] = array(
     'callback' => 'ajax_comments_submit_js',
-    'wrapper' => $form['#id'],
+    'wrapper' => $id,
     'method' => 'replace',
     'effect' => 'fade',
   );
   $form['actions']['preview']['#ajax'] = array(
     'callback' => 'ajax_comments_preview_js',
-    'wrapper' => $form['#id'],
+    'wrapper' => $id,
     'method' => 'replace',
     'effect' => 'fade',
   );
   $form['#attached'] = array(
     'js' => array(drupal_get_path('module', 'ajax_comments') . '/ajax_comments.js'),
   );
-
   // HACK, stop ctools from modifying us in node_comment_form.inc
   $form_state['ctools comment alter'] = FALSE;
 }
