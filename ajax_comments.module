@@ -8,6 +8,7 @@
 /**
  * Implements hook_init().
  * See README.txt for why this is necessary.
+ * TODO: check if this is really necessary
  */
 function ajax_comments_init() {
   if (isset($_POST['ajax_html_ids']) && count($_POST['ajax_html_ids']) == 1) {
@@ -306,7 +307,7 @@ function ajax_comments_submit_js($form, &$form_state) {
     $commands[] = ajax_command_invoke('#' . $form['#id'], 'remove');
   }
   // If this is being submitted via the views ajax add comment field.
-  elseif ($form_state['comment']->views_ajax_submission) {
+  elseif (isset($form_state['comment']->views_ajax_submission)){
     $message = t('Your comment has been posted.');
     $commands[] = ajax_command_replace('#' . $form['#id'], $message);
   }
@@ -601,7 +602,13 @@ function ajax_comments_remove_status() {
   $not_published = t('Your comment has been queued for review by site administrators and will be published after approval.');
   foreach ($_SESSION['messages']['status'] as $key => $value) {
     if ($value == $published || $value == $not_published || $value = $deleted) {
-      unset($_SESSION['messages']['status']);
+      unset($_SESSION['messages']['status'][$key]);
+    }
+  }
+  if (empty($_SESSION['messages']['status'])) {
+    unset($_SESSION['messages']['status']);
+    if (empty($_SESSION['messages'])) {
+      unset($_SESSION['messages']);
     }
   }
 }

@@ -39,7 +39,9 @@ class ajax_comments_handler_field_list_comments extends views_handler_field_enti
       // Only attempt to render comments if the node has visible comments.
       // Unpublished comments are not included in $node->comment_count, so show
       // comments unconditionally if the user is an administrator.
-      if (($node->comment_count && user_access('access comments')) || user_access('administer comments')) {
+      if (($node->comment_count && user_access('access comments')) || 
+        user_access('administer comments')) {
+
         $mode = variable_get('comment_default_mode_' . $node->type, COMMENT_MODE_THREADED);
         $comments_per_page = variable_get('comment_default_per_page_' . $node->type, 150);
         if ($cids = $this->comment_get_thread($node, $mode, $comments_per_page)) {
@@ -55,7 +57,7 @@ class ajax_comments_handler_field_list_comments extends views_handler_field_enti
       // Append comment form if needed.
       if (user_access('post comments') && $node->comment == COMMENT_NODE_OPEN 
           && (variable_get('comment_form_location_' . $node->type, COMMENT_FORM_BELOW) == COMMENT_FORM_BELOW 
-              && $this->options['ajax_comments_display_add_comment_form'])) {
+          && $this->options['ajax_comments_display_add_comment_form'])) {
         $build = drupal_get_form("comment_node_{$node->type}_form", (object) array('nid' => $node->nid));
         $additions['comment_form'] = $build;
       }
@@ -70,7 +72,7 @@ class ajax_comments_handler_field_list_comments extends views_handler_field_enti
         //Add the ajax_comments wrapper.
         $additions['comments']['#prefix'] = '<div id="comment-wrapper-nid-' . $node->nid . '">';
         $additions['comments']['#suffix'] = '</div>';
-      } 
+      }
 
       return $additions;
     }
