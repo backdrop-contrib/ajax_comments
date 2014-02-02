@@ -473,7 +473,7 @@ function ajax_comments_entity_prepare_view($entities, $entity_type, $langcode) {
         $opened++;
       }
       else {
-        $entity->wrappers_to_close = ($i == 0 ? 0 : 1) + ($opened - $depth);
+        $entity->wrappers_to_close = ($depth == $opened)? 1 : ($opened - $depth)+1;
 
         while ($depth < $opened) {
           $opened--;
@@ -495,7 +495,7 @@ function ajax_comments_entity_prepare_view($entities, $entity_type, $langcode) {
       $i++;
     }
 
-    $entities[$id]->final_wrappers_to_close = $opened + 1;
+    $entities[$id]->final_wrappers_to_close = $opened;
   }
 }
 
