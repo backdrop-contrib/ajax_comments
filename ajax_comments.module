@@ -133,6 +133,10 @@ function ajax_comments_preprocess_node(&$variables) {
     return;
   }
 
+  if (empty($node->comment) || $node->comment == COMMENT_NODE_CLOSED) {
+    return;
+  }
+
   drupal_add_library('system', 'drupal.ajax');
 
   $variables['content']['links']['comment']['#links']['comment-add']['attributes']['class'] = 'use-ajax';
