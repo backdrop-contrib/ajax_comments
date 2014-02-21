@@ -165,7 +165,7 @@ function ajax_comments_form_comment_form_alter(&$form, &$form_state, $form_id) {
     // TODO: we are not in a node context and have no clue to modify the form or not
   }
   $micro = microtime();
-  $id = drupal_html_id('ajax-comment-'.$microtime);
+  $id = drupal_html_id('ajax-comment-'.$micro);
   $form['#attributes'] = array('id' => array($id));
   $form['actions']['submit']['#ajax'] = array(
     'callback' => 'ajax_comments_submit_js',
