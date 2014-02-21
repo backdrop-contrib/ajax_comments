@@ -668,8 +668,8 @@ function theme_ajax_comments_notify_text($vars = array()) {
     $text = t('This is the preview for your comment. You must click SAVE or your comment will be lost.');
     $status = 'warning';
   }
-  // Using messages (minus .session which defaults to 960px in bartik) for now.
-  return '<div id="messages"><div class="clearfix"><div class="messages ajax-comments ' . $status . '"><h2 class="element-invisible">Status message</h2>' . $text . '</div></div></div>';
+  drupal_set_message($text, $status);
+  return theme('status_messages');
 }
 
 /**
