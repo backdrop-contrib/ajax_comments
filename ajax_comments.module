@@ -223,6 +223,7 @@ function ajax_comments_preview_js($form, &$form_state) {
     $new_form_state = array();
     $new_form_state['build_info']['args'][] = (object) array('nid' => $node->nid);
     $new_form_state['input'] = $form_state['input'];
+    $new_form_state['rebuild_info'] = $form_state['rebuild_info'];
     $form['#action'] = '/ajax_comments/reply/' . $comment->nid . '/' . $comment->pid;
     $new_form_build = drupal_build_form($form['#form_id'], $new_form_state);
     // Don't build comment and body.
@@ -241,6 +242,7 @@ function ajax_comments_preview_js($form, &$form_state) {
     $new_form_state = array();
     $new_form_state['build_info']['args'][] = (object) array('nid' => $node->nid);
     $new_form_state['input'] = $form_state['input'];
+    $new_form_state['rebuild_info'] = $form_state['rebuild_info'];
     $new_form_build = drupal_build_form($form['#form_id'], $new_form_state);
     // Don't build comment and body.
     unset($new_form_build['comment_preview']);
