@@ -22,7 +22,7 @@ function ajax_comments_init() {
  * Implements hook_menu().
  */
 function ajax_comments_menu() {
-  $items['ajax_comments/reply/%node/%/%'] = array(
+  $items['ajax_comments/reply/%node/%'] = array(
     'page callback' => 'ajax_comments_reply',
     'page arguments' => array(2,3,4),
     'access callback' => 'node_access',
