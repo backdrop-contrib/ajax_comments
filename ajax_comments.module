@@ -471,7 +471,7 @@ function ajax_comments_entity_prepare_view($entities, $entity_type, $langcode) {
 
     foreach ($entities as $id => $entity) {
 
-      $depth = count(explode('.', $entity->thread)) - 1;
+      $depth = isset($entity->thread) ? count(explode('.', $entity->thread)) - 1 : 0;
 
       $entity->wrappers_to_close = 0;
 
