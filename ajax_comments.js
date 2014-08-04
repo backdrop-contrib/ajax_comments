@@ -5,6 +5,9 @@ Drupal.behaviors.ajaxComments = {
 
     // Responds to submission of new comment by the user.
     if ($(context).hasClass('ajax-comment-wrapper')) {
+      if (typeof(commentNumber) != "undefined") {
+        $('a#reply-' + commentNumber[1]).show();
+      }
       commentNumber = $(context).attr("id").split('-');
       // Scroll to the comment reply inserted by ajax_command.
       ajaxCommentsScrollReply(commentNumber[2])
@@ -26,11 +29,12 @@ Drupal.behaviors.ajaxComments = {
       // Hide comment form.
       $(commentForm).hide();
 
-      ajaxCommentsScrollReply(commentNumber[1])
+      commentNumber = $(this).attr("id").split('-');
+
+      ajaxCommentsScrollReply(commentNumber[3]);
 
       e.preventDefault();
 
-      commentNumber = $(this).attr("id").split('-');
       // This needs to be unbound because the ajax_command callback is still
       // attached to it. We want to show the form that is already hidden
       // instead of calling for a new one.
@@ -38,7 +42,7 @@ Drupal.behaviors.ajaxComments = {
         click: function(e) {
           commentNumber = $(this).attr("id").split('-');
           // Reshow the form.
-          $('[about="/comment/' + commentNumber[1] + '#comment-' + commentNumber[1] + '"]').next().show();
+          $('[about*="/comment/' + commentNumber[1] + '#comment-' + commentNumber[1] + '"]').next().show();
 
           // Don't let people reply over and over.
           $(this).hide();
