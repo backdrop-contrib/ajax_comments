@@ -3,7 +3,6 @@
  ** @file
  *  views handler class
  *  mostyly just  renders the field for views display  and adds  js and css
- */
 class ajax_comments_handler_field_ajax_add_comment extends views_handler_field_comment_node_link {
   var $output;
 
@@ -47,7 +46,7 @@ class ajax_comments_handler_field_ajax_add_comment extends views_handler_field_c
         ),
         'query' => array('tok' => drupal_get_token('ajax-comments-add-comment-' . $node->nid)),
         );
-      $path = 'ajax_comments/reply/' . $node->nid."/NULL/views";
+      $path = 'ajax_comments/reply/' . $node->nid."/NULL";
       $text = !empty($this->options['text']) ? $this->options['text'] : t('Add new comment');
       // since we don't have a comment at all simulate the wrapper
       $prepend = '';
@@ -58,3 +57,4 @@ class ajax_comments_handler_field_ajax_add_comment extends views_handler_field_c
     }
   }
 }
+ */
