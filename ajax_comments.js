@@ -16,6 +16,8 @@ Drupal.behaviors.ajaxComments = {
     // Scroll to the comment reply form when reply is clicked.
     $("a.ajax-comment-reply:not(clicked)").click(function() {
       commentNumber = $(this).attr("id").split('-');
+console.log(commentNumber);
+console.log(this);
       ajaxCommentsScrollForm(commentNumber[1]);
 
       // Don't let people reply over and over.
@@ -31,7 +33,8 @@ Drupal.behaviors.ajaxComments = {
 
       commentNumber = $(this).attr("id").split('-');
 
-      ajaxCommentsScrollReply(commentNumber[3]);
+      //ajaxCommentsScrollReply(commentNumber[3]);
+      ajaxCommentsScrollReply(commentNumber[1]);
 
       e.preventDefault();
 
@@ -62,7 +65,6 @@ Drupal.behaviors.ajaxComments = {
 function ajaxCommentsScrollForm(commentNumber) {
   pos = $('#comment-wrapper-' + commentNumber).offset();
   height = propHelper($('#comment-wrapper-' + commentNumber + ' .comment'), "scrollHeight");
-
   // Scroll to comment reply form.
   $('html, body').animate({ scrollTop: pos.top + height}, 'fast');
 }
