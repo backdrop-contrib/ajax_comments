@@ -435,7 +435,7 @@ function ajax_comments_comment_view($comment, $view_mode, $langcode) {
 function ajax_comments_node_view_alter(&$build) {
   $active = ajax_comments_node_type_active($build['#node']->type);
   if($active){
-    $build['comments']['comments']['#prefix'] = '<div id="comment-wrapper-nid-' . $build['#node']->nid . '">test!';
+    $build['comments']['comments']['#prefix'] = '<div id="comment-wrapper-nid-' . $build['#node']->nid . '">';
     $build['comments']['comments']['#suffix'] = '</div>';
   }
 }
