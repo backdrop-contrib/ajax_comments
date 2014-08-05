@@ -23,6 +23,14 @@ function ajax_comments_settings() {
     '#default_value' => variable_get('ajax_comments_notify', ''),
   );
 
+  $form['ajax_comments_scroll'] = array(
+    '#title' => t('Disable scrolling'),
+    '#type' => 'checkbox',
+    '#description' => t('Disable the scroll events'),
+    '#default_value' => variable_get('ajax_comments_scroll', ''),
+  );
+
+
   $entity_info = entity_get_info('node');
   foreach ($entity_info['view modes'] as $view_mode => $view_mode_info) {
     $view_modes[$view_mode] = $view_mode_info['label'];

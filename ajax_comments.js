@@ -1,34 +1,11 @@
 (function ($) {
 
 Drupal.behaviors.ajaxComments = {
-  attach: function(context, settings) {
+  attach: function(context, settings) {	
 
-    // Responds to submission of new comment by the user.
-    if ($(context).hasClass('ajax-comment-wrapper')) {
-      if (typeof(commentNumber) != "undefined") {
-        $('a#reply-' + commentNumber[1]).show();
-      }
-      commentNumber = $(context).attr("id").split('-');
-      // Scroll to the comment reply inserted by ajax_command.
-      ajaxCommentsScrollReply(commentNumber[2])
-    }
-
-    // Scroll to the comment reply form when reply is clicked.
-    $("a.ajax-comment-reply:not(clicked)").click(function() {
-      commentNumber = $(this).attr("id").split('-');
-console.log(commentNumber);
-console.log(this);
-      ajaxCommentsScrollForm(commentNumber[1]);
-
-      // Don't let people reply over and over.
-      $(this).hide();
-
-    });
-
-    // Hide comment form if cancel is clicked.
+    // Hide comment form on cancel
     $("a.ajax-comments-reply-cancel").click(function(e) {
       commentForm = $(this).attr("href");
-      // Hide comment form.
       $(commentForm).hide();
 
       commentNumber = $(this).attr("id").split('-');
@@ -49,13 +26,37 @@ console.log(this);
 
           // Don't let people reply over and over.
           $(this).hide();
-
           ajaxCommentsScrollForm(commentNumber[1]);
           e.preventDefault();
         },
       });
     });
+    
+    // disable all scroll events
+    if(settings.ajax_comments.disable_scrolling == 1){
+      return;
+    }
+    // Responds to submission of new comment by the user.
+    if ($(context).hasClass('ajax-comment-wrapper')) {
+      if (typeof(commentNumber) != "undefined") {
+        $('a#reply-' + commentNumber[1]).show();
+      }
+      commentNumber = $(context).attr("id").split('-');
+      // Scroll to the comment reply inserted by ajax_command.
+      ajaxCommentsScrollReply(commentNumber[2])
+    }
 
+    // Scroll to the comment reply form when reply is clicked.
+    $("a.ajax-comment-reply:not(clicked)").click(function() {
+      commentNumber = $(this).attr("id").split('-');
+      ajaxCommentsScrollForm(commentNumber[1]);
+
+      // Don't let people reply over and over.
+      $(this).hide();
+
+    });
+
+    // Hide comment form if cancel is clicked.
   }
 };
 
@@ -73,26 +74,25 @@ function ajaxCommentsScrollForm(commentNumber) {
  * Scrolls user to comment that has been added to page.
  */
 function ajaxCommentsScrollReply(commentNumber) {
-  formSize = propHelper($('.comment-form'), "scrollHeight");
+  // offset should only be added then we the comment form is on top
+  //formSize = propHelper($('.comment-form'), "scrollHeight");
   pos = $('#comment-wrapper-' + commentNumber).offset();
 
   // Scroll to comment reply.
-  $('html, body').animate({ scrollTop: pos.top - formSize}, 'slow');
+  $('html, body').animate({ scrollTop: pos.top}, 'slow');
+  //$('html, body').animate({ scrollTop: pos.top - formSize}, 'slow');
 }
 
 /**
  * Helper function to retrieve object properties.
- *
  * Works with jquery below and above version 1.6
- *
  */
 function propHelper(e, p) {
-	if ($.isFunction($.prop)) {
-		return e.prop(p);
-	}
-	else {
-		return e.attr(p);
-	}
+  if ($.isFunction($.prop)) {
+    return e.prop(p);
+  } else {
+    return e.attr(p);
+  }
 }
 
 }(jQuery));

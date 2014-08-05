@@ -66,6 +66,14 @@ function ajax_comments_menu() {
 }
 
 /**
+ * hook_init()
+ */
+function ajax_comments_init(){
+  $scroll = variable_get('ajax_comments_scroll', '');
+  drupal_add_js(array('ajax_comments' => array('disable_scrolling' => $scroll)), 'setting');
+
+}
+/**
  * Implements hook_views_api().
  */
 function ajax_comments_views_api() {
