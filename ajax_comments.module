@@ -329,11 +329,11 @@ function ajax_comments_submit_js($form, &$form_state) {
 
   // Or are we replying to another comment.
   elseif (isset($form_state['values']['pid'])) {
+    // Delete the form.
+    $commands[] = ajax_command_invoke('#' . $form['#attributes']['id']['0'] , 'remove');
     // Append comment to parent wrapper.
     $comment_output = drupal_render($comment_build);
     $commands[] = ajax_command_append('#comment-wrapper-' . $comment->pid, $notify_text . $comment_output);
-    // Delete the form.
-    $commands[] = ajax_command_invoke('#' . $form['#attributes']['id']['0'] , 'remove');
   }
 
   // If this is being submitted via the views ajax add comment field.
