@@ -23,11 +23,11 @@ function ajax_comments_settings() {
     '#default_value' => variable_get('ajax_comments_notify', ''),
   );
 
-  $form['ajax_comments_scroll'] = array(
+  $form['ajax_comments_disable_scroll'] = array(
     '#title' => t('Disable scrolling'),
     '#type' => 'checkbox',
     '#description' => t('Disable the scroll events'),
-    '#default_value' => variable_get('ajax_comments_scroll', ''),
+    '#default_value' => variable_get('ajax_comments_disable_scroll', ''),
   );
 
 

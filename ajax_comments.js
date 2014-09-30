@@ -1,98 +1,94 @@
 (function ($) {
 
-Drupal.behaviors.ajaxComments = {
-  attach: function(context, settings) {	
+    // Scroll to given element
+    Drupal.ajax.prototype.commands.ajaxCommentsScrollToElement = function(ajax, response, status) {
+        try {
+            pos = $(response.selector).offset();
+            $('html, body').animate({ scrollTop: pos.top}, 'slow');
+        } catch (e) {
+            console.log('ajaxComments-ScrollToElementError: ' + e.name);
+        }
+    };
 
-    // Hide comment form on cancel
-    $("a.ajax-comments-reply-cancel").click(function(e) {
-      commentForm = $(this).attr("href");
-      $(commentForm).hide();
+    /**
+     * Add the dummy div if they are not exist.
+     * On the server side we have a current state of node and comments, but on client side we may have a outdated state
+     * and some div's may be not present
+     */
+    Drupal.ajax.prototype.commands.ajaxCommentsAddDummyDivAfter = function(ajax, response, status) {
+        try {
+            if (!$(response.selector).next().hasClass(response.class)) {
+                $('<div class="' + response.class + '"></div>').insertAfter(response.selector);
+            }
+        } catch (e) {
+            console.log('ajaxComments-AddDummyDivAfter: ' + e.name);
+        }
+    };
 
-      commentNumber = $(this).attr("id").split('-');
+    /*
+     * These function may be removed when bug #736066 is fixed
+     * At this time, ajax.js automatically wrap comment content into div when we use ajax_command_NAME functions,
+     * and this is not good for us because this broke div layout
+     */
 
-      //ajaxCommentsScrollReply(commentNumber[3]);
-      ajaxCommentsScrollReply(commentNumber[1]);
+    /**
+     * Own implementation of ajax_command_replace()
+     * see bug: https://www.drupal.org/node/736066
+     */
+    Drupal.ajax.prototype.commands.ajaxCommentsReplace = function(ajax, response, status) {
+        try {
+            $(response.selector).replaceWith(response.html);
+        } catch (e) {
+            console.log('ajaxComments-Replace: ' + e.name)
+        }
+    };
 
-      e.preventDefault();
+    /**
+     * Own implementation of ajax_command_before()
+     * see bug: https://www.drupal.org/node/736066
+     */
+    Drupal.ajax.prototype.commands.ajaxCommentsBefore = function(ajax, response, status) {
+        try {
+            $(response.html).insertBefore(response.selector);
+        } catch (e) {
+            console.log('ajaxComments-Before: ' + e.name)
+        }
+    };
 
-      // This needs to be unbound because the ajax_command callback is still
-      // attached to it. We want to show the form that is already hidden
-      // instead of calling for a new one.
-      $('a#reply-' + commentNumber[3]).addClass('clicked').unbind().attr("href", "#").show().bind({
-        click: function(e) {
-          commentNumber = $(this).attr("id").split('-');
-          // Reshow the form.
-          $('[about*="/comment/' + commentNumber[1] + '#comment-' + commentNumber[1] + '"]').next().show();
+    /**
+     * Own implementation of ajax_command_after()
+     * see bug: https://www.drupal.org/node/736066
+     */
+    Drupal.ajax.prototype.commands.ajaxCommentsAfter = function(ajax, response, status) {
+        try {
+            $(response.html).insertAfter(response.selector);
+        } catch (e) {
+            console.log('ajaxComments-After: ' + e.name)
+        }
+    };
 
-          // Don't let people reply over and over.
-          $(this).hide();
-          ajaxCommentsScrollForm(commentNumber[1]);
-          e.preventDefault();
-        },
-      });
-    });
-    
-    // disable all scroll events
-    if(settings.ajax_comments.disable_scrolling == 1){
-      return;
-    }
-    // Responds to submission of new comment by the user.
-    if ($(context).hasClass('ajax-comment-wrapper')) {
-      if (typeof(commentNumber) != "undefined") {
-        $('a#reply-' + commentNumber[1]).show();
-      }
-      commentNumber = $(context).attr("id").split('-');
-      // Scroll to the comment reply inserted by ajax_command.
-      ajaxCommentsScrollReply(commentNumber[2])
-    }
+    /**
+     * Own implementation of ajax_command_insert()
+     * see bug: https://www.drupal.org/node/736066
+     */
+    Drupal.ajax.prototype.commands.ajaxCommentsPrepend = function(ajax, response, status) {
+        try {
+            $(response.selector).prepend(response.html);
+        } catch (e) {
+            console.log('ajaxComments-Prepend: ' + e.name)
+        }
+    };
 
-    // Scroll to the comment reply form when reply is clicked.
-    $("a.ajax-comment-reply:not(clicked)").click(function() {
-      commentNumber = $(this).attr("id").split('-');
-      ajaxCommentsScrollForm(commentNumber[1]);
-
-      // Don't let people reply over and over.
-      $(this).hide();
-
-    });
-
-    // Hide comment form if cancel is clicked.
-  }
-};
-
-/**
- * Scrolls user to comment reply form.
- */
-function ajaxCommentsScrollForm(commentNumber) {
-  pos = $('#comment-wrapper-' + commentNumber).offset();
-  height = propHelper($('#comment-wrapper-' + commentNumber + ' .comment'), "scrollHeight");
-  // Scroll to comment reply form.
-  $('html, body').animate({ scrollTop: pos.top + height}, 'fast');
-}
-
-/**
- * Scrolls user to comment that has been added to page.
- */
-function ajaxCommentsScrollReply(commentNumber) {
-  // offset should only be added then we the comment form is on top
-  //formSize = propHelper($('.comment-form'), "scrollHeight");
-  pos = $('#comment-wrapper-' + commentNumber).offset();
-
-  // Scroll to comment reply.
-  $('html, body').animate({ scrollTop: pos.top}, 'slow');
-  //$('html, body').animate({ scrollTop: pos.top - formSize}, 'slow');
-}
-
-/**
- * Helper function to retrieve object properties.
- * Works with jquery below and above version 1.6
- */
-function propHelper(e, p) {
-  if ($.isFunction($.prop)) {
-    return e.prop(p);
-  } else {
-    return e.attr(p);
-  }
-}
+    /**
+     * Own implementation of ajax_command_append()
+     * see bug: https://www.drupal.org/node/736066
+     */
+    Drupal.ajax.prototype.commands.ajaxCommentsAppend = function(ajax, response, status) {
+        try {
+            $(response.selector).append(response.html);
+        } catch (e) {
+            console.log('ajaxComments-Append: ' + e.name)
+        }
+    };
 
 }(jQuery));
