@@ -178,7 +178,7 @@ function ajax_comments_form_comment_form_alter(&$form, &$form_state, $form_id) {
   if (isset($form_state['comment']->pid)) {
     $form['actions']['cancel'] = array (
       '#type' => 'button',
-      '#value' => 'Cancel',
+      '#value' => t('Cancel'),
       '#access' => true,
       '#weight' => 21,
       '#limit_validation_errors' => array(),
