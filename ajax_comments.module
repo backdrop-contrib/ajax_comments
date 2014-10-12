@@ -439,7 +439,7 @@ function ajax_comments_comment_view($comment, $view_mode, $langcode) {
   // Check
   if (ajax_comments_node_type_active(substr($comment->node_type, strlen('comment_node_')))) {
     // A little HACK for do not mark as NEW own comments
-    if ($comment->uid == $user->uid && ($comment->new == MARK_NEW || $comment->new == MARK_UPDATED)) {
+    if (isset($comment->new) && $comment->uid == $user->uid && ($comment->new == MARK_NEW || $comment->new == MARK_UPDATED)) {
       $comment->new = MARK_READ;
     }
     // Reply.
