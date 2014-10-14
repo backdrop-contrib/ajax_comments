@@ -493,7 +493,6 @@ function ajax_comments_reply($node, $pid = 0, $flag = 'node') {
   }
 
   // If there is a pid this is a reply to a comment.
-  if ($pid == "NULL") $pid = NULL;
   if (!empty($pid)) {
     if (!user_access('access comments')) {
       return MENU_ACCESS_DENIED;
