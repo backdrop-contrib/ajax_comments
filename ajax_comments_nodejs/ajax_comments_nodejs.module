@@ -56,10 +56,10 @@ function ajax_comments_nodejs_comment_update($comment) {
         // Flat mode or not reply to comment
         if ($sort == 1) {
           // Newer first.
-          $commands[] = array('command' => 'ajaxCommentsAfter', 'selector' => 'div.comment-wrapper-nid-' . $comment->nid . ' > div.ajax-comment-wrapper:last', 'html' => $comment_output);
+          $commands[] = array('command' => 'ajaxCommentsAfter', 'selector' => '.comment-wrapper-nid-' . $comment->nid . ' > .ajax-comment-wrapper:last', 'html' => $comment_output);
         } else {
           // Older first.
-          $commands[] = array('command' => 'ajaxCommentsBefore', 'selector' => 'div.comment-wrapper-nid-' . $comment->nid . '> div.ajax-comment-wrapper:first', 'html' => $comment_output);
+          $commands[] = array('command' => 'ajaxCommentsBefore', 'selector' => '.comment-wrapper-nid-' . $comment->nid . '> .ajax-comment-wrapper:first', 'html' => $comment_output);
         }
       }
     }
@@ -114,10 +114,10 @@ function ajax_comments_nodejs_comment_insert($comment) {
       // Flat mode or not reply to comment
       if ($sort == 1) {
         // Newer first.
-        $commands[] = array('command' => 'ajaxCommentsAfter', 'selector' => 'div.comment-wrapper-nid-' . $comment->nid . ' > div.ajax-comment-wrapper:last', 'html' => $comment_output);
+        $commands[] = array('command' => 'ajaxCommentsAfter', 'selector' => '.comment-wrapper-nid-' . $comment->nid . ' > .ajax-comment-wrapper:last', 'html' => $comment_output);
       } else {
         // Older first.
-        $commands[] = array('command' => 'ajaxCommentsBefore', 'selector' => 'div.comment-wrapper-nid-' . $comment->nid . '> div.ajax-comment-wrapper:first', 'html' => $comment_output);
+        $commands[] = array('command' => 'ajaxCommentsBefore', 'selector' => '.comment-wrapper-nid-' . $comment->nid . '> .ajax-comment-wrapper:first', 'html' => $comment_output);
       }
     }
     $nodejs_comment = (object) array(

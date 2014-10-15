@@ -341,13 +341,13 @@ function ajax_comments_submit_js($form, &$form_state) {
       if ($sort == 1) {
         // Older first. Append comment to last wrapper.
         $commands[] = ajax_command_invoke('.ajax-comment-reply-form-' . $comment->nid . '-' . $pid . '-' . $cid, 'remove');
-        //$commands[] = ajax_command_after('div.comment-wrapper-nid-' . $comment->nid . ' > div.ajax-comment-wrapper:last', $comment_output);
-        $commands[] = array('command' => 'ajaxCommentsAfter', 'selector' => 'div.comment-wrapper-nid-' . $comment->nid . ' > div.ajax-comment-wrapper:last', 'html' => $comment_output);
+        //$commands[] = ajax_command_after('.comment-wrapper-nid-' . $comment->nid . ' > .ajax-comment-wrapper:last', $comment_output);
+        $commands[] = array('command' => 'ajaxCommentsAfter', 'selector' => '.comment-wrapper-nid-' . $comment->nid . ' > .ajax-comment-wrapper:last', 'html' => $comment_output);
       } else {
         // Newer first. Append comment to top.
         $commands[] = ajax_command_invoke('.ajax-comment-reply-form-' . $comment->nid . '-' . $pid . '-' . $cid, 'remove');
-        //$commands[] = ajax_command_prepend('div.comment-wrapper-nid-' . $comment->nid, $comment_output);
-        $commands[] = array('command' => 'ajaxCommentsPrepend', 'selector' => 'div.comment-wrapper-nid-' . $comment->nid, 'html' => $comment_output);
+        //$commands[] = ajax_command_prepend('.comment-wrapper-nid-' . $comment->nid, $comment_output);
+        $commands[] = array('command' => 'ajaxCommentsPrepend', 'selector' => '.comment-wrapper-nid-' . $comment->nid, 'html' => $comment_output);
       }
     }
 
@@ -360,12 +360,12 @@ function ajax_comments_submit_js($form, &$form_state) {
     // Check sort by comment_goodness.
     if ($sort == 1) {
       // Older first. Append comment to last wrapper.
-      //$commands[] = ajax_command_after('div.comment-wrapper-nid-' . $comment->nid . ' > div.ajax-comment-wrapper:last', $comment_output);
-      $commands[] = array('command' => 'ajaxCommentsAfter', 'selector' => 'div.comment-wrapper-nid-' . $comment->nid . ' > div.ajax-comment-wrapper:last', 'html' => $comment_output);
+      //$commands[] = ajax_command_after('.comment-wrapper-nid-' . $comment->nid . ' > .ajax-comment-wrapper:last', $comment_output);
+      $commands[] = array('command' => 'ajaxCommentsAfter', 'selector' => '.comment-wrapper-nid-' . $comment->nid . ' > .ajax-comment-wrapper:last', 'html' => $comment_output);
     } else {
       // Newer first. Append comment to top.
-      //$commands[] = ajax_command_prepend('div.comment-wrapper-nid-' . $comment->nid, $comment_output);
-      $commands[] = array('command' => 'ajaxCommentsBefore', 'selector' => 'div.comment-wrapper-nid-' . $comment->nid . '> div.ajax-comment-wrapper:first', 'html' => $comment_output);
+      //$commands[] = ajax_command_prepend('.comment-wrapper-nid-' . $comment->nid, $comment_output);
+      $commands[] = array('command' => 'ajaxCommentsBefore', 'selector' => '.comment-wrapper-nid-' . $comment->nid . '> .ajax-comment-wrapper:first', 'html' => $comment_output);
     }
 
     // If we have a default form, update it with a new one.
@@ -379,7 +379,7 @@ function ajax_comments_submit_js($form, &$form_state) {
       $commands[] = ajax_command_replace('.ajax-comment-reply-form-' . $form_state['comment']->nid . '-' . $pid . '-' . $cid, drupal_render($new_form_build));
 
       if (!variable_get('ajax_comments_disable_scroll', 0) && $sort == 2) {
-        $commands[] = array('command' => 'ajaxCommentsScrollToElement', 'selector' => 'div.comment-wrapper-nid-' . $comment->nid);
+        $commands[] = array('command' => 'ajaxCommentsScrollToElement', 'selector' => '.comment-wrapper-nid-' . $comment->nid);
       }
     }
     // Otherwise, delete it.
@@ -549,10 +549,10 @@ function ajax_comments_reply($node, $pid = 0, $flag = 'node') {
     // Check sort by comment_goodness.
     if ($sort == 1) {
       // Older first. Append comment to last wrapper.
-      $commands[] = ajax_command_after('div.comment-wrapper-nid-' . $node->nid . ' > div.ajax-comment-wrapper:last', $form);
+      $commands[] = ajax_command_after('.comment-wrapper-nid-' . $node->nid . ' > .ajax-comment-wrapper:last', $form);
     } else {
       // Newer first. Append comment to top.
-      $commands[] = ajax_command_before('div.comment-wrapper-nid-' . $node->nid . '> div.ajax-comment-wrapper:first', $form);
+      $commands[] = ajax_command_before('.comment-wrapper-nid-' . $node->nid . '> .ajax-comment-wrapper:first', $form);
     }
   }
 
