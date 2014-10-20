@@ -154,7 +154,7 @@ function ajax_comments_form_comment_form_alter(&$form, &$form_state, $form_id) {
 
   $form['actions']['submit']['#ajax'] = array(
     'callback' => 'ajax_comments_submit_js',
-    'wrapper' => $id,
+    'wrapper' => $form['#attributes']['id'],
     'method' => 'replace',
     'effect' => 'fade',
   );
@@ -165,7 +165,7 @@ function ajax_comments_form_comment_form_alter(&$form, &$form_state, $form_id) {
 
   $form['actions']['preview']['#ajax'] = array(
     'callback' => 'ajax_comments_preview_js',
-    'wrapper' => $id,
+    'wrapper' => $form['#attributes']['id'],
     'method' => 'replace',
     'effect' => 'fade',
   );
@@ -184,7 +184,7 @@ function ajax_comments_form_comment_form_alter(&$form, &$form_state, $form_id) {
       '#limit_validation_errors' => array(),
     );
     $form['actions']['cancel']['#ajax'] = array(
-      'wrapper' => $id,
+      'wrapper' => $form['#attributes']['id'],
       'method' => 'replace',
       'effect' => 'fade',
     );
@@ -231,6 +231,11 @@ function ajax_comments_form_comment_confirm_delete_alter(&$form, &$form_state, $
 function ajax_comments_preview_js($form, &$form_state) {
   // Return the actual form if it contains errors.
   if (form_get_errors()) {
+    // Remove comment preview
+    if (isset($form['comment_preview'])) {
+      unset($form['notify_text']);
+      unset($form['comment_preview']);
+    }
     return $form;
   }
 
@@ -281,6 +286,11 @@ function ajax_comments_edit_cancel_js($form, &$form_state) {
 function ajax_comments_submit_js($form, &$form_state) {
   // Return the actual form if it contains errors.
   if (form_get_errors()) {
+    // Remove comment preview
+    if (isset($form['comment_preview'])) {
+      unset($form['notify_text']);
+      unset($form['comment_preview']);
+    }
     return $form;
   }
 
