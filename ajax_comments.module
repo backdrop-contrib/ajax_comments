@@ -243,8 +243,9 @@ function ajax_comments_preview_js($form, &$form_state) {
   $cid = empty($form_state['comment']->cid) ? 0 : $form_state['comment']->cid;
 
   $commands[] = ajax_command_replace('.ajax-comment-reply-form-' . $form_state['comment']->nid . '-' . $pid . '-' . $cid, drupal_render($form));
-  $commands[] = array('command' => 'ajaxCommentsScrollToElement', 'selector' => '.ajax-comment-reply-form-' . $form_state['comment']->nid . '-' . $pid . '-' . $cid);
-
+  if (!variable_get('ajax_comments_disable_scroll', 0)) {
+    $commands[] = array('command' => 'ajaxCommentsScrollToElement', 'selector' => '.ajax-comment-reply-form-' . $form_state['comment']->nid . '-' . $pid . '-' . $cid);
+  }
 
   return array('#type' => 'ajax', '#commands' => $commands);
 }
