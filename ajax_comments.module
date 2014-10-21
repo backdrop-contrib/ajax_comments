@@ -303,9 +303,10 @@ function ajax_comments_submit_js($form, &$form_state) {
   $cid = empty($form['cid']['#value']) ? 0 : $form['cid']['#value'];
   $pid = empty($form_state['comment']->pid) ? 0 : $form_state['comment']->pid;
 
-  if (cache_get('ajax_comments_reply_form-' .  $form_state['comment']->nid . '-' . $pid)) {
+  $key = _ajax_comments_cache_key($form_state['comment']->nid, $pid);
+  if (cache_get($key)) {
     // This form cached. Remove it from cache.
-    cache_clear_all('ajax_comments_reply_form-' . $form_state['comment']->nid . '-' . $pid, 'cache');
+    cache_clear_all($key, 'cache');
   }
 
   $comment = comment_load($form_state['comment']->cid);
@@ -520,13 +521,20 @@ function ajax_comments_reply($node, $pid = 0, $flag = 'node') {
     }
   }
 
-  if ($cache = cache_get('ajax_comments_reply_form-' . $node->nid . '-' . $pid)) {
-    // Get form from cache
-    $form_build = $cache->data;
+  if (!user_is_anonymous() || (user_is_anonymous() && variable_get('cache', 0) != 0)) {
+    // Authenticated user or anonymous and page cache is enabled
+    $key = _ajax_comments_cache_key($node->nid, $pid);
+    if ($cache = cache_get($key)) {
+      // Get form from cache
+      $form_build = $cache->data;
+    } else {
+      // Build form and Save to cache*/
+      $form_build = drupal_get_form("comment_node_{$node->type}_form", (object) array('nid' => $node->nid, 'pid' => $pid));
+      cache_set($key, $form_build, 'cache', time() + 360);
+    }
   } else {
-    // Build form and Save to cache*/
+    // Anonymous and page cache is disabled
     $form_build = drupal_get_form("comment_node_{$node->type}_form", (object) array('nid' => $node->nid, 'pid' => $pid));
-    cache_set('ajax_comments_reply_form-' . $node->nid . '-' . $pid, $form_build, 'cache', time() + 360);
   }
 
   $form = trim(drupal_render($form_build));
@@ -574,6 +582,21 @@ function ajax_comments_reply($node, $pid = 0, $flag = 'node') {
   }
 
   return array('#type' => 'ajax', '#commands' => $commands);
+}
+
+/**
+ * Create the key for caching a comment form.
+ */
+function _ajax_comments_cache_key($nid, $pid) {
+  $key = 'ajax_comments_reply_form-' . $nid . '-' . $pid;
+
+  if (!user_is_anonymous()) {
+    $key .= '-' . session_id();
+  } else {
+    $key .= '-' . ip_address();
+  }
+
+  return $key;
 }
 
 /**
