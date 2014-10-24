@@ -182,3 +182,4 @@ function ajax_comments_nodejs_preprocess_comment(&$variables) {
     $variables['classes_array'][] = $variables['comment']->ajax_comments_nodejs_class;
   }
 }
+

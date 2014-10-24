@@ -4,3 +4,4 @@ core = 7.x
 dependencies[] = ajax_comments
 dependencies[] = nodejs
 dependencies[] = nodejs_ajax
+

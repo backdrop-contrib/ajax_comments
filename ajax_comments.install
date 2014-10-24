@@ -15,3 +15,4 @@ function ajax_comments_uninstall() {
 function ajax_comments_update_7100(&$sandbox) {
   variable_del('ajax_comments_view_modes');
 }
+

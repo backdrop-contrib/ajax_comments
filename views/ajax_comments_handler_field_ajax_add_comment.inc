@@ -58,3 +58,4 @@ class ajax_comments_handler_field_ajax_add_comment extends views_handler_field_c
   }
 }
  */
+
