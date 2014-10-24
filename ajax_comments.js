@@ -37,7 +37,18 @@
      */
     Drupal.ajax.prototype.commands.ajaxCommentsReplace = function(ajax, response, status) {
         try {
+            // Removing content from the wrapper, detach behaviors first.
+            var wrapper = response.selector ? $(response.selector) : $(ajax.wrapper);
+            var settings = response.settings || ajax.settings || Drupal.settings;
+            Drupal.detachBehaviors(wrapper, settings);
+
             $(response.selector).replaceWith(response.html);
+
+            // Attach all JavaScript behaviors to the new content, if it was successfully
+            // added to the page, this if statement allows #ajax['wrapper'] to be
+            // optional.
+            var settings = response.settings || ajax.settings || Drupal.settings;
+            Drupal.attachBehaviors(response.data, settings);
         } catch (e) {
             console.log('ajaxComments-Replace: ' + e.name)
         }
@@ -50,6 +61,12 @@
     Drupal.ajax.prototype.commands.ajaxCommentsBefore = function(ajax, response, status) {
         try {
             $(response.html).insertBefore(response.selector);
+
+            // Attach all JavaScript behaviors to the new content, if it was successfully
+            // added to the page, this if statement allows #ajax['wrapper'] to be
+            // optional.
+            var settings = response.settings || ajax.settings || Drupal.settings;
+            Drupal.attachBehaviors(response.data, settings);
         } catch (e) {
             console.log('ajaxComments-Before: ' + e.name)
         }
@@ -62,6 +79,12 @@
     Drupal.ajax.prototype.commands.ajaxCommentsAfter = function(ajax, response, status) {
         try {
             $(response.html).insertAfter(response.selector);
+
+            // Attach all JavaScript behaviors to the new content, if it was successfully
+            // added to the page, this if statement allows #ajax['wrapper'] to be
+            // optional.
+            var settings = response.settings || ajax.settings || Drupal.settings;
+            Drupal.attachBehaviors(response.data, settings);
         } catch (e) {
             console.log('ajaxComments-After: ' + e.name)
         }
@@ -74,6 +97,12 @@
     Drupal.ajax.prototype.commands.ajaxCommentsPrepend = function(ajax, response, status) {
         try {
             $(response.selector).prepend(response.html);
+
+            // Attach all JavaScript behaviors to the new content, if it was successfully
+            // added to the page, this if statement allows #ajax['wrapper'] to be
+            // optional.
+            var settings = response.settings || ajax.settings || Drupal.settings;
+            Drupal.attachBehaviors(response.data, settings);
         } catch (e) {
             console.log('ajaxComments-Prepend: ' + e.name)
         }
@@ -86,6 +115,12 @@
     Drupal.ajax.prototype.commands.ajaxCommentsAppend = function(ajax, response, status) {
         try {
             $(response.selector).append(response.html);
+
+            // Attach all JavaScript behaviors to the new content, if it was successfully
+            // added to the page, this if statement allows #ajax['wrapper'] to be
+            // optional.
+            var settings = response.settings || ajax.settings || Drupal.settings;
+            Drupal.attachBehaviors(response.data, settings);
         } catch (e) {
             console.log('ajaxComments-Append: ' + e.name)
         }
