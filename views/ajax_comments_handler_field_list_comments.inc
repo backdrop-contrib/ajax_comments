@@ -104,4 +104,3 @@ class ajax_comments_handler_field_list_comments extends views_handler_field_enti
     return $cids;
   }
 }
-

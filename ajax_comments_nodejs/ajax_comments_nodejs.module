@@ -129,11 +129,11 @@ function _ajax_comments_nodejs_view_added($cid) {
           // Flat mode or not reply to comment
           if ($sort == 1) {
             // Newer first.
-            $commands[] = array('command' => 'ajaxCommentsAfter', 'selector' => 'div.comment-wrapper-nid-' . $comment->nid . ' > div.ajax-comment-wrapper:last', 'html' => $comment_output);
+            $commands[] = array('command' => 'ajaxCommentsAfter', 'selector' => '.comment-wrapper-nid-' . $comment->nid . ' > .ajax-comment-wrapper:last', 'html' => $comment_output);
           }
           else {
             // Older first.
-            $commands[] = array('command' => 'ajaxCommentsBefore', 'selector' => 'div.comment-wrapper-nid-' . $comment->nid . '> div.ajax-comment-wrapper:first', 'html' => $comment_output);
+            $commands[] = array('command' => 'ajaxCommentsBefore', 'selector' => '.comment-wrapper-nid-' . $comment->nid . '> .ajax-comment-wrapper:first', 'html' => $comment_output);
           }
         }
       }
@@ -182,4 +182,3 @@ function ajax_comments_nodejs_preprocess_comment(&$variables) {
     $variables['classes_array'][] = $variables['comment']->ajax_comments_nodejs_class;
   }
 }
-

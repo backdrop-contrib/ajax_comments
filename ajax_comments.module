@@ -115,8 +115,9 @@ function ajax_comments_preprocess_node(&$variables) {
 
   drupal_add_js(drupal_get_path('module', 'ajax_comments') .'/ajax_comments.js', 'file');
 
-  $variables['content']['links']['comment']['#links']['comment-add']['attributes']['class'] = 'use-ajax';
-  $variables['content']['links']['comment']['#links']['comment-add']['attributes']['id'] = 'reply-0';
+  $variables['content']['links']['comment']['#links']['comment-add']['attributes']['class'][] = 'use-ajax';
+  $variables['content']['links']['comment']['#links']['comment-add']['attributes']['class'][] = 'ajax-comments-reply-' . $node->nid . '-0';;
+  $variables['content']['links']['comment']['#links']['comment-add']['attributes']['id'] = 'ajax-comments-reply-' . $node->nid . '-0';
   $variables['content']['links']['comment']['#links']['comment-add']['href'] = 'ajax_comments/reply/' . $node->nid;
   $variables['content']['links']['comment']['#links']['comment-add']['fragment'] = NULL;
 }
@@ -153,12 +154,28 @@ function ajax_comments_form_comment_form_alter(&$form, &$form_state, $form_id) {
   $form['#attributes']['id'] = drupal_html_id($id);
   $form['#attributes']['class'][] = $id;
 
-  $form['actions']['submit']['#ajax'] = array(
-    'callback' => 'ajax_comments_submit_js',
-    'wrapper' => $form['#attributes']['id'],
-    'method' => 'replace',
-    'effect' => 'fade',
-  );
+  $views_inline_form = !empty($_GET['ajax-comments-views-inline-form']) || !empty($form_state['storage']['views_inline_form']);
+
+  if (!$views_inline_form) {
+    $form['actions']['submit']['#ajax'] = array(
+      'callback' => 'ajax_comments_submit_js',
+      'wrapper' => $form['#attributes']['id'],
+      'method' => 'replace',
+      'effect' => 'fade',
+    );
+  }
+  else {
+    $form['actions']['submit']['#ajax'] = array(
+      'callback' => 'ajax_comments_submit_views_inline_js',
+      'wrapper' => $form['#attributes']['id'],
+      'method' => 'replace',
+      'effect' => 'fade',
+    );
+    // Store views inline form flag. Required for preview.
+    if (empty($form_state['storage']['views_inline_form'])) {
+      $form_state['storage']['views_inline_form'] = true;
+    }
+  }
   // Set unique id (need for Views with enabled AJAX)
   if (empty($form['actions']['submit']['#id'])) {
     $form['actions']['submit']['#id'] = drupal_html_id('edit-' . $id);
@@ -264,7 +281,9 @@ function ajax_comments_cancel_js($form, &$form_state) {
       $commands[] = array('command' => 'ajaxCommentsScrollToElement', 'selector' => '.comment-wrapper-' . $pid);
     }
   }
-  $commands[] = ajax_command_invoke('a#reply-' . $pid, 'show');
+
+  // Show reply to comment link
+  $commands[] = ajax_command_invoke('.ajax-comments-reply-' . $form['#node']->nid . '-' . $pid, 'show');
 
   return array('#type' => 'ajax', '#commands' => $commands);
 }
@@ -411,12 +430,39 @@ function ajax_comments_submit_js($form, &$form_state) {
     $commands[] = array('command' => 'ajaxCommentsBefore', 'selector' => '.comment-wrapper-' . $comment->cid, 'html' => $notify_text);
   }
 
-  $commands[] = ajax_command_invoke('a#reply-' . $pid, 'show');
+  // Show reply to comment link
+  $commands[] = ajax_command_invoke('.ajax-comments-reply-' . $comment->nid . '-' . $pid, 'show');
 
   $output = array('#type' => 'ajax', '#commands' => $commands);
   return $output;
 }
 
+/**
+ * Build reply for Views Inline Integration
+ */
+function ajax_comments_submit_views_inline_js($form, &$form_state) {
+  // Return the actual form if it contains errors.
+  if (form_get_errors()) {
+    // Remove comment preview
+    if (isset($form['comment_preview'])) {
+      unset($form['notify_text']);
+      unset($form['comment_preview']);
+    }
+    return $form;
+  }
+  // This is to remove the "Your comment has been posted" status message that
+  // will appear upon refresh. This seems dirty but it means we don't have to
+  // rewrite the whole comment_form_submit(). Please chime in if you think this
+  // is dumb.
+  ajax_comments_remove_status();
+
+  // Replace with text
+  $nid = empty($form_state['comment']->nid) ? 0 : $form_state['comment']->nid;
+  $commands[] = ajax_command_replace('.comment-wrapper-nid-' . $nid, t('Your comment has been posted.'));
+
+  $output = array('#type' => 'ajax', '#commands' => $commands);
+  return $output;
+}
 /**
  * Removes the comment.
  */
@@ -461,8 +507,8 @@ function ajax_comments_comment_view($comment, $view_mode, $langcode) {
     }
     // Reply.
     if (isset($comment->content['links']['comment']['#links']['comment-reply'])) {
-      $comment->content['links']['comment']['#links']['comment-reply']['attributes']['class'] = array('use-ajax', 'ajax-comment-reply', 'reply-' . $comment->cid);
-      $comment->content['links']['comment']['#links']['comment-reply']['attributes']['id'] = array('reply-' . $comment->cid);
+      $comment->content['links']['comment']['#links']['comment-reply']['attributes']['class'] = array('use-ajax', 'ajax-comment-reply', 'ajax-comments-reply-' . $comment->nid . '-' . $comment->cid);
+      $comment->content['links']['comment']['#links']['comment-reply']['attributes']['id'] = array('ajax-comments-reply-' . $comment->nid . '-' . $comment->cid);
       $comment->content['links']['comment']['#links']['comment-reply']['href'] = 'ajax_comments/reply/' . $comment->nid . '/' . $comment->cid;
     }
     // Edit.
@@ -527,7 +573,7 @@ function ajax_comments_reply($node, $pid = 0, $flag = 'node') {
     }
   }
 
-  if (!user_is_anonymous() || (user_is_anonymous() && variable_get('cache', 0) != 0)) {
+  if (empty($_GET['ajax-comments-views-inline-form']) && (!user_is_anonymous() || (user_is_anonymous() && variable_get('cache', 0) != 0))) {
     // Authenticated user or anonymous and page cache is enabled
     $key = _ajax_comments_cache_key($node->nid, $pid);
     if ($cache = cache_get($key)) {
@@ -586,7 +632,8 @@ function ajax_comments_reply($node, $pid = 0, $flag = 'node') {
     }
   }
 
-  $commands[] = ajax_command_invoke('a#reply-' . $pid, 'hide');
+  // Hide reply to comment link
+  $commands[] = ajax_command_invoke('.ajax-comments-reply-' . $node->nid . '-' . $pid, 'hide');
 
   if (!variable_get('ajax_comments_disable_scroll', 0)) {
     $commands[] = array('command' => 'ajaxCommentsScrollToElement', 'selector' => '.ajax-comment-reply-form-' . $node->nid . '-' . $pid . '-0');
@@ -727,7 +774,7 @@ function ajax_comments_theme($existing, $type, $theme, $path) {
  * Returns text to notify user their comment has been added.
  */
 function theme_ajax_comments_notify_text($vars = array()) {
-  $text = t('Your comment has been posted');
+  $text = t('Your comment has been posted.');
   $status = 'status';
   // If the comment is unapproved, alter the message
   if (isset($vars['comment']) && !$vars['comment']->status) {
@@ -768,4 +815,3 @@ function ajax_comments_process_node(&$variables) {
     );
   }
 }
-

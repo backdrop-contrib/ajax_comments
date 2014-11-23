@@ -3,6 +3,7 @@
  ** @file
  *  views handler class
  *  mostyly just  renders the field for views display  and adds  js and css
+ */
 class ajax_comments_handler_field_ajax_add_comment extends views_handler_field_comment_node_link {
   var $output;
 
@@ -35,27 +36,25 @@ class ajax_comments_handler_field_ajax_add_comment extends views_handler_field_c
 
   function render($values) {
     if (user_access('post comments') && $node = $this->get_value($values)) {
+      // Add Comment wrapper
+      $result = '<div class="comment-wrapper comment-wrapper-nid-' . $node->nid .'">';
+      // Add dummy comment
+      $result .= '<div class="ajax-comment-wrapper ajax-comment-dummy-comment"></div>';
       // Generate a unique token to prevent illegitimate requests.
       $options = array(
         'attributes' => array(
           'class' => array(
             'use-ajax',
-            'ajax-comments-add-comment',
-            'ajax-comments-add-comment-nid-' . $node->nid,
+            'ajax-comments-reply-' . $node->nid . '-0',
           ),
         ),
-        'query' => array('tok' => drupal_get_token('ajax-comments-add-comment-' . $node->nid)),
+        'query' => array('ajax-comments-views-inline-form' => drupal_get_token('reply-' . $node->nid)),
         );
-      $path = 'ajax_comments/reply/' . $node->nid."/NULL";
+      $path = 'ajax_comments/reply/' . $node->nid;
       $text = !empty($this->options['text']) ? $this->options['text'] : t('Add new comment');
-      // since we don't have a comment at all simulate the wrapper
-      $prepend = '';
-      if ($node->comment_count == 0){
-        $prepend  = '<div id="comment-wrapper-nid-' . $node->nid . '">huhu</div>';
-      }
-      return $prepend.l($text, $path, $options);
+      // Close Comment wrapper
+      $result .= l($text, $path, $options) . '</div>';
+      return $result;
     }
   }
 }
- */
-
