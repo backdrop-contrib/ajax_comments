@@ -338,11 +338,17 @@ function ajax_comments_submit_js($form, &$form_state) {
   $comment_build = comment_view($comment, $node);
 
   /**
-   * comment_goodnes module compatibility:
+   * comment_goodnes module and comment_sort_created compatibility:
    * 1 - Older first
    * 2 - Newer first
    */
-  $sort = variable_get('comment_default_sorting_' . $node->type, 1);
+  $sort = 1;
+  if (module_exists('comment_goodness')) {
+    $sort = variable_get('comment_default_sorting_' . $node->type, comment_goodness_OLDER_FIRST);
+  }
+  else if (module_exists('comment_sort_created')) {
+    $sort = variable_get('comment_sort_created_order_' . $node->type) == COMMENT_SORT_CREATED_OLDER_FIRST ? 1 : 2;
+  }
 
   // remove messages
   if (variable_get('ajax_comments_notify')) {
@@ -594,11 +600,17 @@ function ajax_comments_reply($node, $pid = 0, $flag = 'node') {
   $form = trim(drupal_render($form_build));
 
   /**
-   * comment_goodnes module compatibility:
+   * comment_goodnes module and comment_sort_created compatibility:
    * 1 - Older first
    * 2 - Newer first
    */
-  $sort = variable_get('comment_default_sorting_' . $node->type, 1);
+  $sort = 1;
+  if (module_exists('comment_goodness')) {
+    $sort = variable_get('comment_default_sorting_' . $node->type, comment_goodness_OLDER_FIRST);
+  }
+  else if (module_exists('comment_sort_created')) {
+    $sort = variable_get('comment_sort_created_order_' . $node->type) == COMMENT_SORT_CREATED_OLDER_FIRST ? 1 : 2;
+  }
 
   // Add the new form.
   if (!empty($pid)) {
