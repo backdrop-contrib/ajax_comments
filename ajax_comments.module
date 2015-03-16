@@ -78,7 +78,7 @@ function ajax_comments_views_data() {
       'handler' => 'ajax_comments_handler_field_list_comments',
     ),
   );
-  //@TODO: remove 
+
   $data['node']['ajax_comment'] = array(
     'title' => t('AJAX Add Comment'),
     'help' => t('Adds an inline AJAX comment form.'),
@@ -154,28 +154,13 @@ function ajax_comments_form_comment_form_alter(&$form, &$form_state, $form_id) {
   $form['#attributes']['id'] = drupal_html_id($id);
   $form['#attributes']['class'][] = $id;
 
-  $views_inline_form = !empty($_GET['ajax-comments-views-inline-form']) || !empty($form_state['storage']['views_inline_form']);
+  $form['actions']['submit']['#ajax'] = array(
+    'callback' => 'ajax_comments_submit_js',
+    'wrapper' => $form['#attributes']['id'],
+    'method' => 'replace',
+    'effect' => 'fade',
+  );
 
-  if (!$views_inline_form) {
-    $form['actions']['submit']['#ajax'] = array(
-      'callback' => 'ajax_comments_submit_js',
-      'wrapper' => $form['#attributes']['id'],
-      'method' => 'replace',
-      'effect' => 'fade',
-    );
-  }
-  else {
-    $form['actions']['submit']['#ajax'] = array(
-      'callback' => 'ajax_comments_submit_views_inline_js',
-      'wrapper' => $form['#attributes']['id'],
-      'method' => 'replace',
-      'effect' => 'fade',
-    );
-    // Store views inline form flag. Required for preview.
-    if (empty($form_state['storage']['views_inline_form'])) {
-      $form_state['storage']['views_inline_form'] = true;
-    }
-  }
   // Set unique id (need for Views with enabled AJAX)
   if (empty($form['actions']['submit']['#id'])) {
     $form['actions']['submit']['#id'] = drupal_html_id('edit-' . $id);
@@ -224,9 +209,6 @@ function ajax_comments_form_comment_form_alter(&$form, &$form_state, $form_id) {
 
   $form['actions'] = ajax_pre_render_element($form['actions']);
 
-  // @todo: test without this hack, and remove
-  // HACK, stop ctools from modifying us in node_comment_form.inc
-  //$form_state['ctools comment alter'] = FALSE;
 }
 
 /**
@@ -337,19 +319,6 @@ function ajax_comments_submit_js($form, &$form_state) {
 
   $comment_build = comment_view($comment, $node);
 
-  /**
-   * comment_goodnes module and comment_sort_created compatibility:
-   * 1 - Older first
-   * 2 - Newer first
-   */
-  $sort = 1;
-  if (module_exists('comment_goodness')) {
-    $sort = variable_get('comment_default_sorting_' . $node->type, comment_goodness_OLDER_FIRST);
-  }
-  else if (module_exists('comment_sort_created')) {
-    $sort = variable_get('comment_sort_created_order_' . $node->type) == COMMENT_SORT_CREATED_OLDER_FIRST ? 1 : 2;
-  }
-
   // remove messages
   if (variable_get('ajax_comments_notify')) {
     $commands[] = ajax_command_remove('.messages.warning');
@@ -378,7 +347,7 @@ function ajax_comments_submit_js($form, &$form_state) {
     }
     else {
       // Flat. Check sort by comment_goodness.
-      if ($sort == 1) {
+      if (_ajax_comments_get_comment_sort_order($node) == 1) {
         // Older first. Append comment to last wrapper.
         $commands[] = ajax_command_invoke('.ajax-comment-reply-form-' . $comment->nid . '-' . $pid . '-' . $cid, 'remove');
         //$commands[] = ajax_command_after('.comment-wrapper-nid-' . $comment->nid . ' > .ajax-comment-wrapper:last', $comment_output);
@@ -399,7 +368,7 @@ function ajax_comments_submit_js($form, &$form_state) {
   // Or is this a brand new comment?
   else {
     // Check sort by comment_goodness.
-    if ($sort == 1) {
+    if (_ajax_comments_get_comment_sort_order($node) == 1) {
       // Older first. Append comment to last wrapper.
       //$commands[] = ajax_command_after('.comment-wrapper-nid-' . $comment->nid . ' > .ajax-comment-wrapper:last', $comment_output);
       $commands[] = array('command' => 'ajaxCommentsAfter', 'selector' => '.comment-wrapper-nid-' . $comment->nid . ' > .ajax-comment-wrapper:last', 'html' => $comment_output);
@@ -411,7 +380,7 @@ function ajax_comments_submit_js($form, &$form_state) {
     }
 
     // If we have a default form, update it with a new one.
-    if (variable_get('comment_form_location_' . $node->type, COMMENT_FORM_BELOW) == COMMENT_FORM_BELOW) {
+    if (variable_get('comment_form_location_' . $node->type, COMMENT_FORM_BELOW) == COMMENT_FORM_BELOW && empty($form_state['build_info']['args'][1]['flag'])) {
       $new_form_state = array();
       $new_form_state['build_info']['args'][] = (object) array('nid' => $node->nid);
       // Don't pull from cache.
@@ -420,7 +389,7 @@ function ajax_comments_submit_js($form, &$form_state) {
 
       $commands[] = ajax_command_replace('.ajax-comment-reply-form-' . $form_state['comment']->nid . '-' . $pid . '-' . $cid, drupal_render($new_form_build));
 
-      if (!variable_get('ajax_comments_disable_scroll', 0) && $sort == 2) {
+      if (!variable_get('ajax_comments_disable_scroll', 0) && _ajax_comments_get_comment_sort_order($node) == 2) {
         $commands[] = array('command' => 'ajaxCommentsScrollToElement', 'selector' => '.comment-wrapper-nid-' . $comment->nid);
       }
     }
@@ -430,45 +399,33 @@ function ajax_comments_submit_js($form, &$form_state) {
     }
   }
 
+  if (!empty($form_state['build_info']['args'][1]['flag'])) {
+    // Submiting comment via Views Add Comment Form
+    switch ((int) $form_state['build_info']['args'][1]['flag']) {
+      case 1:
+        $commands[] = ajax_command_invoke('.views-comment-result-nid-' . $comment->nid, 'show');
+        break;
+      case 2:
+        $commands[] = ajax_command_invoke('.ajax-comments-reply-' . $comment->nid . '-' . $pid, 'show');
+        break;
+    }
+
+  }
+  else {
+    // Show reply to comment link
+    $commands[] = ajax_command_invoke('.ajax-comments-reply-' . $comment->nid . '-' . $pid, 'show');
+  }
+
   // Show notify
   if (!empty($notify_text)) {
     //$commands[] = ajax_command_before('.comment-wrapper-' . $comment->cid, $notify_text);
     $commands[] = array('command' => 'ajaxCommentsBefore', 'selector' => '.comment-wrapper-' . $comment->cid, 'html' => $notify_text);
   }
 
-  // Show reply to comment link
-  $commands[] = ajax_command_invoke('.ajax-comments-reply-' . $comment->nid . '-' . $pid, 'show');
-
   $output = array('#type' => 'ajax', '#commands' => $commands);
   return $output;
 }
 
-/**
- * Build reply for Views Inline Integration
- */
-function ajax_comments_submit_views_inline_js($form, &$form_state) {
-  // Return the actual form if it contains errors.
-  if (form_get_errors()) {
-    // Remove comment preview
-    if (isset($form['comment_preview'])) {
-      unset($form['notify_text']);
-      unset($form['comment_preview']);
-    }
-    return $form;
-  }
-  // This is to remove the "Your comment has been posted" status message that
-  // will appear upon refresh. This seems dirty but it means we don't have to
-  // rewrite the whole comment_form_submit(). Please chime in if you think this
-  // is dumb.
-  ajax_comments_remove_status();
-
-  // Replace with text
-  $nid = empty($form_state['comment']->nid) ? 0 : $form_state['comment']->nid;
-  $commands[] = ajax_command_replace('.comment-wrapper-nid-' . $nid, t('Your comment has been posted.'));
-
-  $output = array('#type' => 'ajax', '#commands' => $commands);
-  return $output;
-}
 /**
  * Removes the comment.
  */
@@ -481,6 +438,7 @@ function ajax_comments_delete_js($form, &$form_state) {
 
   if ($notify_text) {
     $commands[] = ajax_command_remove('.messages.status');
+    $commands[] = ajax_command_remove('.messages.warning');
     $commands[] = ajax_command_replace('.comment-wrapper-' . $comment->cid, $notify_text);
     $commands[] = ajax_command_remove('a#comment-' . $comment->cid);
   }
@@ -556,7 +514,7 @@ function ajax_comments_preprocess_comment_wrapper(&$variables) {
  * "Add new comment" link on pages where there is no default comment form
  * (comment_form_location is COMMENT_FORM_SEPARATE_PAGE)
  */
-function ajax_comments_reply($node, $pid = 0, $flag = 'node') {
+function ajax_comments_reply($node, $pid = 0, $flag = 0) {
   if (!user_access('post comments')) {
     return MENU_ACCESS_DENIED;
   }
@@ -579,7 +537,7 @@ function ajax_comments_reply($node, $pid = 0, $flag = 'node') {
     }
   }
 
-  if (empty($_GET['ajax-comments-views-inline-form']) && (!user_is_anonymous() || (user_is_anonymous() && variable_get('cache', 0) != 0))) {
+  if ((!user_is_anonymous() || (user_is_anonymous() && variable_get('cache', 0) != 0))) {
     // Authenticated user or anonymous and page cache is enabled
     $key = _ajax_comments_cache_key($node->nid, $pid);
     if ($cache = cache_get($key)) {
@@ -588,29 +546,16 @@ function ajax_comments_reply($node, $pid = 0, $flag = 'node') {
     }
     else {
       // Build form and Save to cache*/
-      $form_build = drupal_get_form("comment_node_{$node->type}_form", (object) array('nid' => $node->nid, 'pid' => $pid));
+      $form_build = drupal_get_form("comment_node_{$node->type}_form", (object) array('nid' => $node->nid, 'pid' => $pid), array('flag' => $flag));
       cache_set($key, $form_build, 'cache', time() + 360);
     }
   }
   else {
     // Anonymous and page cache is disabled
-    $form_build = drupal_get_form("comment_node_{$node->type}_form", (object) array('nid' => $node->nid, 'pid' => $pid));
+    $form_build = drupal_get_form("comment_node_{$node->type}_form", (object) array('nid' => $node->nid, 'pid' => $pid), array('flag' => $flag));
   }
 
   $form = trim(drupal_render($form_build));
-
-  /**
-   * comment_goodnes module and comment_sort_created compatibility:
-   * 1 - Older first
-   * 2 - Newer first
-   */
-  $sort = 1;
-  if (module_exists('comment_goodness')) {
-    $sort = variable_get('comment_default_sorting_' . $node->type, comment_goodness_OLDER_FIRST);
-  }
-  else if (module_exists('comment_sort_created')) {
-    $sort = variable_get('comment_sort_created_order_' . $node->type) == COMMENT_SORT_CREATED_OLDER_FIRST ? 1 : 2;
-  }
 
   // Add the new form.
   if (!empty($pid)) {
@@ -622,7 +567,7 @@ function ajax_comments_reply($node, $pid = 0, $flag = 'node') {
       // Add div with class "indented" if they are not exist
       $commands[] = array('command' => 'ajaxCommentsAddDummyDivAfter', 'selector' => '.comment-wrapper-' . $pid, 'class' => 'indented');
       // Check sort by comment_goodness.
-      if ($sort == 1) {
+      if (_ajax_comments_get_comment_sort_order($node) == 1) {
         // Newer first.
         $commands[] = ajax_command_append('.comment-wrapper-' . $pid . ' + .indented', $form);
       }
@@ -633,14 +578,20 @@ function ajax_comments_reply($node, $pid = 0, $flag = 'node') {
     }
   }
   else {
-    // Check sort by comment_goodness.
-    if ($sort == 1) {
-      // Older first. Append comment to last wrapper.
-      $commands[] = ajax_command_after('.comment-wrapper-nid-' . $node->nid . ' > .ajax-comment-wrapper:last', $form);
+    // Check Views Add form
+    if (empty($form_state['build_info']['args'][1]['flag'])) {
+      $commands[] = ajax_command_after('.views-comment-wrapper-nid-' . $node->nid . ' > .ajax-comment-wrapper:last', $form);
     }
     else {
-      // Newer first. Append comment to top.
-      $commands[] = ajax_command_before('.comment-wrapper-nid-' . $node->nid . '> .ajax-comment-wrapper:first', $form);
+      // Check sort by comment_goodness.
+      if (_ajax_comments_get_comment_sort_order($node) == 1) {
+        // Older first. Append comment to last wrapper.
+        $commands[] = ajax_command_after('.comment-wrapper-nid-' . $node->nid . ' > .ajax-comment-wrapper:last', $form);
+      }
+      else {
+        // Newer first. Append comment to top.
+        $commands[] = ajax_command_before('.comment-wrapper-nid-' . $node->nid . '> .ajax-comment-wrapper:first', $form);
+      }
     }
   }
 
@@ -826,4 +777,25 @@ function ajax_comments_process_node(&$variables) {
       '#suffix' => '</div>',
     );
   }
+}
+
+/**
+ * Returns comment sort order.
+ *
+ * comment_goodnes module and comment_sort_created compatibility:
+ * 1 - Older first
+ * 2 - Newer first
+ */
+function _ajax_comments_get_comment_sort_order($node) {
+  $result = &drupal_static(__FUNCTION__);
+  if (!isset($result)) {
+    $result = 1;
+    if (module_exists('comment_goodness')) {
+      $result = variable_get('comment_default_sorting_' . $node->type, comment_goodness_OLDER_FIRST);
+    }
+    else if (module_exists('comment_sort_created')) {
+      $result = variable_get('comment_sort_created_order_' . $node->type) == COMMENT_SORT_CREATED_OLDER_FIRST ? 1 : 2;
+    }
+  }
+  return $result;
 }

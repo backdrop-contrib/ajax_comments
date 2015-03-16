@@ -19,8 +19,8 @@ class ajax_comments_handler_field_list_comments extends views_handler_field_enti
   
   function options_form(&$form, &$form_state) {
     $form['ajax_comments_display_add_comment_form'] = array(
-      '#title' => t('View the add comment form'), 
-      '#description' => t("Enable to display the add comment form below the list of comments."), 
+      '#title' => t('Show Add Comment form'),
+      '#description' => t("Enable to display the Add Comment form below the list of comments."),
       '#type' => 'checkbox', 
       '#default_value' => $this->options['ajax_comments_display_add_comment_form'],
     );
@@ -54,12 +54,13 @@ class ajax_comments_handler_field_list_comments extends views_handler_field_enti
         }
       }
 
+      $comment_form = array();
+
       // Append comment form if needed.
       if (user_access('post comments') && $node->comment == COMMENT_NODE_OPEN 
           && (variable_get('comment_form_location_' . $node->type, COMMENT_FORM_BELOW) == COMMENT_FORM_BELOW 
           && $this->options['ajax_comments_display_add_comment_form'])) {
-        $build = drupal_get_form("comment_node_{$node->type}_form", (object) array('nid' => $node->nid));
-        $additions['comment_form'] = $build;
+        $comment_form = drupal_get_form("comment_node_{$node->type}_form", (object) array('nid' => $node->nid));
       }
 
       if ($additions) {
@@ -67,11 +68,8 @@ class ajax_comments_handler_field_list_comments extends views_handler_field_enti
           '#theme' => 'comment_wrapper__node_' . $node->type, 
           '#node' => $node, 
           'comments' => array(), 
-          'comment_form' => array(),
+          'comment_form' => $comment_form,
         );
-        //Add the ajax_comments wrapper.
-        $additions['comments']['#prefix'] = '<div id="comment-wrapper-nid-' . $node->nid . '">';
-        $additions['comments']['#suffix'] = '</div>';
       }
 
       return $additions;
