@@ -146,13 +146,31 @@ function ajax_comments_form_comment_form_alter(&$form, &$form_state, $form_id) {
     $pid = empty($form_state['comment']->pid) ? 0 : $form_state['comment']->pid;
     $id = 'ajax-comment-reply-form-' . $form_state['comment']->nid . '-' . $pid . '-' . $cid;
     $form_state['storage']['ajax_comments_form_id'] = $id;
+    // Get comment form state class
+    if (!empty($cid)) {
+      // Comment Edit Form
+      $form_state_class = 'ajax-comments-form-edit';
+    }
+    else {
+      if (!empty($pid)) {
+        // Comment Reply Form
+        $form_state_class = 'ajax-comments-form-reply';
+      }
+      else {
+        // Add New Comment Form
+        $form_state_class = 'ajax-comments-form-add';
+      }
+    }
+    $form_state['storage']['form_state_class'] = $form_state_class;
   }
   else {
     $id = $form_state['storage']['ajax_comments_form_id'];
+    $form_state_class = $form_state['storage']['form_state_class'];
   }
-  // not sure if we still need this
+
   $form['#attributes']['id'] = drupal_html_id($id);
   $form['#attributes']['class'][] = $id;
+  $form['#attributes']['class'][] = $form_state_class;
 
   $form['actions']['submit']['#ajax'] = array(
     'callback' => 'ajax_comments_submit_js',
@@ -343,7 +361,6 @@ function ajax_comments_submit_js($form, &$form_state) {
       // Threaded. Append comment to parent wrapper.
       //$commands[] = ajax_command_replace('.ajax-comment-reply-form-' . $comment->nid . '-' . $pid . '-' . $cid, $comment_output);
       $commands[] = array('command' => 'ajaxCommentsReplace', 'selector' => '.ajax-comment-reply-form-' . $comment->nid . '-' . $pid . '-' . $cid, 'html' => $comment_output);
-
     }
     else {
       // Flat. Check sort by comment_goodness.
@@ -556,6 +573,11 @@ function ajax_comments_reply($node, $pid = 0, $flag = 0) {
   }
 
   $form = trim(drupal_render($form_build));
+
+  if (variable_get('ajax_comments_reply_autoclose') && !empty($pid)) {
+    $commands[] = ajax_command_remove('.ajax-comments-form-reply');
+    $commands[] = ajax_command_invoke('.ajax-comment-reply', 'show');
+  }
 
   // Add the new form.
   if (!empty($pid)) {

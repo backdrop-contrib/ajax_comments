@@ -30,6 +30,13 @@ function ajax_comments_settings() {
     '#default_value' => variable_get('ajax_comments_disable_scroll', ''),
   );
 
+  $form['ajax_comments_reply_autoclose'] = array(
+    '#title' => t('Autoclose reply'),
+    '#type' => 'checkbox',
+    '#description' => t('Autoclose any opened reply forms'),
+    '#default_value' => variable_get('ajax_comments_reply_autoclose', ''),
+  );
+
   return system_settings_form($form);
 }
 
