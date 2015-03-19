@@ -9,41 +9,6 @@
  * Implements hook_menu().
  */
 function ajax_comments_menu() {
-  $items['ajax_comments/reply/%node'] = array(
-    'page callback' => 'ajax_comments_reply',
-    'page arguments' => array(2),
-    'access callback' => 'node_access',
-    'access arguments' => array('view', 2),
-    'delivery callback' => 'ajax_deliver',
-    'type' => MENU_CALLBACK,
-  );
-
-  $items['ajax_comments/reply/%node/%'] = array(
-    'page callback' => 'ajax_comments_reply',
-    'page arguments' => array(2,3),
-    'access callback' => 'node_access',
-    'access arguments' => array('view', 2),
-    'delivery callback' => 'ajax_deliver',
-    'type' => MENU_CALLBACK,
-  );
-
-  $items['ajax_comments/edit/%comment'] = array(
-    'page callback' => 'ajax_comments_edit',
-    'page arguments' => array(2),
-    'access callback' => 'comment_access',
-    'access arguments' => array('edit', 2),
-    'delivery callback' => 'ajax_deliver',
-    'type' => MENU_CALLBACK,
-  );
-
-  $items['ajax_comments/delete/%'] = array(
-    'page callback' => 'ajax_comments_delete',
-    'page arguments' => array(2),
-    'access arguments' => array('administer comments'),
-    'delivery callback' => 'ajax_deliver',
-    'type' => MENU_CALLBACK,
-  );
-
   $items['admin/config/content/ajax_comments'] = array(
     'title' => 'AJAX comments',
     'description' => 'AJAXifies comments on site.',
@@ -51,6 +16,32 @@ function ajax_comments_menu() {
     'page arguments' => array('ajax_comments_settings'),
     'access arguments' => array('administer site configuration'),
     'file' => 'ajax_comments.admin.inc',
+  );
+
+  $items['ajax_comment/%comment/edit'] = array(
+    'page callback' => 'ajax_comments_edit',
+    'page arguments' => array(1),
+    'access callback' => 'comment_access',
+    'access arguments' => array('edit', 1),
+    'delivery callback' => 'ajax_deliver',
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['ajax_comment/%/delete'] = array(
+    'page callback' => 'ajax_comments_delete',
+    'page arguments' => array(1),
+    'access arguments' => array('administer comments'),
+    'delivery callback' => 'ajax_deliver',
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['ajax_comment/reply/%node'] = array(
+    'page callback' => 'ajax_comments_reply',
+    'page arguments' => array(2),
+    'access callback' => 'node_access',
+    'access arguments' => array('view', 2),
+    'delivery callback' => 'ajax_deliver',
+    'type' => MENU_CALLBACK,
   );
 
   return $items;
@@ -115,10 +106,8 @@ function ajax_comments_preprocess_node(&$variables) {
 
   drupal_add_js(drupal_get_path('module', 'ajax_comments') .'/ajax_comments.js', 'file');
 
-  $variables['content']['links']['comment']['#links']['comment-add']['attributes']['class'][] = 'use-ajax';
+  $variables['content']['links']['comment']['#links']['comment-add']['attributes']['class'][] = 'use-ajax-comments';
   $variables['content']['links']['comment']['#links']['comment-add']['attributes']['class'][] = 'ajax-comments-reply-' . $node->nid . '-0';;
-  $variables['content']['links']['comment']['#links']['comment-add']['attributes']['id'] = 'ajax-comments-reply-' . $node->nid . '-0';
-  $variables['content']['links']['comment']['#links']['comment-add']['href'] = 'ajax_comments/reply/' . $node->nid;
   $variables['content']['links']['comment']['#links']['comment-add']['fragment'] = NULL;
 }
 
@@ -144,7 +133,7 @@ function ajax_comments_form_comment_form_alter(&$form, &$form_state, $form_id) {
   if (empty($form_state['storage']['ajax_comments_form_id'])) {
     $cid = $pid = empty($form_state['comment']->cid) ? 0 : $form_state['comment']->cid;
     $pid = empty($form_state['comment']->pid) ? 0 : $form_state['comment']->pid;
-    $id = 'ajax-comment-reply-form-' . $form_state['comment']->nid . '-' . $pid . '-' . $cid;
+    $id = 'ajax-comments-reply-form-' . $form_state['comment']->nid . '-' . $pid . '-' . $cid;
     $form_state['storage']['ajax_comments_form_id'] = $id;
     // Get comment form state class
     if (!empty($cid)) {
@@ -261,9 +250,9 @@ function ajax_comments_preview_js($form, &$form_state) {
   $pid = empty($form_state['comment']->pid) ? 0 : $form_state['comment']->pid;
   $cid = empty($form_state['comment']->cid) ? 0 : $form_state['comment']->cid;
 
-  $commands[] = ajax_command_replace('.ajax-comment-reply-form-' . $form_state['comment']->nid . '-' . $pid . '-' . $cid, drupal_render($form));
+  $commands[] = ajax_command_replace('.ajax-comments-reply-form-' . $form_state['comment']->nid . '-' . $pid . '-' . $cid, drupal_render($form));
   if (!variable_get('ajax_comments_disable_scroll', 0)) {
-    $commands[] = array('command' => 'ajaxCommentsScrollToElement', 'selector' => '.ajax-comment-reply-form-' . $form_state['comment']->nid . '-' . $pid . '-' . $cid);
+    $commands[] = array('command' => 'ajaxCommentsScrollToElement', 'selector' => '.ajax-comments-reply-form-' . $form_state['comment']->nid . '-' . $pid . '-' . $cid);
   }
 
   return array('#type' => 'ajax', '#commands' => $commands);
@@ -275,7 +264,7 @@ function ajax_comments_preview_js($form, &$form_state) {
 function ajax_comments_cancel_js($form, &$form_state) {
   $cid = empty($form_state['comment']->cid) ? 0 : $form_state['comment']->cid;
   $pid = empty($form_state['comment']->pid) ? 0 : $form_state['comment']->pid;
-  $commands[] = ajax_command_remove('.ajax-comment-reply-form-' . $form['#node']->nid . '-' . $pid . '-' . $cid);
+  $commands[] = ajax_command_remove('.ajax-comments-reply-form-' . $form['#node']->nid . '-' . $pid . '-' . $cid);
   if (variable_get('comment_form_location_' . $form['#node']->type, COMMENT_FORM_SEPARATE_PAGE) == COMMENT_FORM_BELOW) {
     if (!variable_get('ajax_comments_disable_scroll', 0)) {
       $commands[] = array('command' => 'ajaxCommentsScrollToElement', 'selector' => '.comment-wrapper-' . $pid);
@@ -295,7 +284,7 @@ function ajax_comments_edit_cancel_js($form, &$form_state) {
   $comment = comment_load($form_state['comment']->cid);
   $comment_build = comment_view($comment, $form['#node']);
   $comment_output = drupal_render($comment_build);
-  $commands[] = ajax_command_replace('.ajax-comment-reply-form-' . $comment->nid . '-' . $comment->pid . '-' . $comment->cid, $comment_output);
+  $commands[] = ajax_command_replace('.ajax-comments-reply-form-' . $comment->nid . '-' . $comment->pid . '-' . $comment->cid, $comment_output);
   if (!variable_get('ajax_comments_disable_scroll', 0)) {
     $commands[] = array('command' => 'ajaxCommentsScrollToElement', 'selector' => '.comment-wrapper-' . $form_state['comment']->cid);
   }
@@ -351,28 +340,28 @@ function ajax_comments_submit_js($form, &$form_state) {
 
   // Are we editing a comment.
   if (isset($form['cid']['#value'])) {
-    //$commands[] = ajax_command_replace('.ajax-comment-reply-form-' . $comment->nid . '-' . $pid . '-' . $cid, $comment_output);
-    $commands[] = array('command' => 'ajaxCommentsReplace', 'selector' => '.ajax-comment-reply-form-' . $comment->nid . '-' . $pid . '-' . $cid, 'html' => $comment_output);
+    //$commands[] = ajax_command_replace('.ajax-comments-reply-form-' . $comment->nid . '-' . $pid . '-' . $cid, $comment_output);
+    $commands[] = array('command' => 'ajaxCommentsReplace', 'selector' => '.ajax-comments-reply-form-' . $comment->nid . '-' . $pid . '-' . $cid, 'html' => $comment_output);
   }
   // Or are we replying to another comment.
   elseif (!empty($form_state['values']['pid'])) {
     $mode = variable_get('comment_default_mode_' . $node->type, COMMENT_MODE_THREADED);
     if (!empty($mode)) {
       // Threaded. Append comment to parent wrapper.
-      //$commands[] = ajax_command_replace('.ajax-comment-reply-form-' . $comment->nid . '-' . $pid . '-' . $cid, $comment_output);
-      $commands[] = array('command' => 'ajaxCommentsReplace', 'selector' => '.ajax-comment-reply-form-' . $comment->nid . '-' . $pid . '-' . $cid, 'html' => $comment_output);
+      //$commands[] = ajax_command_replace('.ajax-comments-reply-form-' . $comment->nid . '-' . $pid . '-' . $cid, $comment_output);
+      $commands[] = array('command' => 'ajaxCommentsReplace', 'selector' => '.ajax-comments-reply-form-' . $comment->nid . '-' . $pid . '-' . $cid, 'html' => $comment_output);
     }
     else {
       // Flat. Check sort by comment_goodness.
       if (_ajax_comments_get_comment_sort_order($node) == 1) {
         // Older first. Append comment to last wrapper.
-        $commands[] = ajax_command_invoke('.ajax-comment-reply-form-' . $comment->nid . '-' . $pid . '-' . $cid, 'remove');
+        $commands[] = ajax_command_invoke('.ajax-comments-reply-form-' . $comment->nid . '-' . $pid . '-' . $cid, 'remove');
         //$commands[] = ajax_command_after('.comment-wrapper-nid-' . $comment->nid . ' > .ajax-comment-wrapper:last', $comment_output);
         $commands[] = array('command' => 'ajaxCommentsAfter', 'selector' => '.comment-wrapper-nid-' . $comment->nid . ' > .ajax-comment-wrapper:last', 'html' => $comment_output);
       }
       else {
         // Newer first. Append comment to top.
-        $commands[] = ajax_command_invoke('.ajax-comment-reply-form-' . $comment->nid . '-' . $pid . '-' . $cid, 'remove');
+        $commands[] = ajax_command_invoke('.ajax-comments-reply-form-' . $comment->nid . '-' . $pid . '-' . $cid, 'remove');
         //$commands[] = ajax_command_prepend('.comment-wrapper-nid-' . $comment->nid, $comment_output);
         $commands[] = array('command' => 'ajaxCommentsPrepend', 'selector' => '.comment-wrapper-nid-' . $comment->nid, 'html' => $comment_output);
       }
@@ -404,7 +393,7 @@ function ajax_comments_submit_js($form, &$form_state) {
       $new_form_state['input'] = array();
       $new_form_build = drupal_build_form($form['#form_id'], $new_form_state);
 
-      $commands[] = ajax_command_replace('.ajax-comment-reply-form-' . $form_state['comment']->nid . '-' . $pid . '-' . $cid, drupal_render($new_form_build));
+      $commands[] = ajax_command_replace('.ajax-comments-reply-form-' . $form_state['comment']->nid . '-' . $pid . '-' . $cid, drupal_render($new_form_build));
 
       if (!variable_get('ajax_comments_disable_scroll', 0) && _ajax_comments_get_comment_sort_order($node) == 2) {
         $commands[] = array('command' => 'ajaxCommentsScrollToElement', 'selector' => '.comment-wrapper-nid-' . $comment->nid);
@@ -412,7 +401,7 @@ function ajax_comments_submit_js($form, &$form_state) {
     }
     // Otherwise, delete it.
     else {
-      $commands[] = ajax_command_invoke('.ajax-comment-reply-form-' . $comment->nid . '-' . $pid . '-' . $cid, 'remove');
+      $commands[] = ajax_command_invoke('.ajax-comments-reply-form-' . $comment->nid . '-' . $pid . '-' . $cid, 'remove');
     }
   }
 
@@ -488,19 +477,15 @@ function ajax_comments_comment_view($comment, $view_mode, $langcode) {
     }
     // Reply.
     if (isset($comment->content['links']['comment']['#links']['comment-reply'])) {
-      $comment->content['links']['comment']['#links']['comment-reply']['attributes']['class'] = array('use-ajax', 'ajax-comment-reply', 'ajax-comments-reply-' . $comment->nid . '-' . $comment->cid);
-      $comment->content['links']['comment']['#links']['comment-reply']['attributes']['id'] = array('ajax-comments-reply-' . $comment->nid . '-' . $comment->cid);
-      $comment->content['links']['comment']['#links']['comment-reply']['href'] = 'ajax_comments/reply/' . $comment->nid . '/' . $comment->cid;
+      $comment->content['links']['comment']['#links']['comment-reply']['attributes']['class'] = array('use-ajax-comments', 'ajax-comments-reply', 'ajax-comments-reply-' . $comment->nid . '-' . $comment->cid);
     }
     // Edit.
     if (isset($comment->content['links']['comment']['#links']['comment-edit'])) {
-      $comment->content['links']['comment']['#links']['comment-edit']['attributes']['class'] = array('use-ajax', 'ajax-comment-edit');
-      $comment->content['links']['comment']['#links']['comment-edit']['href'] = 'ajax_comments/edit/' . $comment->cid;
+      $comment->content['links']['comment']['#links']['comment-edit']['attributes']['class'] = array('use-ajax-comments', 'ajax-comments-edit', 'ajax-comments-edit-' . $comment->cid);
     }
     // Delete.
     if (isset($comment->content['links']['comment']['#links']['comment-delete'])) {
-      $comment->content['links']['comment']['#links']['comment-delete']['attributes']['class'] = array('use-ajax');
-      $comment->content['links']['comment']['#links']['comment-delete']['href'] = 'ajax_comments/delete/' . $comment->cid;
+      $comment->content['links']['comment']['#links']['comment-delete']['attributes']['class'] = array('use-ajax-comments', 'ajax-comments-delete', 'ajax-comments-delete-' . $comment->cid);
     }
   }
 }
@@ -576,7 +561,7 @@ function ajax_comments_reply($node, $pid = 0, $flag = 0) {
 
   if (variable_get('ajax_comments_reply_autoclose') && !empty($pid)) {
     $commands[] = ajax_command_remove('.ajax-comments-form-reply');
-    $commands[] = ajax_command_invoke('.ajax-comment-reply', 'show');
+    $commands[] = ajax_command_invoke('.ajax-comments-reply', 'show');
   }
 
   // Add the new form.
@@ -621,8 +606,8 @@ function ajax_comments_reply($node, $pid = 0, $flag = 0) {
   $commands[] = ajax_command_invoke('.ajax-comments-reply-' . $node->nid . '-' . $pid, 'hide');
 
   if (!variable_get('ajax_comments_disable_scroll', 0)) {
-    $commands[] = array('command' => 'ajaxCommentsScrollToElement', 'selector' => '.ajax-comment-reply-form-' . $node->nid . '-' . $pid . '-0');
-    $commands[] = ajax_command_invoke('.ajax-comment-reply-form-' . $node->nid . '-' . $pid . '-0 .form-textarea' , 'focus');
+    $commands[] = array('command' => 'ajaxCommentsScrollToElement', 'selector' => '.ajax-comments-reply-form-' . $node->nid . '-' . $pid . '-0');
+    $commands[] = ajax_command_invoke('.ajax-comments-reply-form-' . $node->nid . '-' . $pid . '-0 .form-textarea' , 'focus');
   }
 
   return array('#type' => 'ajax', '#commands' => $commands);
@@ -661,7 +646,7 @@ function ajax_comments_edit($comment) {
   $commands[] = ajax_command_replace('.comment-wrapper-' . $comment->cid, $form);
 
   if (!variable_get('ajax_comments_disable_scroll', 0)) {
-    $commands[] = array('command' => 'ajaxCommentsScrollToElement', 'selector' => '.ajax-comment-reply-form-' . $comment->nid . '-' . $comment->pid . '-' . $comment->cid);
+    $commands[] = array('command' => 'ajaxCommentsScrollToElement', 'selector' => '.ajax-comments-reply-form-' . $comment->nid . '-' . $comment->pid . '-' . $comment->cid);
   }
 
   return array('#type' => 'ajax', '#commands' => $commands);
@@ -715,18 +700,20 @@ function ajax_comments_delete($cid) {
  *   from the status message.
  */
 function ajax_comments_remove_status() {
-  $deleted = t('The comment and all its replies have been deleted.');
-  $published = t('Your comment has been posted.');
-  $not_published = t('Your comment has been queued for review by site administrators and will be published after approval.');
-  foreach ($_SESSION['messages']['status'] as $key => $value) {
-    if ($value == $published || $value == $not_published || $value = $deleted) {
-      unset($_SESSION['messages']['status'][$key]);
+  if (!empty($_SESSION['messages']['status'])) {
+    $deleted = t('The comment and all its replies have been deleted.');
+    $published = t('Your comment has been posted.');
+    $not_published = t('Your comment has been queued for review by site administrators and will be published after approval.');
+    foreach ($_SESSION['messages']['status'] as $key => $value) {
+      if ($value == $published || $value == $not_published || $value = $deleted) {
+        unset($_SESSION['messages']['status'][$key]);
+      }
     }
-  }
-  if (empty($_SESSION['messages']['status'])) {
-    unset($_SESSION['messages']['status']);
-    if (empty($_SESSION['messages'])) {
-      unset($_SESSION['messages']);
+    if (empty($_SESSION['messages']['status'])) {
+      unset($_SESSION['messages']['status']);
+      if (empty($_SESSION['messages'])) {
+        unset($_SESSION['messages']);
+      }
     }
   }
 }

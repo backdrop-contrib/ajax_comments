@@ -133,5 +133,28 @@
     }
   };
 
-}(jQuery));
+  /**
+   * Own Bind Ajax behavior for comment links.
+   */
+  Drupal.behaviors.ajaxCommentsBehavior = {
+    attach: function(context, settings) {
+      // Bind Ajax behavior to all items showing the class.
+      $('.use-ajax-comments:not(.ajax-processed)').addClass('ajax-processed').each(function () {
+        var element_settings = {};
+        // Clicked links look better with the throbber than the progress bar.
+        element_settings.progress = { 'type': 'throbber' };
 
+        // For anchor tags, these will go to the target of the anchor rather
+        // than the usual location.
+        if ($(this).attr('href')) {
+          element_settings.url = $(this).attr('href').replace('comment', 'ajax_comment');
+          element_settings.event = 'click';
+        }
+        var base = $(this).attr('id');
+        Drupal.ajax[base] = new Drupal.ajax(base, this, element_settings);
+      });
+    }
+  };
+
+
+}(jQuery));

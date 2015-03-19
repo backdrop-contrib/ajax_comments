@@ -61,12 +61,12 @@ class ajax_comments_handler_field_ajax_add_comment extends views_handler_field_c
       $options = array(
         'attributes' => array(
           'class' => array(
-            'use-ajax',
+            'use-ajax-comments',
             'ajax-comments-reply-' . $node->nid . '-0',
           ),
         ),
         );
-      $path = 'ajax_comments/reply/' . $node->nid . '/0/' . $this->options['submit_action'];
+      $path = 'comment/reply/' . $node->nid . '/0/' . $this->options['submit_action'];
       $text = !empty($this->options['text']) ? $this->options['text'] : t('Add new comment');
       // Close Comment wrapper
       $result .= l($text, $path, $options) . '</div>';
