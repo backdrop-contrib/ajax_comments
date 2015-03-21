@@ -465,27 +465,45 @@ function ajax_comments_delete_js($form, &$form_state) {
 }
 
 /**
- * Implements hook_comment_view().
+ * Implements hook_comment_view_alter().
  */
-function ajax_comments_comment_view($comment, $view_mode, $langcode) {
+function ajax_comments_comment_view_alter(&$build) {
   global $user;
   // Check
-  if (ajax_comments_node_type_active(substr($comment->node_type, strlen('comment_node_')))) {
+  if (ajax_comments_node_type_active($build['#node']->type)) {
     // A little HACK for do not mark as NEW own comments
-    if (isset($comment->new) && $comment->uid == $user->uid && ($comment->new == MARK_NEW || $comment->new == MARK_UPDATED)) {
-      $comment->new = MARK_READ;
+    if (isset($build['#comment']->new) && $build['#comment']->uid == $user->uid && ($build['#comment']->new == MARK_NEW || $build['#comment']->new == MARK_UPDATED)) {
+      $build['#comment']->new = MARK_READ;
     }
     // Reply.
-    if (isset($comment->content['links']['comment']['#links']['comment-reply'])) {
-      $comment->content['links']['comment']['#links']['comment-reply']['attributes']['class'] = array('use-ajax-comments', 'ajax-comments-reply', 'ajax-comments-reply-' . $comment->nid . '-' . $comment->cid);
+    if (isset($build['links']['comment']['#links']['comment-reply'])) {
+      $classes = array('use-ajax-comments', 'ajax-comments-reply', 'ajax-comments-reply-' . $build['#comment']->nid . '-' . $build['#comment']->cid);
+      if (empty($build['links']['comment']['#links']['comment-reply']['attributes']['class'])) {
+        $build['links']['comment']['#links']['comment-reply']['attributes']['class'] = $classes;
+      }
+      else {
+        $build['links']['comment']['#links']['comment-reply']['attributes']['class'] = array_unique(array_merge($build['links']['comment']['#links']['comment-reply']['attributes']['class'],$classes));
+      }
     }
     // Edit.
-    if (isset($comment->content['links']['comment']['#links']['comment-edit'])) {
-      $comment->content['links']['comment']['#links']['comment-edit']['attributes']['class'] = array('use-ajax-comments', 'ajax-comments-edit', 'ajax-comments-edit-' . $comment->cid);
+    if (isset($build['links']['comment']['#links']['comment-edit'])) {
+      $classes = array('use-ajax-comments', 'ajax-comments-edit', 'ajax-comments-edit-' . $build['#comment']->cid);
+      if (empty($build['links']['comment']['#links']['comment-edit']['attributes']['class'])) {
+        $build['links']['comment']['#links']['comment-edit']['attributes']['class'] = $classes;
+      }
+      else {
+        $build['links']['comment']['#links']['comment-edit']['attributes']['class'] = array_unique(array_merge($build['links']['comment']['#links']['comment-edit']['attributes']['class'],$classes));
+      }
     }
     // Delete.
-    if (isset($comment->content['links']['comment']['#links']['comment-delete'])) {
-      $comment->content['links']['comment']['#links']['comment-delete']['attributes']['class'] = array('use-ajax-comments', 'ajax-comments-delete', 'ajax-comments-delete-' . $comment->cid);
+    if (isset($build['links']['comment']['#links']['comment-delete'])) {
+      $classes = array('use-ajax-comments', 'ajax-comments-delete', 'ajax-comments-delete-' . $build['#comment']->cid);
+      if (empty($build['links']['comment']['#links']['comment-delete']['attributes']['class'])) {
+        $build['links']['comment']['#links']['comment-delete']['attributes']['class'] = $classes;
+      }
+      else {
+        $build['links']['comment']['#links']['comment-delete']['attributes']['class'] = array_unique(array_merge($build['links']['comment']['#links']['comment-delete']['attributes']['class'],$classes));
+      }
     }
   }
 }
