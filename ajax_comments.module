@@ -35,6 +35,12 @@ function ajax_comments_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  // Special-casing for CommentAccess Module
+  if (module_exists('commentaccess')) {
+    $items['ajax_comment/%/delete']['access callback'] = 'commentaccess_access_check';
+    $items['ajax_comment/%/delete']['access arguments'] = array(1, 'delete');
+  }
+
   $items['ajax_comment/reply/%node'] = array(
     'page callback' => 'ajax_comments_reply',
     'page arguments' => array(2),
