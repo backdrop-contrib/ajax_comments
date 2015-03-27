@@ -610,7 +610,7 @@ function ajax_comments_reply($node, $pid = 0, $flag = 0) {
   }
   else {
     // Check Views Add form
-    if (empty($form_state['build_info']['args'][1]['flag'])) {
+    if (!empty($flag)) {
       $commands[] = ajax_command_after('.views-comment-wrapper-nid-' . $node->nid . ' > .ajax-comment-wrapper:last', $form);
     }
     else {
