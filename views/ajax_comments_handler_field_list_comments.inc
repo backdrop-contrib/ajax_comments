@@ -26,7 +26,14 @@ class ajax_comments_handler_field_list_comments extends views_handler_field_enti
     );
     parent::options_form($form, $form_state);
   }
-  
+
+  function pre_render(&$values) {
+    parent::pre_render($values);
+
+    // Load necessary AJAX libraries.
+    drupal_add_js(drupal_get_path('module', 'ajax_comments') . '/ajax_comments.js');
+    drupal_add_library('system', 'drupal.ajax');
+  }
 
   /**
    * Render the list of comments
