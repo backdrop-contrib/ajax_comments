@@ -35,6 +35,12 @@ function ajax_comments_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  // Special-casing for comment_goodness Module
+  if (module_exists('comment_goodness')) {
+    $items['ajax_comment/%/delete']['access arguments'] = array(1);
+    $items['ajax_comment/%/delete']['access callback'] = 'comment_goodness_delete_comment_access';
+  }
+
   // Special-casing for CommentAccess Module
   if (module_exists('commentaccess')) {
     $items['ajax_comment/%/delete']['access callback'] = 'commentaccess_access_check';
