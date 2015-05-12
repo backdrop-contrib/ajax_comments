@@ -33,6 +33,13 @@ class ajax_comments_handler_field_list_comments extends views_handler_field_enti
     // Load necessary AJAX libraries.
     drupal_add_js(drupal_get_path('module', 'ajax_comments') . '/ajax_comments.js');
     drupal_add_library('system', 'drupal.ajax');
+    if (module_exists('ajax_comments_nodejs')) {
+      foreach ($values as $node) {
+        nodejs_send_content_channel_token('ajax_comments_nodejs_' . $node->nid);
+      }
+      drupal_add_js(drupal_get_path('module', 'ajax_comments_nodejs') . '/nodejs.ajaxcomments.js', array('type' => 'file'));
+      drupal_add_css(drupal_get_path('module', 'ajax_comments_nodejs') .'/ajax_comments_nodejs.css', array('type' => 'file'));
+    }
   }
 
   /**
@@ -56,7 +63,7 @@ class ajax_comments_handler_field_list_comments extends views_handler_field_enti
         user_access('administer comments')) {
         $mode = variable_get('comment_default_mode_' . $node->type, COMMENT_MODE_THREADED);
         $comments_per_page = variable_get('comment_default_per_page_' . $node->type, 150);
-        if ($cids = $this->comment_get_thread($node, $mode, $comments_per_page)) {
+        if ($cids = comment_get_thread($node, $mode, $comments_per_page)) {
           $comments = comment_load_multiple($cids);
           comment_prepare_thread($comments);
           $build = comment_view_multiple($comments, $node);
@@ -83,31 +90,5 @@ class ajax_comments_handler_field_list_comments extends views_handler_field_enti
       );
       return $result;
     }
-  }
-
-  /* 
-   * We need to fetch this in our own method since Drupal doesn't seeem
-   * to support nested pagers 
-   */
-  function comment_get_thread($node, $mode, $comments_per_page = 150) {
-    $query = db_select('comment', 'c');
-    $query->addField('c', 'cid');
-    $query
-      ->condition('c.nid', $node->nid)
-      ->addTag('node_access')
-      ->addTag('comment_filter')
-      ->addMetaData('node', $node);
-      //->limit(0,$comments_per_page);
-    if (!user_access('administer comments')) {
-      $query->condition('c.status', COMMENT_PUBLISHED);
-    }
-    if ($mode === COMMENT_MODE_FLAT) {
-      $query->orderBy('c.cid', 'ASC');
-    }
-    
-
-    $cids = $query->execute()->fetchCol();
-
-    return $cids;
   }
 }
