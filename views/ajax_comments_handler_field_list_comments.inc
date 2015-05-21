@@ -47,7 +47,7 @@ class ajax_comments_handler_field_list_comments extends views_handler_field_enti
    * modified to add the ajax_comments wrapper and the add comment form option.
    */
   function render($values) {
-    if (user_access('post comments') && $node = $this->get_value($values)) {
+    if ($node = $this->get_value($values)) {
       // Init with dummy Comment. For explanation look at ajax_comments_process_node().
       $result = array('comments' => array('dummyComment' => array(
         '#prefix' => '<div class="ajax-comment-wrapper ajax-comment-dummy-comment" style="display:none">',
