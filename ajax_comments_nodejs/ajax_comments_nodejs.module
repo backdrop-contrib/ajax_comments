@@ -9,7 +9,7 @@
  * Implements hook_preprocess_node()
  */
 function ajax_comments_nodejs_process_node(&$variables) {
-  if (isset($variables['content']['comments']) && $variables['node']->comment == COMMENT_NODE_OPEN && ajax_comments_node_type_active($variables['node']->type)) {
+  if ($variables['node']->comment == COMMENT_NODE_OPEN && ajax_comments_node_type_active($variables['node']->type)) {
     // Enable channel for current node.
     nodejs_send_content_channel_token('ajax_comments_nodejs_' . $variables['node']->nid);
     drupal_add_js(drupal_get_path('module', 'ajax_comments_nodejs') . '/nodejs.ajaxcomments.js', array('type' => 'file'));
