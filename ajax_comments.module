@@ -228,6 +228,8 @@ function ajax_comments_form_comment_form_alter(&$form, &$form_state, $form_id) {
 
   $form['actions'] = ajax_pre_render_element($form['actions']);
 
+  // HACK, stop ctools from modifying us in node_comment_form.inc
+  $form_state['ctools comment alter'] = FALSE;
 }
 
 /**
