@@ -837,6 +837,9 @@ function _ajax_comments_get_comment_sort_order($node) {
     else if (module_exists('comment_sort_created')) {
       $result = variable_get('comment_sort_created_order_' . $node->type) == COMMENT_SORT_CREATED_OLDER_FIRST ? 1 : 2;
     }
+    else if (module_exists('sort_comments')) {
+      $result = variable_get('comment_default_sorting_' . $node->type, SORT_COMMENTS_OLDER_FIRST);
+    }
   }
   return $result;
 }

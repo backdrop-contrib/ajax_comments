@@ -111,13 +111,7 @@ function _ajax_comments_nodejs_view_added($cid) {
          * 1 - Older first
          * 2 - Newer first
          */
-        $sort = 1;
-        if (module_exists('comment_goodness')) {
-          $sort = variable_get('comment_default_sorting_' . $node->type, comment_goodness_OLDER_FIRST);
-        }
-        else if (module_exists('comment_sort_created')) {
-          $sort = variable_get('comment_sort_created_order_' . $node->type) == COMMENT_SORT_CREATED_OLDER_FIRST ? 1 : 2;
-        }
+        $sort = _ajax_comments_get_comment_sort_order($node);
         $mode = variable_get('comment_default_mode_' . $node->type, COMMENT_MODE_THREADED);
         if ($mode == COMMENT_MODE_THREADED && $comment->pid > 0) {
           // Reply in threaded mode
