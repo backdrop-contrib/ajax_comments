@@ -540,6 +540,18 @@ function ajax_comments_preprocess_comment(&$variables) {
  */
 function ajax_comments_preprocess_comment_wrapper(&$variables) {
   $variables['classes_array'][] = 'comment-wrapper-nid-' . $variables['node']->nid;
+
+  if (empty($variables['content']['comments']) && $variables['node']->comment == COMMENT_NODE_OPEN && ajax_comments_node_type_active($variables['node']->type)) {
+    /**
+     * A little HACK for adding dummy comment which give us right point to place first comment on the page.
+     */
+    $variables['content']['comments']['dummyComment'] = array(
+      '#prefix' => '<div class="ajax-comment-wrapper ajax-comment-dummy-comment" style="display:none">',
+      '#type' => 'item',
+      '#markup' => '',
+      '#suffix' => '</div>',
+    );
+  }
 }
 
 /**
@@ -794,30 +806,6 @@ function theme_ajax_comments_notify_text($vars = array()) {
   }
   drupal_set_message($text, $status);
   return theme('status_messages');
-}
-
-/**
- * Implements hook_process_node().
- * We use prorcess instead preprocess just because views overwrite $variables['content']['comments'] when display comments is enabled
- */
-function ajax_comments_process_node(&$variables) {
-  if (isset($variables['content']['comments']) && $variables['node']->comment == COMMENT_NODE_OPEN && ajax_comments_node_type_active($variables['node']->type)) {
-    /**
-     * A little HACK for always run comment-wrapper.tpl.php and comment.tpl.php also when we have no comments.
-     * This is give us always have a right div layout on the page and
-     * dummy comment give us right point to place first comment on the page.
-     */
-    if (empty($variables['content']['comments'])) {
-      $variables['content']['comments']['#node'] = $variables['node'];
-      $variables['content']['comments']['#theme'] = 'comment_wrapper__node_' . $variables['node']->type;
-    }
-    $variables['content']['comments']['comments']['dummyComment'] = array(
-      '#prefix' => '<div class="ajax-comment-wrapper ajax-comment-dummy-comment" style="display:none">',
-      '#type' => 'item',
-      '#markup' => '',
-      '#suffix' => '</div>',
-    );
-  }
 }
 
 /**
