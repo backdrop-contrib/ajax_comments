@@ -27,6 +27,11 @@ function ajax_comments_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  // Special-casing for EditLimit Module.
+  if (module_exists('edit_limit')) {
+    $items['ajax_comment/%comment/edit']['access callback'] = 'edit_limit_comment_access';
+  }
+
   $items['ajax_comment/%/delete'] = array(
     'page callback' => 'ajax_comments_delete',
     'page arguments' => array(1),
