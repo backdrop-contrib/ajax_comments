@@ -386,7 +386,7 @@ function ajax_comments_submit_js($form, &$form_state) {
       }
     }
 
-    if (!variable_get('ajax_comments_disable_scroll', 0) && empty($mode)) {
+    if (!variable_get('ajax_comments_disable_scroll', 0)) {
       $commands[] = array('command' => 'ajaxCommentsScrollToElement', 'selector' => '.comment-wrapper-' . $comment->cid);
     }
   }
