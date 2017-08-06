@@ -82,7 +82,13 @@
    */
   Drupal.ajax.prototype.commands.ajaxCommentsAfter = function(ajax, response, status) {
     try {
-      $(response.html).insertAfter(response.selector);
+      var $element = $(response.selector);
+      var $nextElement = $($element).next();
+
+      if ($nextElement.hasClass('indented')) {
+        $element = $nextElement;
+      }
+      $(response.html).insertAfter($element);
 
       // Attach all JavaScript behaviors to the new content, if it was successfully
       // added to the page, this if statement allows #ajax['wrapper'] to be
