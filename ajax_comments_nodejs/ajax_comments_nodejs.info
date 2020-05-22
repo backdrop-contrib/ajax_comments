@@ -1,6 +1,7 @@
 name = AJAX Comments Nodejs Integration
 description = Integrates Ajax Comments with Nodejs
-core = 7.x
+backdrop = 1.x
+type = module
 dependencies[] = ajax_comments
 dependencies[] = nodejs
 dependencies[] = nodejs_ajax

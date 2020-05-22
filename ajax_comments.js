@@ -1,7 +1,7 @@
 (function ($) {
 
  // Scroll to given element
-  Drupal.ajax.prototype.commands.ajaxCommentsScrollToElement = function(ajax, response, status) {
+  Backdrop.ajax.prototype.commands.ajaxCommentsScrollToElement = function(ajax, response, status) {
     try {
       pos = $(response.selector).offset();
       $('html, body').animate({ scrollTop: pos.top}, 'slow');
@@ -16,7 +16,7 @@
    * On the server side we have a current state of node and comments, but on client side we may have a outdated state
    * and some div's may be not present
    */
-  Drupal.ajax.prototype.commands.ajaxCommentsAddDummyDivAfter = function(ajax, response, status) {
+  Backdrop.ajax.prototype.commands.ajaxCommentsAddDummyDivAfter = function(ajax, response, status) {
     try {
       if (!$(response.selector).next().hasClass(response.class)) {
         $('<div class="' + response.class + '"></div>').insertAfter(response.selector);
@@ -37,20 +37,20 @@
    * Own implementation of ajax_command_replace()
    * see bug: https://www.drupal.org/node/736066
    */
-  Drupal.ajax.prototype.commands.ajaxCommentsReplace = function(ajax, response, status) {
+  Backdrop.ajax.prototype.commands.ajaxCommentsReplace = function(ajax, response, status) {
     try {
       // Removing content from the wrapper, detach behaviors first.
       var wrapper = response.selector ? $(response.selector) : $(ajax.wrapper);
-      var settings = response.settings || ajax.settings || Drupal.settings;
-      Drupal.detachBehaviors(wrapper, settings);
+      var settings = response.settings || ajax.settings || Backdrop.settings;
+      Backdrop.detachBehaviors(wrapper, settings);
 
       $(response.selector).replaceWith(response.html);
 
       // Attach all JavaScript behaviors to the new content, if it was successfully
       // added to the page, this if statement allows #ajax['wrapper'] to be
       // optional.
-      var settings = response.settings || ajax.settings || Drupal.settings;
-      Drupal.attachBehaviors(response.data, settings);
+      var settings = response.settings || ajax.settings || Backdrop.settings;
+      Backdrop.attachBehaviors(response.data, settings);
     }
     catch (e) {
       console.log('ajaxComments-Replace: ' + e.name)
@@ -61,15 +61,15 @@
    * Own implementation of ajax_command_before()
    * see bug: https://www.drupal.org/node/736066
    */
-  Drupal.ajax.prototype.commands.ajaxCommentsBefore = function(ajax, response, status) {
+  Backdrop.ajax.prototype.commands.ajaxCommentsBefore = function(ajax, response, status) {
     try {
       $(response.html).insertBefore(response.selector);
 
       // Attach all JavaScript behaviors to the new content, if it was successfully
       // added to the page, this if statement allows #ajax['wrapper'] to be
       // optional.
-      var settings = response.settings || ajax.settings || Drupal.settings;
-        Drupal.attachBehaviors(response.data, settings);
+      var settings = response.settings || ajax.settings || Backdrop.settings;
+        Backdrop.attachBehaviors(response.data, settings);
       }
       catch (e) {
         console.log('ajaxComments-Before: ' + e.name)
@@ -80,7 +80,7 @@
    * Own implementation of ajax_command_after()
    * see bug: https://www.drupal.org/node/736066
    */
-  Drupal.ajax.prototype.commands.ajaxCommentsAfter = function(ajax, response, status) {
+  Backdrop.ajax.prototype.commands.ajaxCommentsAfter = function(ajax, response, status) {
     try {
       var $element = $(response.selector);
       var $nextElement = $($element).next();
@@ -93,8 +93,8 @@
       // Attach all JavaScript behaviors to the new content, if it was successfully
       // added to the page, this if statement allows #ajax['wrapper'] to be
       // optional.
-      var settings = response.settings || ajax.settings || Drupal.settings;
-      Drupal.attachBehaviors(response.data, settings);
+      var settings = response.settings || ajax.settings || Backdrop.settings;
+      Backdrop.attachBehaviors(response.data, settings);
     }
     catch (e) {
       console.log('ajaxComments-After: ' + e.name)
@@ -105,15 +105,15 @@
    * Own implementation of ajax_command_insert()
    * see bug: https://www.drupal.org/node/736066
    */
-  Drupal.ajax.prototype.commands.ajaxCommentsPrepend = function(ajax, response, status) {
+  Backdrop.ajax.prototype.commands.ajaxCommentsPrepend = function(ajax, response, status) {
     try {
       $(response.selector).prepend(response.html);
 
       // Attach all JavaScript behaviors to the new content, if it was successfully
       // added to the page, this if statement allows #ajax['wrapper'] to be
       // optional.
-      var settings = response.settings || ajax.settings || Drupal.settings;
-      Drupal.attachBehaviors(response.data, settings);
+      var settings = response.settings || ajax.settings || Backdrop.settings;
+      Backdrop.attachBehaviors(response.data, settings);
     }
     catch (e) {
       console.log('ajaxComments-Prepend: ' + e.name)
@@ -124,15 +124,15 @@
    * Own implementation of ajax_command_append()
    * see bug: https://www.drupal.org/node/736066
    */
-  Drupal.ajax.prototype.commands.ajaxCommentsAppend = function(ajax, response, status) {
+  Backdrop.ajax.prototype.commands.ajaxCommentsAppend = function(ajax, response, status) {
     try {
       $(response.selector).append(response.html);
 
       // Attach all JavaScript behaviors to the new content, if it was successfully
       // added to the page, this if statement allows #ajax['wrapper'] to be
       // optional.
-      var settings = response.settings || ajax.settings || Drupal.settings;
-      Drupal.attachBehaviors(response.data, settings);
+      var settings = response.settings || ajax.settings || Backdrop.settings;
+      Backdrop.attachBehaviors(response.data, settings);
     }
     catch (e) {
       console.log('ajaxComments-Append: ' + e.name)
@@ -142,7 +142,7 @@
   /**
    * Own Bind Ajax behavior for comment links.
    */
-  Drupal.behaviors.ajaxCommentsBehavior = {
+  Backdrop.behaviors.ajaxCommentsBehavior = {
     attach: function(context, settings) {
       // Bind Ajax behavior to all items showing the class.
       $('.use-ajax-comments:not(.ajax-processed)').addClass('ajax-processed').each(function () {
@@ -157,7 +157,7 @@
           element_settings.event = 'click';
         }
         var base = $(this).attr('id');
-        Drupal.ajax[base] = new Drupal.ajax(base, this, element_settings);
+        Backdrop.ajax[base] = new Backdrop.ajax(base, this, element_settings);
       });
     }
   };

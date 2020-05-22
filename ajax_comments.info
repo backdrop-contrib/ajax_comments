@@ -1,9 +1,7 @@
 name = AJAX Comments
 description = Module makes comments load without a page refresh via AJAX
-core = 7.x
+backdrop = 1.x
+type = module
 dependencies[] = comment
 configure = admin/config/content/ajax_comments
-
-files[] = views/ajax_comments_handler_field_ajax_add_comment.inc
-files[] = views/ajax_comments_handler_field_list_comments.inc
 

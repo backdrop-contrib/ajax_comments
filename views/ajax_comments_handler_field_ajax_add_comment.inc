@@ -9,7 +9,10 @@ class ajax_comments_handler_field_ajax_add_comment extends views_handler_field_c
 
   function option_definition() {
     $options = parent::option_definition();
-    $options['text'] = array('default' => '', 'translatable' => TRUE);
+    $options['text'] = array(
+      'default' => '',
+      'translatable' => TRUE,
+    );
     $options['submit_action'] = array('default' => 1);
     return $options;
   }
@@ -35,7 +38,7 @@ class ajax_comments_handler_field_ajax_add_comment extends views_handler_field_c
     );
 
     parent::options_form($form, $form_state);
-    
+
     // The path is set by render_link function so don't allow to set it.
     $form['alter']['path'] = array('#access' => FALSE);
     $form['alter']['external'] = array('#access' => FALSE);
@@ -45,17 +48,17 @@ class ajax_comments_handler_field_ajax_add_comment extends views_handler_field_c
     parent::pre_render($values);
 
     // Load necessary AJAX libraries.
-    drupal_add_js(drupal_get_path('module', 'ajax_comments') . '/ajax_comments.js');
-    drupal_add_library('system', 'drupal.ajax');
+    backdrop_add_js(backdrop_get_path('module', 'ajax_comments') . '/ajax_comments.js');
+    backdrop_add_library('system', 'backdrop.ajax');
   }
 
   function render($values) {
     if (user_access('post comments') && $node = $this->get_value($values)) {
       // Add Comment wrapper
-      $result = '<div class="comment-wrapper views-comment-wrapper-nid-' . $node->nid .'">';
+      $result = '<div class="comment-wrapper views-comment-wrapper-nid-' . $node->nid . '">';
       // Add result text
-      $result .= '<p class="views-comment-result-nid-' . $node->nid . '" style="display: none;">'. t('Your comment has been posted.') .'</p>';
-        // Add dummy comment
+      $result .= '<p class="views-comment-result-nid-' . $node->nid . '" style="display: none;">' . t('Your comment has been posted.') . '</p>';
+      // Add dummy comment
       $result .= '<div class="ajax-comment-wrapper ajax-comment-dummy-comment"></div>';
       // Generate a unique token to prevent illegitimate requests.
       $options = array(
@@ -65,7 +68,7 @@ class ajax_comments_handler_field_ajax_add_comment extends views_handler_field_c
             'ajax-comments-reply-' . $node->nid . '-0',
           ),
         ),
-        );
+      );
       $path = 'comment/reply/' . $node->nid . '/0/' . $this->options['submit_action'];
       $text = !empty($this->options['text']) ? $this->options['text'] : t('Add new comment');
       // Close Comment wrapper

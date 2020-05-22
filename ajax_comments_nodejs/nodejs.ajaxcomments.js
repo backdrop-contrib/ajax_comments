@@ -1,28 +1,28 @@
 (function ($) {
   /**
-   * Drupal.Nodejs.callback on node update.
+   * Backdrop.Nodejs.callback on node update.
    */
-  Drupal.Nodejs.callbacks.ajaxCommentsNodejs = {
+  Backdrop.Nodejs.callbacks.ajaxCommentsNodejs = {
     callback: function (message) {
-      if (message.authToken != Drupal.settings.nodejs.authToken) {
+      if (message.authToken != Backdrop.settings.nodejs.authToken) {
         if (typeof message.action === 'undefined') {
-          Drupal.nodejs_ajax.runCommands(message);
+          Backdrop.nodejs_ajax.runCommands(message);
         }
         else {
           if (message.action == 'updated' && $('.comment-wrapper-' + message.cid).length == 0) {
             message.action = 'added';
           }
-          var commentUrl = Drupal.settings.basePath + 'ajax_comments_nodejs/view/' + message.action + '/' + message.cid;
+          var commentUrl = Backdrop.settings.basePath + 'ajax_comments_nodejs/view/' + message.action + '/' + message.cid;
           var ajaxSettings = {url : commentUrl};
-          var ajaxRequest = new Drupal.ajax(false, false, ajaxSettings);
+          var ajaxRequest = new Backdrop.ajax(false, false, ajaxSettings);
           ajaxRequest.eventResponse(ajaxRequest, {});
         }
       }
     }
   };
 
-  // Drupal.ajaxCommentsNodejs
-  Drupal.behaviors.ajaxCommentsNodejs = {
+  // Backdrop.ajaxCommentsNodejs
+  Backdrop.behaviors.ajaxCommentsNodejs = {
     attach: function(context, settings) {
       $('.ajax-comments-nodejs-new', context).once('ajax-comments-nodejs-new-behavior', function() {
         if ($.isFunction($.fn.live)) {
