@@ -6,3 +6,4 @@ dependencies[] = ajax_comments
 dependencies[] = nodejs
 dependencies[] = nodejs_ajax
 
+hidden = 1

@@ -1,13 +1,15 @@
 <?php
-/*
- ** @file
- *  views handler class
- *  mostyly just  renders the field for views display  and adds  js and css
+/**
+ *
+ * @file
+ * Views handler class
+ * Mostly just  renders the field for views display and adds js and css.
+ *
  */
 class ajax_comments_handler_field_ajax_add_comment extends views_handler_field_comment_node_link {
-  var $output;
+  public $output;
 
-  function option_definition() {
+  public function option_definition() {
     $options = parent::option_definition();
     $options['text'] = array(
       'default' => '',
@@ -17,7 +19,7 @@ class ajax_comments_handler_field_ajax_add_comment extends views_handler_field_c
     return $options;
   }
 
-  function options_form(&$form, &$form_state) {
+  public function options_form(&$form, &$form_state) {
     $form['text'] = array(
       '#type' => 'textfield',
       '#title' => t('Text to display'),
@@ -44,7 +46,7 @@ class ajax_comments_handler_field_ajax_add_comment extends views_handler_field_c
     $form['alter']['external'] = array('#access' => FALSE);
   }
 
-  function pre_render(&$values) {
+  public function pre_render(&$values) {
     parent::pre_render($values);
 
     // Load necessary AJAX libraries.
@@ -52,7 +54,7 @@ class ajax_comments_handler_field_ajax_add_comment extends views_handler_field_c
     backdrop_add_library('system', 'backdrop.ajax');
   }
 
-  function render($values) {
+  public function render($values) {
     if (user_access('post comments') && $node = $this->get_value($values)) {
       // Add Comment wrapper
       $result = '<div class="comment-wrapper views-comment-wrapper-nid-' . $node->nid . '">';
@@ -76,4 +78,5 @@ class ajax_comments_handler_field_ajax_add_comment extends views_handler_field_c
       return $result;
     }
   }
+
 }

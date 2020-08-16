@@ -11,7 +11,7 @@
  */
 class ajax_comments_handler_field_list_comments extends views_handler_field_entity {
 
-  function option_definition() {
+  public function option_definition() {
     $options = parent::option_definition();
     $options['ajax_comments_display_add_comment_form'] = array(
       'default' => FALSE,
@@ -20,7 +20,7 @@ class ajax_comments_handler_field_list_comments extends views_handler_field_enti
     return $options;
   }
 
-  function options_form(&$form, &$form_state) {
+  public function options_form(&$form, &$form_state) {
     $form['ajax_comments_display_add_comment_form'] = array(
       '#title' => t('Show Add Comment form'),
       '#description' => t("Enable to display the Add Comment form below the list of comments."),
@@ -30,7 +30,7 @@ class ajax_comments_handler_field_list_comments extends views_handler_field_enti
     parent::options_form($form, $form_state);
   }
 
-  function pre_render(&$values) {
+  public function pre_render(&$values) {
     parent::pre_render($values);
 
     // Load necessary AJAX libraries.
@@ -49,15 +49,19 @@ class ajax_comments_handler_field_list_comments extends views_handler_field_enti
    * Render the list of comments
    * modified to add the ajax_comments wrapper and the add comment form option.
    */
-  function render($values) {
+  public function render($values) {
     if ($node = $this->get_value($values)) {
       // Init with dummy Comment. For explanation look at ajax_comments_process_node().
-      $result = array('comments' => array('dummyComment' => array(
+      $result = array(
+        'comments' => array(
+          'dummyComment' => array(
             '#prefix' => '<div class="ajax-comment-wrapper ajax-comment-dummy-comment" style="display:none">',
             '#type' => 'item',
             '#markup' => '',
             '#suffix' => '</div>',
-          )));
+          ),
+        ),
+      );
 
       // Only attempt to render comments if the node has visible comments.
       // Unpublished comments are not included in $node->comment_count, so show
@@ -97,4 +101,5 @@ class ajax_comments_handler_field_list_comments extends views_handler_field_enti
       return $result;
     }
   }
+
 }

@@ -145,7 +145,7 @@
   Backdrop.behaviors.ajaxCommentsBehavior = {
     attach: function(context, settings) {
       // Bind Ajax behavior to all items showing the class.
-      $('.use-ajax-comments:not(.ajax-processed)').addClass('ajax-processed').each(function () {
+    $('.use-ajax-comments:not(.ajax-processed)').addClass('ajax-processed').each(function () {
         var element_settings = {};
         // Clicked links look better with the throbber than the progress bar.
         element_settings.progress = { 'type': 'throbber' };
@@ -161,6 +161,5 @@
       });
     }
   };
-
 
 }(jQuery));

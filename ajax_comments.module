@@ -109,9 +109,7 @@ function ajax_comments_preprocess_node(&$variables) {
   if (!ajax_comments_node_type_active($node->type)) {
     return;
   }
-
-  // TODO This variable was probably removed in Backdrop without replacement.
-  if (variable_get('comment_form_location_' . $node->type, COMMENT_FORM_BELOW) == COMMENT_FORM_BELOW) {
+  if (config_get('node.type.' . $node->type, 'settings.comment_form_location') == COMMENT_FORM_BELOW) {
     return;
   }
 
@@ -157,7 +155,6 @@ function ajax_comments_form_comment_form_alter(&$form, &$form_state, $form_id) {
       unset($form['comment_output_below']);
     }
   }
-
   if (empty($form_state['storage']['ajax_comments_form_id'])) {
     $cid = $pid = empty($form_state['comment']->cid) ? 0 : $form_state['comment']->cid;
     $pid = empty($form_state['comment']->pid) ? 0 : $form_state['comment']->pid;
@@ -217,7 +214,7 @@ function ajax_comments_form_comment_form_alter(&$form, &$form_state, $form_id) {
     $form['actions']['cancel'] = array(
       '#type' => 'button',
       '#value' => t('Cancel'),
-      '#access' => true,
+      '#access' => TRUE,
       '#weight' => 21,
       '#limit_validation_errors' => array(),
     );
@@ -244,8 +241,6 @@ function ajax_comments_form_comment_form_alter(&$form, &$form_state, $form_id) {
 
   $form['actions'] = ajax_pre_render_element($form['actions']);
 
-  // HACK, stop ctools from modifying us in node_comment_form.inc
-  $form_state['ctools comment alter'] = FALSE;
 }
 
 /**
@@ -298,8 +293,7 @@ function ajax_comments_cancel_js($form, &$form_state) {
   $cid = empty($form_state['comment']->cid) ? 0 : $form_state['comment']->cid;
   $pid = empty($form_state['comment']->pid) ? 0 : $form_state['comment']->pid;
   $commands[] = ajax_command_remove('.ajax-comments-reply-form-' . $form['#node']->nid . '-' . $pid . '-' . $cid);
-  // TODO This variable was probably removed in Backdrop without replacement.
-  if (variable_get('comment_form_location_' . $form['#node']->type, COMMENT_FORM_SEPARATE_PAGE) == COMMENT_FORM_BELOW) {
+  if (config_get('node.type.' . $form['#node']->type, 'settings.comment_form_location') == COMMENT_FORM_BELOW) {
     if (!config_get('ajax_comments.settings', 'ajax_comments_disable_scroll')) {
       $commands[] = array(
         'command' => 'ajaxCommentsScrollToElement',
@@ -360,14 +354,13 @@ function ajax_comments_submit_js($form, &$form_state) {
     // This form cached. Remove it from cache.
     cache_clear_all($key, 'cache');
   }
-
   $comment = comment_load($form_state['comment']->cid);
   $node = $form['#node'];
   $notify_text = $config->get('ajax_comments_notify') ? theme('ajax_comments_notify_text', array('comment' => $comment)) : '';
 
   $comment_build = comment_view($comment, $node);
 
-  // remove messages
+  // Remove messages.
   if ($config->get('ajax_comments_notify')) {
     $commands[] = ajax_command_remove('.messages.warning');
     $commands[] = ajax_command_remove('.messages.status');
@@ -390,8 +383,7 @@ function ajax_comments_submit_js($form, &$form_state) {
   }
   // Or are we replying to another comment.
   elseif (!empty($form_state['values']['pid'])) {
-    // TODO This variable was probably removed in Backdrop without replacement.
-    $mode = variable_get('comment_default_mode_' . $node->type, COMMENT_MODE_THREADED);
+    $mode = config_get('node.type.' . $node->type, 'settings.comment_mode');
     if (!empty($mode)) {
       // Threaded. Append comment to parent wrapper.
       //$commands[] = ajax_command_replace('.ajax-comments-reply-form-' . $comment->nid . '-' . $pid . '-' . $cid, $comment_output);
@@ -440,7 +432,7 @@ function ajax_comments_submit_js($form, &$form_state) {
       //$commands[] = ajax_command_after('.comment-wrapper-nid-' . $comment->nid . ' > .ajax-comment-wrapper:last', $comment_output);
       $commands[] = array(
         'command' => 'ajaxCommentsAfter',
-        'selector' => '.comment-wrapper-nid-' . $comment->nid . ' > .ajax-comment-wrapper:last',
+        'selector' => '#node-' . $comment->nid . ' .comments > .ajax-comment-wrapper:last',
         'html' => $comment_output,
       );
     }
@@ -449,16 +441,15 @@ function ajax_comments_submit_js($form, &$form_state) {
       //$commands[] = ajax_command_prepend('.comment-wrapper-nid-' . $comment->nid, $comment_output);
       $commands[] = array(
         'command' => 'ajaxCommentsBefore',
-        'selector' => '.comment-wrapper-nid-' . $comment->nid . '> .ajax-comment-wrapper:first',
+        'selector' => '#node-' . $comment->nid . ' .comments > .ajax-comment-wrapper:first',
         'html' => $comment_output,
       );
     }
 
     // If we have a default form, update it with a new one.
-    // TODO This variable was probably removed in Backdrop without replacement.
-    if (variable_get('comment_form_location_' . $node->type, COMMENT_FORM_BELOW) == COMMENT_FORM_BELOW && empty($form_state['build_info']['args'][1]['flag'])) {
+    if (config_get('node.type.' . $node->type, 'settings.comment_form_location') == COMMENT_FORM_BELOW && empty($form_state['build_info']['args'][1]['flag'])) {
       $new_form_state = array();
-      $new_form_state['build_info']['args'][] = (object) array('nid' => $node->nid);
+      $new_form_state['build_info']['args'][] = entity_create('comment', array('nid' => $node->nid, 'node_type' => $node->type));
       // Don't pull from cache.
       $new_form_state['input'] = array();
       $new_form_build = backdrop_build_form($form['#form_id'], $new_form_state);
@@ -468,7 +459,7 @@ function ajax_comments_submit_js($form, &$form_state) {
       if (!$config->get('ajax_comments_disable_scroll') && _ajax_comments_get_comment_sort_order($node) == 2) {
         $commands[] = array(
           'command' => 'ajaxCommentsScrollToElement',
-          'selector' => '.comment-wrapper-nid-' . $comment->nid,
+          'selector' => '.node-' . $comment->nid . ' .comments',
         );
       }
     }
@@ -479,11 +470,12 @@ function ajax_comments_submit_js($form, &$form_state) {
   }
 
   if (!empty($form_state['build_info']['args'][1]['flag'])) {
-    // Submiting comment via Views Add Comment Form
+    // Submitting comment via Views Add Comment Form
     switch ((int) $form_state['build_info']['args'][1]['flag']) {
       case 1:
         $commands[] = ajax_command_invoke('.views-comment-result-nid-' . $comment->nid, 'show');
         break;
+
       case 2:
         $commands[] = ajax_command_invoke('.ajax-comments-reply-' . $comment->nid . '-' . $pid, 'show');
         break;
@@ -589,27 +581,29 @@ function ajax_comments_comment_view_alter(&$build) {
 }
 
 /**
- * Implements template_preprocess_comment()
+ * Implements template_preprocess_comment().
+ *
  * Wrap comments and their replies in a #comment-wrapper-(cid) div
  */
 function ajax_comments_preprocess_comment(&$variables) {
   $element = $variables['elements'];
   $comment = $element['#comment'];
   if (ajax_comments_node_type_active(substr($comment->node_type, strlen('comment_node_')))) {
-    $variables['classes_array'][] = 'ajax-comment-wrapper';
-    $variables['classes_array'][] = 'comment-wrapper-' . $comment->cid;
+    $variables['classes'][] = 'ajax-comment-wrapper';
+    $variables['classes'][] = 'comment-wrapper-' . $comment->cid;
   }
 }
 
-/*
- * Implements template_preprocess_comment_wrapper()
- */
 /**
+ *
+ * Implements template_preprocess_comment_wrapper().
+ *
  * @todo Please document this function.
  * @see http://drupal.org/node/1354
+ *
  */
 function ajax_comments_preprocess_comment_wrapper(&$variables) {
-  $variables['classes_array'][] = 'comment-wrapper-nid-' . $variables['node']->nid;
+  $variables['classes'][] = 'comment-wrapper-nid-' . $variables['node']->nid;
 
   if (empty($variables['content']['comments']) && $variables['node']->comment == COMMENT_NODE_OPEN && ajax_comments_node_type_active($variables['node']->type)) {
     /**
@@ -663,13 +657,13 @@ function ajax_comments_reply($node, $pid = 0, $flag = 0) {
     }
     else {
       // Build form and Save to cache*/
-      $form_build = backdrop_get_form("comment_node_{$node->type}_form", (object) array('nid' => $node->nid, 'pid' => $pid), array('flag' => $flag));
+      $form_build = backdrop_get_form("comment_node_{$node->type}_form", entity_create('comment', array('nid' => $node->nid, 'pid' => $pid, 'node_type' => $node->type)), array('flag' => $flag));
       cache_set($key, $form_build, 'cache', time() + 360);
     }
   }
   else {
     // Anonymous and page cache is disabled
-    $form_build = backdrop_get_form("comment_node_{$node->type}_form", (object) array('nid' => $node->nid, 'pid' => $pid), array('flag' => $flag));
+    $form_build = backdrop_get_form("comment_node_{$node->type}_form", entity_create('comment', array('nid' => $node->nid, 'pid' => $pid, 'node_type' => $node->type)), array('flag' => $flag));
   }
 
   $form = trim(backdrop_render($form_build));
@@ -681,8 +675,7 @@ function ajax_comments_reply($node, $pid = 0, $flag = 0) {
 
   // Add the new form.
   if (!empty($pid)) {
-    // TODO This variable was probably removed in Backdrop without replacement.
-    $mode = variable_get('comment_default_mode_' . $node->type, COMMENT_MODE_THREADED);
+    $mode = config_get('node.type.' . $node->type, 'settings.comment_mode');
     if (empty($mode)) {
       $commands[] = ajax_command_after('.comment-wrapper-' . $pid, $form);
     }
@@ -893,27 +886,14 @@ function theme_ajax_comments_notify_text($vars = array()) {
 /**
  * Returns comment sort order.
  *
- * comment_goodnes module and comment_sort_created compatibility:
+ * comment_goodness module and comment_sort_created compatibility:
  * 1 - Older first
  * 2 - Newer first
  */
 function _ajax_comments_get_comment_sort_order($node) {
-  $result = &backdrop_static(__FUNCTION__);
-  if (!isset($result)) {
-    $result = 1;
-    if (module_exists('comment_goodness')) {
-      // TODO This variable was probably removed in Backdrop without replacement.
-      $result = variable_get('comment_default_sorting_' . $node->type, comment_goodness_OLDER_FIRST);
-    }
-    else if (module_exists('comment_sort_created')) {
-      // TODO This variable was probably removed in Backdrop without replacement.
-      $result = variable_get('comment_sort_created_order_' . $node->type) == COMMENT_SORT_CREATED_OLDER_FIRST ? 1 : 2;
-    }
-    else if (module_exists('sort_comments')) {
-      // TODO This variable was probably removed in Backdrop without replacement.
-      $result = variable_get('comment_default_sorting_' . $node->type, SORT_COMMENTS_OLDER_FIRST);
-    }
-  }
+  // TODO: Add sorting support when/if it is implemented or contrib modules
+  // allow it. For now, default is older first.
+  $result = 1;
   return $result;
 }
 
