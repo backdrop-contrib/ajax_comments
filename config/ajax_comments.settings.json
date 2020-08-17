@@ -1,7 +1,8 @@
 {
     "_config_name": "ajax_comments.settings",
-    "ajax_comments_node_types": "dynamic value in file /ajax_comments/ajax_comments.module line 774",
-    "ajax_comments_notify": "",
-    "ajax_comments_disable_scroll": "novalue",
-    "ajax_comments_reply_autoclose": "novalue"
+    "ajax_comments_reply_autoclose": 1,
+    "ajax_comments_node_types": {
+    },
+    "ajax_comments_notify": 1,
+    "ajax_comments_disable_scroll": 0
 }

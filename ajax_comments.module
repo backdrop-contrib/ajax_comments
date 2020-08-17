@@ -132,9 +132,10 @@ function ajax_comments_preprocess_node(&$variables) {
  */
 function ajax_comments_config_info() {
   $prefixes['ajax_comments.settings'] = array(
-    'label' => t('Module name settings'),
+    'label' => t('Ajax Comments settings'),
     'group' => t('Configuration'),
   );
+  return $prefixes;
 }
 
 /**
