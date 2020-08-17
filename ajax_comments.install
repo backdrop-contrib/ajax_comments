@@ -15,12 +15,6 @@ function ajax_comments_uninstall() {
 }
 
 /**
- * TODO The old hook_update_N functions cannot be applied to Backdrop.
- */
-function ajax_comments_update_7100(&$sandbox) {
-}
-
-/**
  * Implements hook_update_last_removed().
  */
 function ajax_comments_update_last_removed() {
@@ -32,20 +26,12 @@ function ajax_comments_update_last_removed() {
  */
 function ajax_comments_update_1000() {
   $config = config('ajax_comments.settings');
-  $config->set('ajax_comments_node_types', update_variable_get('ajax_comments_node_types', 'dynamic value in file /ajax_comments/ajax_comments.module line 774'));
-  $config->set('ajax_comments_notify', update_variable_get('ajax_comments_notify', ''));
-  $config->set('ajax_comments_disable_scroll', update_variable_get('ajax_comments_disable_scroll', 'novalue'));
-  $config->set('ajax_comments_reply_autoclose', update_variable_get('ajax_comments_reply_autoclose', 'novalue'));
+  $config->set('ajax_comments_node_types', update_variable_get('ajax_comments_node_types', array()));
+  $config->set('ajax_comments_notify', update_variable_get('ajax_comments_notify', 1));
+  $config->set('ajax_comments_disable_scroll', update_variable_get('ajax_comments_disable_scroll', 0));
+  $config->set('ajax_comments_reply_autoclose', update_variable_get('ajax_comments_reply_autoclose', 1));
   update_variable_del('ajax_comments_node_types');
   update_variable_del('ajax_comments_notify');
   update_variable_del('ajax_comments_disable_scroll');
   update_variable_del('ajax_comments_reply_autoclose');
-}
-
-/**
- * Implements hook_install().
- */
-function ajax_comments_install() {
-  // Dynamically generated variable data was detected.
-  // /ajax_comments/ajax_comments.module line 774
 }
