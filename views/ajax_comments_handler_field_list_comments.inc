@@ -34,14 +34,14 @@ class ajax_comments_handler_field_list_comments extends views_handler_field_enti
     parent::pre_render($values);
 
     // Load necessary AJAX libraries.
-    backdrop_add_js(backdrop_get_path('module', 'ajax_comments') . '/ajax_comments.js');
+    backdrop_add_js(backdrop_get_path('module', 'ajax_comments') . '/js/ajax_comments.js');
     backdrop_add_library('system', 'backdrop.ajax');
     if (module_exists('ajax_comments_nodejs')) {
       foreach ($values as $node) {
         nodejs_send_content_channel_token('ajax_comments_nodejs_' . $node->nid);
       }
-      backdrop_add_js(backdrop_get_path('module', 'ajax_comments_nodejs') . '/nodejs.ajaxcomments.js', array('type' => 'file'));
-      backdrop_add_css(backdrop_get_path('module', 'ajax_comments_nodejs') . '/ajax_comments_nodejs.css', array('type' => 'file'));
+      backdrop_add_js(backdrop_get_path('module', 'ajax_comments_nodejs') . '/js/nodejs.ajaxcomments.js', array('type' => 'file'));
+      backdrop_add_css(backdrop_get_path('module', 'ajax_comments_nodejs') . '/css/ajax_comments_nodejs.css', array('type' => 'file'));
     }
   }
 

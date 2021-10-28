@@ -12,9 +12,9 @@ function ajax_comments_nodejs_process_node(&$variables) {
   if ($variables['node']->comment == COMMENT_NODE_OPEN && ajax_comments_node_type_active($variables['node']->type)) {
     // Enable channel for current node.
     nodejs_send_content_channel_token('ajax_comments_nodejs_' . $variables['node']->nid);
-    backdrop_add_js(backdrop_get_path('module', 'ajax_comments_nodejs') . '/nodejs.ajaxcomments.js', array('type' => 'file'));
-    backdrop_add_js(backdrop_get_path('module', 'ajax_comments') . '/ajax_comments.js', array('type' => 'file'));
-    backdrop_add_css(backdrop_get_path('module', 'ajax_comments_nodejs') . '/ajax_comments_nodejs.css', array('type' => 'file'));
+    backdrop_add_js(backdrop_get_path('module', 'ajax_comments_nodejs') . '/js/nodejs.ajaxcomments.js', array('type' => 'file'));
+    backdrop_add_js(backdrop_get_path('module', 'ajax_comments') . '/js/ajax_comments.js', array('type' => 'file'));
+    backdrop_add_css(backdrop_get_path('module', 'ajax_comments_nodejs') . '/css/ajax_comments_nodejs.css', array('type' => 'file'));
   }
 }
 

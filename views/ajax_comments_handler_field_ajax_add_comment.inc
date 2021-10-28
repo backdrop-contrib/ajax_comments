@@ -50,7 +50,7 @@ class ajax_comments_handler_field_ajax_add_comment extends views_handler_field_c
     parent::pre_render($values);
 
     // Load necessary AJAX libraries.
-    backdrop_add_js(backdrop_get_path('module', 'ajax_comments') . '/ajax_comments.js');
+    backdrop_add_js(backdrop_get_path('module', 'ajax_comments') . '/js/ajax_comments.js');
     backdrop_add_library('system', 'backdrop.ajax');
   }
 
