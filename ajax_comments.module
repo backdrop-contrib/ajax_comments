@@ -128,6 +128,7 @@ function ajax_comments_preprocess_node(&$variables) {
     return;
   }
   if (config_get('node.type.' . $node->type, 'settings.comment_form_location') == COMMENT_FORM_BELOW) {
+    $variables['content']['links']['comment']['#links']['comment-add']['fragment'] = 'ajax-comments-reply-form-' . $node->nid . '-0-0';
     return;
   }
 
