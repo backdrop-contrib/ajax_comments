@@ -6,6 +6,24 @@
  */
 
 /**
+ * Implements hook_init().
+ */
+function ajax_comments_init() {
+  $config = config('ajax_comments.settings');
+  $offset_selector = (!empty($config->get('offset_selector'))) ? check_plain($config->get('offset_selector')) : '';
+  $custom_offset = (!empty($config->get('custom_offset'))) ? intval($config->get('custom_offset')) : 0;
+  $settings = array(
+    'ajaxcomments' => array(
+      'offsets' => array(
+        'selector' => $offset_selector,
+        'custom_offset' => $custom_offset,
+      ),
+    ),
+  );
+  backdrop_add_js($settings, 'setting');
+}
+
+/**
  * Implements hook_menu().
  */
 function ajax_comments_menu() {
@@ -535,6 +553,28 @@ function ajax_comments_delete_js($form, &$form_state) {
   }
 
   return array('#type' => 'ajax', '#commands' => $commands);
+}
+
+/**
+ * Implements hook_comment_insert().
+ *
+ * Clear cache since entity cache is in core.
+ * Remove if this gets added to core.
+ * See: https://github.com/backdrop/backdrop-issues/issues/5335
+ */
+function ajax_comments_comment_insert($comment) {
+  cache_clear_all($comment->cid, 'cache_entity_comment');
+}
+
+/**
+ * Implements hook_comment_update().
+ *
+ * Clear cache since entity cache is in core.
+ * Remove if this gets added to core.
+ * See: https://github.com/backdrop/backdrop-issues/issues/5335
+ */
+function ajax_comments_comment_update($comment) {
+  cache_clear_all($comment->cid, 'cache_entity_comment');
 }
 
 /**

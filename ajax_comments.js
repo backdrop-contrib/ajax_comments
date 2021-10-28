@@ -2,13 +2,25 @@
 
  // Scroll to given element
   Backdrop.ajax.prototype.commands.ajaxCommentsScrollToElement = function(ajax, response, status) {
-    try {
-      pos = $(response.selector).offset();
-      $('html, body').animate({ scrollTop: pos.top}, 'slow');
-    }
-    catch (e) {
-      console.log('ajaxComments-ScrollToElementError: ' + e.name);
-    }
+    var delayInMilliseconds = 250; // Give time for the Ajax reply form to load.
+
+    setTimeout(function () {
+      try {
+        var offset = 0;
+        offset += parseInt(Backdrop.settings.ajaxcomments.offsets.custom_offset);
+        offset = offset || 0;
+        $(Backdrop.settings.ajaxcomments.offsets.selector).each(function () {
+          offset += $(this).outerHeight();
+        });
+        pos = $(response.selector).offset();
+        console.log(pos);
+        console.log(offset);
+        $('html, body').animate({ scrollTop: pos.top - offset }, 'slow');
+      }
+      catch (e) {
+        console.log('ajaxComments-ScrollToElementError: ' + e.name);
+      }
+    }, delayInMilliseconds);
   };
 
   /**
