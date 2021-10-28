@@ -2,7 +2,7 @@
 
  // Scroll to given element
   Backdrop.ajax.prototype.commands.ajaxCommentsScrollToElement = function(ajax, response, status) {
-    var delayInMilliseconds = 250; // Give time for the Ajax reply form to load.
+    var delayInMilliseconds = 100; // Give time for the Ajax reply form to load.
 
     setTimeout(function () {
       try {
@@ -13,8 +13,6 @@
           offset += $(this).outerHeight();
         });
         pos = $(response.selector).offset();
-        console.log(pos);
-        console.log(offset);
         $('html, body').animate({ scrollTop: pos.top - offset }, 'slow');
       }
       catch (e) {

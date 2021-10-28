@@ -123,24 +123,42 @@ function ajax_comments_views_data() {
 function ajax_comments_preprocess_node(&$variables) {
   $node = $variables['node'];
   $view_mode = $variables['view_mode'];
-
+dpm(1);
   if (!ajax_comments_node_type_active($node->type)) {
     return;
   }
-  if (config_get('node.type.' . $node->type, 'settings.comment_form_location') == COMMENT_FORM_BELOW) {
-    $variables['content']['links']['comment']['#links']['comment-add']['fragment'] = 'ajax-comments-reply-form-' . $node->nid . '-0-0';
+dpm(2);
+dpm($variables);
+  $variables['comments']['classes'][] = 'comment-wrapper-nid-' . $node->nid;
+  if (!($node->comment_count) && $node->comment == COMMENT_NODE_OPEN) {
+    /**
+     * A little HACK for adding dummy comment which give us right point to place first comment on the page.
+     */
+    $variables['comments']['comments']['dummyComment'] = array(
+      '#prefix' => '<div class="ajax-comment-wrapper ajax-comment-dummy-comment" style="display:none">',
+      '#type' => 'item',
+      '#markup' => '',
+      '#suffix' => '</div>',
+    );
+dpm(3);
+  }
+  else if ($node->comment == COMMENT_NODE_CLOSED) {
+dpm(4);
     return;
   }
 
-  if (empty($node->comment) || $node->comment == COMMENT_NODE_CLOSED) {
+  if (config_get('node.type.' . $node->type, 'settings.comment_form_location') == COMMENT_FORM_BELOW) {
+    $variables['content']['links']['comment']['#links']['comment-add']['fragment'] = 'ajax-comments-reply-form-' . $node->nid . '-0-0';
+dpm(5);
     return;
   }
+dpm(6);
 
   backdrop_add_library('system', 'backdrop.ajax');
   backdrop_add_library('system', 'backdrop.form');
-
   backdrop_add_js(backdrop_get_path('module', 'ajax_comments') . '/js/ajax_comments.js', 'file');
 
+  $variables['content']['links']['comment']['#links']['comment-add']['href'] .= '/0/';
   $variables['content']['links']['comment']['#links']['comment-add']['attributes']['class'][] = 'use-ajax-comments';
   $variables['content']['links']['comment']['#links']['comment-add']['attributes']['class'][] = 'ajax-comments-reply-' . $node->nid . '-0';
   $variables['content']['links']['comment']['#links']['comment-add']['fragment'] = NULL;
@@ -181,12 +199,12 @@ function ajax_comments_form_comment_form_alter(&$form, &$form_state, $form_id) {
     $id = 'ajax-comments-reply-form-' . $form_state['comment']->nid . '-' . $pid . '-' . $cid;
     $form_state['storage']['ajax_comments_form_id'] = $id;
     // Get comment form state class
-    if (!empty($cid)) {
+    if ($cid) {
       // Comment Edit Form
       $form_state_class = 'ajax-comments-form-edit';
     }
     else {
-      if (!empty($pid)) {
+      if ($pid) {
         // Comment Reply Form
         $form_state_class = 'ajax-comments-form-reply';
       }
@@ -637,43 +655,20 @@ function ajax_comments_preprocess_comment(&$variables) {
 }
 
 /**
- *
- * Implements template_preprocess_comment_wrapper().
- *
- * @todo Please document this function.
- * @see http://drupal.org/node/1354
- *
- */
-function ajax_comments_preprocess_comment_wrapper(&$variables) {
-  $variables['classes'][] = 'comment-wrapper-nid-' . $variables['node']->nid;
-
-  if (empty($variables['content']['comments']) && $variables['node']->comment == COMMENT_NODE_OPEN && ajax_comments_node_type_active($variables['node']->type)) {
-    /**
-     * A little HACK for adding dummy comment which give us right point to place first comment on the page.
-     */
-    $variables['content']['comments']['dummyComment'] = array(
-      '#prefix' => '<div class="ajax-comment-wrapper ajax-comment-dummy-comment" style="display:none">',
-      '#type' => 'item',
-      '#markup' => '',
-      '#suffix' => '</div>',
-    );
-  }
-}
-
-/**
  * Callback for clicking "reply".
  * Note: $pid is an optional parameter. This functionality is utilized by the
  * "Add new comment" link on pages where there is no default comment form
  * (comment_form_location is COMMENT_FORM_SEPARATE_PAGE)
  */
 function ajax_comments_reply($node, $pid = 0, $flag = 0) {
+  // If there is a pid this is a reply to a comment.
+  $is_reply = ($pid > 0) ? 1 : 0;
   $config = config('ajax_comments.settings');
   if (!user_access('post comments')) {
     return MENU_ACCESS_DENIED;
   }
 
-  // If there is a pid this is a reply to a comment.
-  if (!empty($pid)) {
+  if ($is_reply) {
     if (!user_access('access comments')) {
       return MENU_ACCESS_DENIED;
     }
@@ -710,13 +705,13 @@ function ajax_comments_reply($node, $pid = 0, $flag = 0) {
 
   $form = trim(backdrop_render($form_build));
 
-  if ($config->get('ajax_comments_reply_autoclose') && !empty($pid)) {
+  if ($config->get('ajax_comments_reply_autoclose') && $is_reply) {
     $commands[] = ajax_command_remove('.ajax-comments-form-reply');
     $commands[] = ajax_command_invoke('.ajax-comments-reply', 'show');
   }
 
   // Add the new form.
-  if (!empty($pid)) {
+  if ($is_reply) {
     $mode = config_get('node.type.' . $node->type, 'settings.comment_mode');
     if (empty($mode)) {
       $commands[] = ajax_command_after('.comment-wrapper-' . $pid, $form);
@@ -740,7 +735,7 @@ function ajax_comments_reply($node, $pid = 0, $flag = 0) {
     }
   }
   else {
-    // Check Views Add form
+    // Check Views Add form.
     if (!empty($flag)) {
       $commands[] = ajax_command_after('.views-comment-wrapper-nid-' . $node->nid . ' > .ajax-comment-wrapper:last', $form);
     }
@@ -757,7 +752,7 @@ function ajax_comments_reply($node, $pid = 0, $flag = 0) {
     }
   }
 
-  // Hide reply to comment link
+  // Hide reply to comment link.
   $commands[] = ajax_command_invoke('.ajax-comments-reply-' . $node->nid . '-' . $pid, 'hide');
 
   if (!$config->get('ajax_comments_disable_scroll')) {

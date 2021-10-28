@@ -3,7 +3,7 @@
  *
  * @file
  * Views handler class
- * Mostly just  renders the field for views display and adds js and css.
+ * Mostly just renders the field for views display and adds js and css.
  *
  */
 class ajax_comments_handler_field_ajax_add_comment extends views_handler_field_comment_node_link {
@@ -56,11 +56,11 @@ class ajax_comments_handler_field_ajax_add_comment extends views_handler_field_c
 
   public function render($values) {
     if (user_access('post comments') && $node = $this->get_value($values)) {
-      // Add Comment wrapper
+      // Add Comment wrapper.
       $result = '<div class="comment-wrapper views-comment-wrapper-nid-' . $node->nid . '">';
-      // Add result text
+      // Add result text.
       $result .= '<p class="views-comment-result-nid-' . $node->nid . '" style="display: none;">' . t('Your comment has been posted.') . '</p>';
-      // Add dummy comment
+      // Add dummy comment.
       $result .= '<div class="ajax-comment-wrapper ajax-comment-dummy-comment"></div>';
       // Generate a unique token to prevent illegitimate requests.
       $options = array(
@@ -73,7 +73,7 @@ class ajax_comments_handler_field_ajax_add_comment extends views_handler_field_c
       );
       $path = 'comment/reply/' . $node->nid . '/0/' . $this->options['submit_action'];
       $text = !empty($this->options['text']) ? $this->options['text'] : t('Add new comment');
-      // Close Comment wrapper
+      // Close Comment wrapper.
       $result .= l($text, $path, $options) . '</div>';
       return $result;
     }
