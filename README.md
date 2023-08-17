@@ -16,7 +16,7 @@ whether to add or disable:
  - scrolling to the comment form
  - automatic closing of the comment reply form
 
-More details may be found (or added) in the [Wiki](https://github.com/backdrop-contrib/ajax_comments/wiki)
+More details may be found (or added) in the [Wiki](https://github.com/backdrop-contrib/ajax_comments/wiki).
 
 ## Issues
 
@@ -24,16 +24,17 @@ Bugs and Feature requests should be reported in the [Issue Queue](https://github
 
 ## Current Maintainers
 
- - [Laryn Kragt Bakker](https://github.com/laryn), [CEDC.org](https://CEDC.org)
+ - [Laryn Kragt Bakker](https://github.com/laryn)
  - [Alan Mels](https://github.com/alanmels), [AltaGrade.com](https://www.altagrade.com)
  - Collaboration and co-maintainers are welcome.
 
 ## Credits
 
-- Ported to Backdrop by [Laryn Kragt Bakker](https://github.com/laryn), [CEDC.org](https://CEDC.org).
+- Ported to Backdrop by [Laryn Kragt Bakker](https://github.com/laryn).
+- Initial Backdrop port sponsored by [CEDC.org](https://CEDC.org).
 - Maintained for Drupal by [Anton Kuzmenko](https://www.drupal.org/u/qzmenko)
   and [Dan Muzyka](https://www.drupal.org/u/danmuzyka).
-- Originally written by [Alexandr Shvets](https://www.drupal.org/u/neochief), Drupal 7 version by 
+- Originally written by [Alexandr Shvets](https://www.drupal.org/u/neochief), Drupal 7 version by
   [acouch](https://www.drupal.org/u/acouch).
 
 ## License
