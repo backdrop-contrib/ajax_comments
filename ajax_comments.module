@@ -116,37 +116,6 @@ function ajax_comments_views_data() {
 }
 
 /**
- * Implements hook_preprocess_node().
- *
- * AJAXify "Add new comment" link when there is no default form.
- */
-function ajax_comments_preprocess_node(&$variables) {
-  $node = $variables['node'];
-  $view_mode = $variables['view_mode'];
-
-  if (!ajax_comments_node_type_active($node->type)) {
-    return;
-  }
-  if (config_get('node.type.' . $node->type, 'settings.comment_form_location') == COMMENT_FORM_BELOW) {
-    $variables['content']['links']['comment']['#links']['comment-add']['fragment'] = 'ajax-comments-reply-form-' . $node->nid . '-0-0';
-    return;
-  }
-
-  if (empty($node->comment) || $node->comment == COMMENT_NODE_CLOSED) {
-    return;
-  }
-
-  backdrop_add_library('system', 'backdrop.ajax');
-  backdrop_add_library('system', 'backdrop.form');
-
-  backdrop_add_js(backdrop_get_path('module', 'ajax_comments') . '/js/ajax_comments.js', 'file');
-
-  $variables['content']['links']['comment']['#links']['comment-add']['attributes']['class'][] = 'use-ajax-comments';
-  $variables['content']['links']['comment']['#links']['comment-add']['attributes']['class'][] = 'ajax-comments-reply-' . $node->nid . '-0';
-  $variables['content']['links']['comment']['#links']['comment-add']['fragment'] = NULL;
-}
-
-/**
  * Implements hook_config_info().
  */
 function ajax_comments_config_info() {
@@ -637,26 +606,23 @@ function ajax_comments_preprocess_comment(&$variables) {
 }
 
 /**
- *
- * Implements template_preprocess_comment_wrapper().
- *
- * @todo Please document this function.
- * @see http://drupal.org/node/1354
- *
+ * Implements hook_preprocess_page().
+ * @param $variables
  */
-function ajax_comments_preprocess_comment_wrapper(&$variables) {
-  $variables['classes'][] = 'comment-wrapper-nid-' . $variables['node']->nid;
-
-  if (empty($variables['content']['comments']) && $variables['node']->comment == COMMENT_NODE_OPEN && ajax_comments_node_type_active($variables['node']->type)) {
-    /**
-     * A little HACK for adding dummy comment which give us right point to place first comment on the page.
-     */
-    $variables['content']['comments']['dummyComment'] = array(
-      '#prefix' => '<div class="ajax-comment-wrapper ajax-comment-dummy-comment" style="display:none">',
-      '#type' => 'item',
-      '#markup' => '',
-      '#suffix' => '</div>',
-    );
+function ajax_comments_preprocess_page(&$variables) {
+  /**
+   * Add a dummy div that provides right point to place first comment on the page.
+   */
+  // Alter only pages of node type.
+  // TODO: Implement this for other entity types.
+  foreach ($variables['classes'] as $id => $class) {
+    if (strpos($class, 'node-type-') !== FALSE) {
+      $node_type = substr($variables['classes'][$id], 10);
+      // Check if Ajax Comments are enabled for this content type.
+      if (ajax_comments_node_type_active($node_type) == TRUE) {
+        $variables['page'] = str_replace('<section class="comments" id="comments">', '<section class="comments" id="comments"><div class="ajax-comment-wrapper"></div>', $variables['page']);
+      }
+    }
   }
 }
 
