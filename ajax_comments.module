@@ -620,7 +620,7 @@ function ajax_comments_preprocess_page(&$variables) {
       $node_type = substr($variables['classes'][$id], 10);
       // Check if Ajax Comments are enabled for this content type.
       if (ajax_comments_node_type_active($node_type) == TRUE) {
-        $variables['page'] = str_replace('<section class="comments" id="comments">', '<section class="comments" id="comments"><div class="ajax-comment-wrapper"></div>', $variables['page']);
+        $variables['page'] = str_replace('id="comments">', 'id="comments"><div class="ajax-comment-wrapper"></div>', $variables['page']);
       }
     }
   }
