@@ -472,7 +472,7 @@ function ajax_comments_submit_js($form, &$form_state) {
 
   }
   else {
-    // Show reply to comment link
+    // Show reply to comment link.
     $commands[] = ajax_command_invoke('.ajax-comments-reply-' . $comment->nid . '-' . $pid, 'show');
   }
 
@@ -485,6 +485,9 @@ function ajax_comments_submit_js($form, &$form_state) {
       'html' => $notify_text,
     );
   }
+
+  // Prevent own comments from being marked as new.
+  _ajax_comments_update_history_timestamp($comment);
 
   $output = array(
     '#type' => 'ajax',
@@ -548,6 +551,27 @@ function ajax_comments_comment_update($comment) {
 }
 
 /**
+ * Update history timestamp to prevent own comments from being marked as new.
+ */
+function _ajax_comments_update_history_timestamp($comment) {
+  $nid = $comment->nid;
+  $node_last_viewed = node_last_viewed($nid);
+
+  $query = 'SELECT 1 FROM {comment} WHERE nid = :nid AND status = :status AND changed > :from AND uid <> :uid';
+  $params = array(
+    'nid' => $nid,
+    'status' => COMMENT_PUBLISHED,
+    'from' => $node_last_viewed,
+    'uid' => $user->uid,
+  );
+  $new_comments = (boolean) db_query_range($query, 0, 1, $params)->fetchField();
+
+  if (!$new_comments && node_last_changed($nid) < $node_last_viewed) {
+    node_tag_new($comment);
+  }
+}
+
+/**
  * Implements hook_comment_view_alter().
  */
 function ajax_comments_comment_view_alter(&$build) {
@@ -555,9 +579,9 @@ function ajax_comments_comment_view_alter(&$build) {
   // Check
   if (ajax_comments_node_type_active($build['#node']->type)) {
     // A little HACK for do not mark as NEW own comments
-    if (isset($build['#comment']->new) && $build['#comment']->uid == $user->uid && ($build['#comment']->new == MARK_NEW || $build['#comment']->new == MARK_UPDATED)) {
-      $build['#comment']->new = MARK_READ;
-    }
+    #if (isset($build['#comment']->new) && $build['#comment']->uid == $user->uid && ($build['#comment']->new == MARK_NEW || $build['#comment']->new == MARK_UPDATED)) {
+     # $build['#comment']->new = MARK_READ;
+    #}
     // Reply.
     if (isset($build['links']['comment']['#links']['comment-reply'])) {
       $classes = array('use-ajax-comments', 'ajax-comments-reply', 'ajax-comments-reply-' . $build['#comment']->nid . '-' . $build['#comment']->cid);
