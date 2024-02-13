@@ -554,6 +554,7 @@ function ajax_comments_comment_update($comment) {
  * Update history timestamp to prevent own comments from being marked as new.
  */
 function _ajax_comments_update_history_timestamp($comment) {
+  global $user;
   $nid = $comment->nid;
   $node_last_viewed = node_last_viewed($nid);
 
