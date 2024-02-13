@@ -21,12 +21,17 @@ function ajax_comments_settings() {
     '#description' => t('Add notification message to comment when posted.'),
     '#default_value' => $config->get('ajax_comments_notify'),
   );
-
   $form['ajax_comments_reply_autoclose'] = array(
     '#title' => t('Autoclose reply'),
     '#type' => 'checkbox',
     '#description' => t('Automatically close any opened reply forms.'),
     '#default_value' => $config->get('ajax_comments_reply_autoclose'),
+  );
+  $form['ajax_comments_comments_form_autoclose'] = array(
+    '#title' => t('Autoclose comment form'),
+    '#type' => 'checkbox',
+    '#description' => t('Automatically close the comment form.'),
+    '#default_value' => $config->get('ajax_comments_comments_form_autoclose'),
   );
   $form['ajax_comments_disable_scroll'] = array(
     '#title' => t('Disable scrolling'),

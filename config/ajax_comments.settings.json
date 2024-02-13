@@ -1,6 +1,7 @@
 {
     "_config_name": "ajax_comments.settings",
     "ajax_comments_reply_autoclose": 1,
+    "ajax_comments_comments_form_autoclose": 1,
     "ajax_comments_node_types": {
     },
     "ajax_comments_notify": 1,

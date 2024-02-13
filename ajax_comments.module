@@ -58,13 +58,13 @@ function ajax_comments_menu() {
     'type' => MENU_CALLBACK,
   );
 
-  // Special-casing for comment_goodness Module
+  // Special-casing for comment_goodness Module.
   if (module_exists('comment_goodness')) {
     $items['ajax_comment/%/delete']['access arguments'] = array(1);
     $items['ajax_comment/%/delete']['access callback'] = 'comment_goodness_delete_comment_access';
   }
 
-  // Special-casing for CommentAccess Module
+  // Special-casing for CommentAccess Module.
   if (module_exists('commentaccess')) {
     $items['ajax_comment/%/delete']['access callback'] = 'commentaccess_access_check';
     $items['ajax_comment/%/delete']['access arguments'] = array(1, 'delete');
@@ -134,10 +134,10 @@ function ajax_comments_form_comment_form_alter(&$form, &$form_state, $form_id) {
   if (!ajax_comments_node_type_active($form['#node']->type)) {
     return;
   }
-  // Disable output original node/comment in preview
+  // Disable output original node/comment in preview.
   if (isset($form['comment_preview'])) {
     $form['notify_text'] = array(
-      '#markup' => config_get('ajax_comments.settings', 'ajax_comments_notify') ? theme('ajax_comments_notify_text', array('type' => 'preview', 'comment' => $form_state['comment'])) : '',
+      '#markup' => theme('ajax_comments_notify_text', array('type' => 'preview', 'comment' => $form_state['comment'])),
       '#weight' => "-100",
     );
     if (isset($form['comment_output_below'])) {
@@ -149,18 +149,18 @@ function ajax_comments_form_comment_form_alter(&$form, &$form_state, $form_id) {
     $pid = empty($form_state['comment']->pid) ? 0 : $form_state['comment']->pid;
     $id = 'ajax-comments-reply-form-' . $form_state['comment']->nid . '-' . $pid . '-' . $cid;
     $form_state['storage']['ajax_comments_form_id'] = $id;
-    // Get comment form state class
+    // Get comment form state class.
     if (!empty($cid)) {
-      // Comment Edit Form
+      // Comment Edit Form.
       $form_state_class = 'ajax-comments-form-edit';
     }
     else {
       if (!empty($pid)) {
-        // Comment Reply Form
+        // Comment Reply Form.
         $form_state_class = 'ajax-comments-form-reply';
       }
       else {
-        // Add New Comment Form
+        // Add New Comment Form.
         $form_state_class = 'ajax-comments-form-add';
       }
     }
@@ -182,7 +182,7 @@ function ajax_comments_form_comment_form_alter(&$form, &$form_state, $form_id) {
     'effect' => 'fade',
   );
 
-  // Set unique id (need for Views with enabled AJAX)
+  // Set unique id (need for Views with enabled AJAX).
   if (empty($form['actions']['submit']['#id'])) {
     $form['actions']['submit']['#id'] = backdrop_html_id('edit-' . $id);
   }
@@ -193,12 +193,12 @@ function ajax_comments_form_comment_form_alter(&$form, &$form_state, $form_id) {
     'method' => 'replace',
     'effect' => 'fade',
   );
-  // Set unique id (need for Views with enabled AJAX)
+  // Set unique id (need for Views with enabled AJAX).
   if (empty($form['actions']['preview']['#id'])) {
     $form['actions']['preview']['#id'] = backdrop_html_id('preview-' . $id);
   }
 
-  // If this a reply to comment offer a 'cancel' button
+  // If this a reply to comment offer a 'cancel' button.
   if (isset($form_state['comment']->pid)) {
     $form['actions']['cancel'] = array(
       '#type' => 'button',
@@ -218,7 +218,7 @@ function ajax_comments_form_comment_form_alter(&$form, &$form_state, $form_id) {
     else {
       $form['actions']['cancel']['#ajax']['callback'] = 'ajax_comments_edit_cancel_js';
     }
-    // Set unique id (need for Views with enabled AJAX)
+    // Set unique id (need for Views with enabled AJAX).
     if (empty($form['actions']['cancel']['#id'])) {
       $form['actions']['cancel']['#id'] = backdrop_html_id('cancel-' . $id);
     }
@@ -291,7 +291,7 @@ function ajax_comments_cancel_js($form, &$form_state) {
     }
   }
 
-  // Show reply to comment link
+  // Show reply to comment link.
   $commands[] = ajax_command_invoke('.ajax-comments-reply-' . $form['#node']->nid . '-' . $pid, 'show');
 
   return array('#type' => 'ajax', '#commands' => $commands);
@@ -329,12 +329,6 @@ function ajax_comments_submit_js($form, &$form_state) {
     return $form;
   }
 
-  // This is to remove the "Your comment has been posted" status message that
-  // will appear upon refresh. This seems dirty but it means we don't have to
-  // rewrite the whole comment_form_submit(). Please chime in if you think this
-  // is dumb.
-  ajax_comments_remove_status();
-
   $cid = empty($form['cid']['#value']) ? 0 : $form['cid']['#value'];
   $pid = empty($form_state['comment']->pid) ? 0 : $form_state['comment']->pid;
 
@@ -345,7 +339,7 @@ function ajax_comments_submit_js($form, &$form_state) {
   }
   $comment = comment_load($form_state['comment']->cid);
   $node = $form['#node'];
-  $notify_text = $config->get('ajax_comments_notify') ? theme('ajax_comments_notify_text', array('comment' => $comment)) : '';
+  $notify_text = theme('ajax_comments_notify_text', array('comment' => $comment));
 
   $comment_build = comment_view($comment, $node);
 
@@ -363,7 +357,6 @@ function ajax_comments_submit_js($form, &$form_state) {
 
   // Are we editing a comment.
   if (isset($form['cid']['#value'])) {
-    //$commands[] = ajax_command_replace('.ajax-comments-reply-form-' . $comment->nid . '-' . $pid . '-' . $cid, $comment_output);
     $commands[] = array(
       'command' => 'ajaxCommentsReplace',
       'selector' => '.ajax-comments-reply-form-' . $comment->nid . '-' . $pid . '-' . $cid,
@@ -375,7 +368,6 @@ function ajax_comments_submit_js($form, &$form_state) {
     $mode = config_get('node.type.' . $node->type, 'settings.comment_mode');
     if (!empty($mode)) {
       // Threaded. Append comment to parent wrapper.
-      //$commands[] = ajax_command_replace('.ajax-comments-reply-form-' . $comment->nid . '-' . $pid . '-' . $cid, $comment_output);
       $commands[] = array(
         'command' => 'ajaxCommentsReplace',
         'selector' => '.ajax-comments-reply-form-' . $comment->nid . '-' . $pid . '-' . $cid,
@@ -387,7 +379,6 @@ function ajax_comments_submit_js($form, &$form_state) {
       if (_ajax_comments_get_comment_sort_order($node) == 1) {
         // Older first. Append comment to last wrapper.
         $commands[] = ajax_command_invoke('.ajax-comments-reply-form-' . $comment->nid . '-' . $pid . '-' . $cid, 'remove');
-        //$commands[] = ajax_command_after('.comment-wrapper-nid-' . $comment->nid . ' > .ajax-comment-wrapper:last', $comment_output);
         $commands[] = array(
           'command' => 'ajaxCommentsAfter',
           'selector' => '.comment-wrapper-nid-' . $comment->nid . ' > .ajax-comment-wrapper:last',
@@ -397,7 +388,6 @@ function ajax_comments_submit_js($form, &$form_state) {
       else {
         // Newer first. Append comment to top.
         $commands[] = ajax_command_invoke('.ajax-comments-reply-form-' . $comment->nid . '-' . $pid . '-' . $cid, 'remove');
-        //$commands[] = ajax_command_prepend('.comment-wrapper-nid-' . $comment->nid, $comment_output);
         $commands[] = array(
           'command' => 'ajaxCommentsPrepend',
           'selector' => '.comment-wrapper-nid-' . $comment->nid,
@@ -418,7 +408,6 @@ function ajax_comments_submit_js($form, &$form_state) {
     // Check sort by comment_goodness.
     if (_ajax_comments_get_comment_sort_order($node) == 1) {
       // Older first. Append comment to last wrapper.
-      //$commands[] = ajax_command_after('.comment-wrapper-nid-' . $comment->nid . ' > .ajax-comment-wrapper:last', $comment_output);
       $commands[] = array(
         'command' => 'ajaxCommentsAfter',
         'selector' => '#node-' . $comment->nid . ' .comments > .ajax-comment-wrapper:last',
@@ -427,7 +416,6 @@ function ajax_comments_submit_js($form, &$form_state) {
     }
     else {
       // Newer first. Append comment to top.
-      //$commands[] = ajax_command_prepend('.comment-wrapper-nid-' . $comment->nid, $comment_output);
       $commands[] = array(
         'command' => 'ajaxCommentsBefore',
         'selector' => '#node-' . $comment->nid . ' .comments > .ajax-comment-wrapper:first',
@@ -476,9 +464,8 @@ function ajax_comments_submit_js($form, &$form_state) {
     $commands[] = ajax_command_invoke('.ajax-comments-reply-' . $comment->nid . '-' . $pid, 'show');
   }
 
-  // Show notify
+  // Show notify.
   if (!empty($notify_text)) {
-    //$commands[] = ajax_command_before('.comment-wrapper-' . $comment->cid, $notify_text);
     $commands[] = array(
       'command' => 'ajaxCommentsBefore',
       'selector' => '.comment-wrapper-' . $comment->cid,
@@ -502,9 +489,7 @@ function ajax_comments_submit_js($form, &$form_state) {
 function ajax_comments_delete_js($form, &$form_state) {
   $comment = $form['#comment'];
 
-  ajax_comments_remove_status();
-
-  $notify_text = config_get('ajax_comments.settings', 'ajax_comments_notify') ? theme('ajax_comments_notify_text', array('type' => 'delete', 'comment' => $comment)) : '';
+  $notify_text = theme('ajax_comments_notify_text', array('type' => 'delete', 'comment' => $comment));
 
   if ($notify_text) {
     $commands[] = ajax_command_remove('.messages.status');
@@ -528,30 +513,11 @@ function ajax_comments_delete_js($form, &$form_state) {
   return array('#type' => 'ajax', '#commands' => $commands);
 }
 
-/**
- * Implements hook_comment_insert().
- *
- * Clear cache since entity cache is in core.
- * Remove if this gets added to core.
- * See: https://github.com/backdrop/backdrop-issues/issues/5335
- */
-function ajax_comments_comment_insert($comment) {
-  cache_clear_all($comment->cid, 'cache_entity_comment');
-}
-
-/**
- * Implements hook_comment_update().
- *
- * Clear cache since entity cache is in core.
- * Remove if this gets added to core.
- * See: https://github.com/backdrop/backdrop-issues/issues/5335
- */
-function ajax_comments_comment_update($comment) {
-  cache_clear_all($comment->cid, 'cache_entity_comment');
-}
 
 /**
  * Update history timestamp to prevent own comments from being marked as new.
+ *
+ * @param $comment
  */
 function _ajax_comments_update_history_timestamp($comment) {
   global $user;
@@ -700,6 +666,11 @@ function ajax_comments_reply($node, $pid = 0, $flag = 0) {
     $commands[] = ajax_command_remove('.ajax-comments-form-reply');
     $commands[] = ajax_command_invoke('.ajax-comments-reply', 'show');
   }
+  if ($config->get('ajax_comments_comments_form_autoclose') && !empty($pid)) {
+    $commands[] = ajax_command_remove('.ajax-comments-form-add');
+    $commands[] = ajax_command_remove('h2.title.comment-form');
+    $commands[] = ajax_command_remove('#comments div.indented:last-child');
+  }
 
   // Add the new form.
   if (!empty($pid)) {
@@ -708,7 +679,7 @@ function ajax_comments_reply($node, $pid = 0, $flag = 0) {
       $commands[] = ajax_command_after('.comment-wrapper-' . $pid, $form);
     }
     else {
-      // Add div with class "indented" if they are not exist
+      // Add divs with class "indented" they don't exist.
       $commands[] = array(
         'command' => 'ajaxCommentsAddDummyDivAfter',
         'selector' => '.comment-wrapper-' . $pid,
@@ -726,7 +697,7 @@ function ajax_comments_reply($node, $pid = 0, $flag = 0) {
     }
   }
   else {
-    // Check Views Add form
+    // Check Views Add form.
     if (!empty($flag)) {
       $commands[] = ajax_command_after('.views-comment-wrapper-nid-' . $node->nid . ' > .ajax-comment-wrapper:last', $form);
     }
@@ -743,7 +714,7 @@ function ajax_comments_reply($node, $pid = 0, $flag = 0) {
     }
   }
 
-  // Hide reply to comment link
+  // Hide reply to comment link.
   $commands[] = ajax_command_invoke('.ajax-comments-reply-' . $node->nid . '-' . $pid, 'hide');
 
   if (!$config->get('ajax_comments_disable_scroll')) {
@@ -783,7 +754,7 @@ function ajax_comments_edit($comment) {
   $form_build = backdrop_get_form("comment_node_{$node->type}_form", $comment);
   $form = backdrop_render($form_build);
 
-  // Remove anchor
+  // Remove anchor.
   $commands[] = ajax_command_remove('a#comment-' . $comment->cid);
 
   // Replace comment with form.
@@ -815,7 +786,7 @@ function ajax_comments_delete($cid) {
   // ajax callback.
   form_load_include($form_state, 'inc', 'comment', 'comment.admin');
 
-  // Get child comments (replies on this comment)
+  // Get child comments (replies on this comment).
   $form_state['storage']['cids'] = array();
   $query = db_select('comment', 'c');
   $query->addField('c', 'cid');
@@ -825,7 +796,7 @@ function ajax_comments_delete($cid) {
   }
   $query->orderBy('c.cid', 'ASC');
   $cids = $query->execute()->fetchCol();
-  // Save child comments ids if they are exist
+  // Save child comments ids if they don't exist.
   if (!empty($cids)) {
     $form_state['storage']['cids'] = $cids;
   }
@@ -840,29 +811,6 @@ function ajax_comments_delete($cid) {
   $commands[] = ajax_command_prepend('.comment-wrapper-' . $cid, $form);
 
   return array('#type' => 'ajax', '#commands' => $commands);
-}
-
-/**
- * Removes "Your comment has been posted." or "Your comment has been queued.."
- *   from the status message.
- */
-function ajax_comments_remove_status() {
-  if (!empty($_SESSION['messages']['status'])) {
-    $deleted = t('The comment and all its replies have been deleted.');
-    $published = t('Your comment has been posted.');
-    $not_published = t('Your comment has been queued for review by site administrators and will be published after approval.');
-    foreach ($_SESSION['messages']['status'] as $key => $value) {
-      if ($value == $published || $value == $not_published || $value = $deleted) {
-        unset($_SESSION['messages']['status'][$key]);
-      }
-    }
-    if (empty($_SESSION['messages']['status'])) {
-      unset($_SESSION['messages']['status']);
-      if (empty($_SESSION['messages'])) {
-        unset($_SESSION['messages']);
-      }
-    }
-  }
 }
 
 /**
@@ -893,22 +841,25 @@ function ajax_comments_theme($existing, $type, $theme, $path) {
  * Returns text to notify user their comment has been added.
  */
 function theme_ajax_comments_notify_text($vars = array()) {
-  $text = t('Your comment has been posted.');
-  $status = 'status';
-  // If the comment is unapproved, alter the message
-  if (isset($vars['comment']) && !$vars['comment']->status) {
-    $text = t('Your comment has been queued for review by site administrators and will be published after approval.');
-    $status = 'warning';
+  unset($_SESSION['messages']['status']);
+  if (config_get('ajax_comments.settings', 'ajax_comments_notify')) {
+    $text = t('Your comment has been posted.');
+    $status = 'status';
+    // If the comment is unapproved, alter the message
+    if (isset($vars['comment']) && !$vars['comment']->status) {
+      $text = t('Your comment has been queued for review by site administrators and will be published after approval.');
+      $status = 'warning';
+    }
+    if ($vars['type'] == 'delete') {
+      $text = t('Your comment has been deleted.');
+    }
+    elseif ($vars['type'] == 'preview') {
+      $text = t('This is a preview of your comment. Please click SAVE to ensure your comment is saved.');
+      $status = 'warning';
+    }
+    backdrop_set_message($text, $status);
+    return theme('status_messages');
   }
-  if ($vars['type'] == 'delete') {
-    $text = t('Your comment has been deleted');
-  }
-  elseif ($vars['type'] == 'preview') {
-    $text = t('This is the preview for your comment. You must click SAVE or your comment will be lost.');
-    $status = 'warning';
-  }
-  backdrop_set_message($text, $status);
-  return theme('status_messages');
 }
 
 /**
